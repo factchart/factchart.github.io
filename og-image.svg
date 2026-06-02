@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="chartGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#00d084;stop-opacity:0.2"/>
+      <stop offset="100%" style="stop-color:#00d084;stop-opacity:0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 배경 -->
+  <rect width="1200" height="630" fill="#080b10"/>
+
+  <!-- 그리드 -->
+  <line x1="0" y1="210" x2="1200" y2="210" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+  <line x1="0" y1="420" x2="1200" y2="420" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+  <line x1="400" y1="0" x2="400" y2="630" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+  <line x1="800" y1="0" x2="800" y2="630" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+
+  <!-- 상단 accent 라인 -->
+  <rect x="0" y="0" width="1200" height="4" fill="#00d084"/>
+
+  <!-- 배경 차트 라인 -->
+  <polyline
+    points="0,520 100,500 200,480 300,450 400,410 500,370 580,330 660,290 740,260 820,230 900,200 980,170 1060,140 1140,110 1200,85"
+    fill="none" stroke="#00d084" stroke-width="2.5" opacity="0.12"/>
+  <polygon
+    points="0,520 100,500 200,480 300,450 400,410 500,370 580,330 660,290 740,260 820,230 900,200 980,170 1060,140 1140,110 1200,85 1200,630 0,630"
+    fill="url(#chartGrad)"/>
+
+  <!-- 공시 마커 -->
+  <g fill="#e53e3e" opacity="0.6">
+    <rect x="294" y="444" width="14" height="14" transform="rotate(45 301 451)"/>
+    <rect x="494" y="364" width="14" height="14" transform="rotate(45 501 371)"/>
+    <rect x="734" y="254" width="14" height="14" transform="rotate(45 741 261)"/>
+    <rect x="894" y="194" width="14" height="14" transform="rotate(45 901 201)"/>
+    <rect x="1054" y="134" width="14" height="14" transform="rotate(45 1061 141)"/>
+  </g>
+
+  <!-- FACT CHART 로고 — 크게 -->
+  <text x="72" y="115" font-family="Inter, Arial, sans-serif" font-size="80" font-weight="900" letter-spacing="-2" fill="#ffffff">FACT <tspan fill="#00d084">CHART</tspan></text>
+
+  <!-- 공시 × 주가 패턴 분석 -->
+  <text x="72" y="175" font-family="'Noto Sans KR', Arial, sans-serif" font-size="36" font-weight="700" fill="#c5d0dc" letter-spacing="-0.5">공시 × 주가 패턴 분석</text>
+
+  <!-- 구분선 -->
+  <rect x="72" y="200" width="520" height="1.5" fill="rgba(0,208,132,0.25)"/>
+
+  <!-- 카피 -->
+  <text x="72" y="248" font-family="'Noto Sans KR', Arial, sans-serif" font-size="22" font-weight="400" fill="#7a8fa3" letter-spacing="1">공시 반복  →  차트 반복  →  매매 패턴 완성</text>
+
+  <!-- 하단 통계 -->
+  <g font-family="Inter, Arial, sans-serif">
+    <text x="72" y="330" font-size="42" font-weight="700" fill="#00d084">12</text>
+    <text x="72" y="358" font-size="13" font-weight="500" fill="#607080" letter-spacing="2">종목</text>
+
+    <text x="185" y="330" font-size="42" font-weight="700" fill="#00d084">2Y</text>
+    <text x="185" y="358" font-size="13" font-weight="500" fill="#607080" letter-spacing="2">데이터</text>
+
+    <text x="290" y="330" font-size="42" font-weight="700" fill="#00d084">566+</text>
+    <text x="290" y="358" font-size="13" font-weight="500" fill="#607080" letter-spacing="2">공시</text>
+
+    <text x="445" y="330" font-size="42" font-weight="700" fill="#00d084">FREE</text>
+    <text x="445" y="358" font-size="13" font-weight="500" fill="#607080" letter-spacing="2">무료</text>
+  </g>
+
+  <!-- URL -->
+  <text x="72" y="560" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="400" fill="#3d4f63" letter-spacing="1">factchart.github.io</text>
+
+  <!-- 우측 카드 1 -->
+  <rect x="800" y="180" width="330" height="145" rx="12" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+  <text x="824" y="218" font-family="'Noto Sans KR', Arial, sans-serif" font-size="13" fill="#607080">삼성전자 · 자사주</text>
+  <text x="824" y="258" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700" fill="#e53e3e">▲ +1.61%</text>
+  <text x="824" y="284" font-family="'Noto Sans KR', Arial, sans-serif" font-size="12" fill="#607080">25건 평균 수익률</text>
+  <rect x="824" y="302" width="282" height="5" rx="2" fill="rgba(229,62,62,0.15)"/>
+  <rect x="824" y="302" width="175" height="5" rx="2" fill="#e53e3e"/>
+
+  <!-- 우측 카드 2 -->
+  <rect x="800" y="345" width="330" height="120" rx="12" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+  <text x="824" y="382" font-family="'Noto Sans KR', Arial, sans-serif" font-size="13" fill="#607080">한화에어로 · 대규모계약</text>
+  <text x="824" y="422" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700" fill="#e53e3e">▲ +2.59%</text>
+  <text x="824" y="448" font-family="'Noto Sans KR', Arial, sans-serif" font-size="12" fill="#607080">2건 평균</text>
+
+  <!-- 우측 카드 3 -->
+  <rect x="800" y="485" width="330" height="90" rx="12" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+  <text x="824" y="520" font-family="'Noto Sans KR', Arial, sans-serif" font-size="13" fill="#607080">SK하이닉스 · 실적발표</text>
+  <text x="824" y="558" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700" fill="#3182ce">▼ -0.81%</text>
+</svg>
