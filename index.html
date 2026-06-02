@@ -270,7 +270,8 @@ body {
   color: var(--text2);
   line-height: 1.7;
   box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-  width: 280px;
+  white-space: nowrap;
+  width: auto;
   top: 28px;
   left: 0;
 }
@@ -509,7 +510,7 @@ body {
 
 .right-col {
   position: sticky;
-  top: 20px;
+  top: 72px;
 }
 
 /* ── 차트 패널 ── */
@@ -779,7 +780,7 @@ body {
 /* ── 차트 ── */
 .chart-body { padding: 10px 20px 4px; }
 
-canvas { max-height: 360px; }
+canvas { max-height: 300px; }
 
 .chart-legend {
   display: flex;
@@ -1705,6 +1706,11 @@ tr.disc-highlight {
   border-top: 1px solid var(--border);
   padding-top: 32px;
   padding-bottom: 48px;
+  max-width: 1680px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 32px;
+  padding-right: 32px;
 }
 
 .footer-top {
@@ -1961,9 +1967,7 @@ tr.disc-highlight {
       <span style="font-family:var(--sans);font-size:11px;font-weight:600;color:var(--text3);letter-spacing:1px;text-transform:uppercase;">종목</span>
       <span class="stock-info-btn" onclick="toggleStockInfo()" title="종목 선택 기준">ⓘ</span>
       <div class="stock-info-tooltip" id="stockInfoTooltip" style="display:none">
-        코스피 시가총액 상위 10개 종목을 선별했습니다.<br>
-        공시 빈도, 패턴 반복성, 거래량 등을 기준으로 선정했으며<br>
-        향후 전 종목으로 확대할 예정입니다.
+        코스피 시가총액 상위 10개 종목 선별 / 공시 빈도, 패턴 반복성, 거래량 기준 / 향후 전 종목 확대 예정
       </div>
     </div>
     <div class="stock-row" id="stockRow">
@@ -2013,7 +2017,7 @@ tr.disc-highlight {
               <input type="checkbox" id="patternToggle" onchange="togglePattern()" checked>
               <span class="toggle-slider"></span>
             </label>
-            <span class="toggle-label active" id="toggleLabel">과거엔 이랬다 ON</span><span class="toggle-desc" id="toggleDesc">같은 공시가 발생했을 때 주가가 어떻게 움직였는지 평균 패턴을 차트에 표시합니다</span>
+            <span class="toggle-label active" id="toggleLabel">패턴 복기 ON</span><span class="toggle-desc" id="toggleDesc">같은 공시가 발생했을 때 주가가 어떻게 움직였는지 평균 패턴을 차트에 표시합니다</span>
           </div>
           <span class="pattern-info" id="patternInfo"></span>
         </div>
@@ -2256,7 +2260,7 @@ function selectStock(name) {
   // 토글 ON 상태로
   document.getElementById('patternToggle').checked = true;
   const lbl = document.getElementById('toggleLabel');
-  lbl.textContent = '과거엔 이랬다 ON';
+  lbl.textContent = '패턴 복기 ON';
   lbl.classList.add('active');
   document.getElementById('patternSelectWrap').classList.add('visible');
   document.getElementById('legendPattern').style.display = 'flex';
@@ -2318,13 +2322,13 @@ function togglePattern() {
   patternOn = document.getElementById('patternToggle').checked;
   const label = document.getElementById('toggleLabel');
   if (patternOn) {
-    label.textContent = '과거엔 이랬다 ON';
+    label.textContent = '패턴 복기 ON';
     label.classList.add('active');
     document.getElementById('patternSelectWrap').classList.add('visible');
     document.getElementById('legendPattern').style.display = 'flex';
     if (selectedType) applyPattern();
   } else {
-    label.textContent = '과거엔 이랬다';
+    label.textContent = '패턴 복기';
     label.classList.remove('active');
     document.getElementById('patternSelectWrap').classList.remove('visible');
     document.getElementById('patternStats').classList.remove('visible');
@@ -3385,10 +3389,20 @@ function closeModal(name) {
   document.getElementById('modal-' + name).style.display = 'none';
   document.body.style.overflow = '';
 }
+function sendContactForm() {
+  const email = document.getElementById('contactEmail').value.trim();
+  const msg = document.getElementById('contactMsg').value.trim();
+  if (msg.length < 10) { alert('메시지를 최소 10자 이상 입력해주세요.'); return; }
+  const subject = encodeURIComponent('[FACT CHART] 제안/문의/제휴');
+  const body = encodeURIComponent((email ? '답장 이메일: ' + email + '\n\n' : '') + msg);
+  window.location.href = 'mailto:kim.tj129@gmail.com?subject=' + subject + '&body=' + body;
+  closeModal('contact');
+}
+
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
-    ['terms','privacy','disclaimer'].forEach(closeModal);
+    ['terms','privacy','disclaimer','contact'].forEach(closeModal);
   }
 });
 
@@ -3400,7 +3414,7 @@ document.addEventListener('keydown', e => {
       <div class="footer-logo">FACT <em>CHART</em></div>
       <div class="footer-tagline">DART 공시와 주가 변동의 1:1 패턴 분석 플랫폼.<br>주식을 처음 시작하는 분들도 데이터로 건강한 투자를 할 수 있도록 만들었습니다.</div>
     </div>
-    <a class="footer-contact-btn" href="mailto:factchart.kr@gmail.com">✉ 제안 · 문의 · 제휴</a>
+    <button class="footer-contact-btn" onclick="openModal('contact')">✉ 제안 · 문의 · 제휴</button>
   </div>
   <div class="footer-disclaimer">
     <div class="footer-disclaimer-title">투자 유의사항</div>
@@ -3413,7 +3427,7 @@ document.addEventListener('keydown', e => {
     <span class="footer-sep">·</span>
     <span class="footer-link" onclick="openModal('disclaimer')">투자 고지·면책</span>
     <span class="footer-sep">·</span>
-    <a class="footer-link" href="mailto:factchart.kr@gmail.com">제안·문의·제휴</a>
+    <span class="footer-link" onclick="openModal('contact')">제안·문의·제휴</span>
   </div>
   <div class="footer-bottom">
     <div class="footer-copy">© 2026 FACT CHART. All rights reserved.</div>
@@ -3461,6 +3475,34 @@ document.addEventListener('keydown', e => {
   </div>
 </div>
 
+
+
+<!-- 제안/문의/제휴 모달 -->
+<div class="modal-overlay" id="modal-contact" style="display:none" onclick="if(event.target===this)closeModal('contact')">
+  <div class="modal-box" style="max-width:500px">
+    <div class="modal-title">제안/문의/제휴 보내기</div>
+    <p style="font-size:13px;color:var(--text3);margin:8px 0 20px">의견·문의·제보 무엇이든 환영합니다. 운영자에게 바로 메일로 전달됩니다.</p>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div>
+        <label style="font-size:12px;color:var(--text3);display:block;margin-bottom:6px">이메일 <span style="opacity:0.5">(답장이 필요하면)</span></label>
+        <input id="contactEmail" type="email" placeholder="you@example.com"
+          style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 14px;font-family:var(--sans);font-size:14px;color:var(--text);outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text3);display:block;margin-bottom:6px">메시지 <span style="color:#e53e3e">*</span> <span id="contactCount" style="opacity:0.5">(0/2000)</span></label>
+        <textarea id="contactMsg" rows="6" placeholder="여기에 의견을 자유롭게 적어주세요. 최소 10자."
+          oninput="document.getElementById('contactCount').textContent='('+this.value.length+'/2000)'"
+          maxlength="2000"
+          style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 14px;font-family:var(--sans);font-size:14px;color:var(--text);outline:none;resize:vertical;box-sizing:border-box"></textarea>
+      </div>
+      <button onclick="sendContactForm()"
+        style="background:var(--accent);color:#000;font-family:var(--sans);font-size:14px;font-weight:700;padding:12px;border-radius:var(--radius-sm);cursor:pointer;border:none;width:100%">
+        ✉ 보내기
+      </button>
+    </div>
+    <button class="modal-close" onclick="closeModal('contact')">닫기</button>
+  </div>
+</div>
 
 </body>
 </html>
