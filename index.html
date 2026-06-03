@@ -62,6 +62,7 @@
 }
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
 // 캔들스틱 커스텀 플러그인 (afterDraw 방식 — type:'line' 유지)
 const CandlestickPlugin = {
@@ -717,10 +718,11 @@ body {
 
 .toggle-desc {
   font-family: var(--sans);
-  font-size: 11px;
-  color: var(--text3);
-  margin-left: 10px;
+  font-size: 12px;
+  color: var(--text2);
+  margin-left: 12px;
   font-weight: 400;
+  opacity: 0.75;
 }
 
 .pattern-info {
@@ -1780,10 +1782,10 @@ tr.disc-highlight {
 
 .footer-tagline {
   font-family: var(--sans);
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text3);
-  line-height: 1.6;
-  max-width: 260px;
+  line-height: 1.65;
+  max-width: 300px;
 }
 
 .footer-contact-btn {
@@ -1818,19 +1820,19 @@ tr.disc-highlight {
 
 .footer-disclaimer-title {
   font-family: var(--sans);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  color: var(--text3);
-  letter-spacing: 1px;
+  color: var(--text2);
+  letter-spacing: 0.5px;
   text-transform: uppercase;
   margin-bottom: 8px;
 }
 
 .footer-disclaimer p {
   font-family: var(--sans);
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text3);
-  line-height: 1.7;
+  line-height: 1.75;
 }
 
 .footer-links {
@@ -1843,7 +1845,7 @@ tr.disc-highlight {
 
 .footer-link {
   font-family: var(--sans);
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text3);
   text-decoration: none;
   padding: 3px 8px;
@@ -1865,13 +1867,13 @@ tr.disc-highlight {
 
 .footer-copy {
   font-family: var(--num);
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text3);
 }
 
 .footer-data {
   font-family: var(--sans);
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text3);
 }
 
@@ -1907,6 +1909,12 @@ tr.disc-highlight {
   box-shadow: 0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
   position: relative;
   animation: modalSlideUp 0.22s cubic-bezier(0.34,1.4,0.64,1);
+}
+
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
 }
 
 @keyframes modalSlideUp {
@@ -1949,11 +1957,10 @@ tr.disc-highlight {
 }
 
 .modal-date {
-  font-family: var(--num);
-  font-size: 11px;
+  font-family: var(--sans);
+  font-size: 13px;
   color: var(--text3);
   margin-bottom: 20px;
-  letter-spacing: 0.3px;
 }
 
 .modal-divider {
@@ -2613,9 +2620,11 @@ function renderChart(prices, disclosures, patternData) {
       ctx.beginPath();
       ctx.moveTo(x, chartArea.top);
       ctx.lineTo(x, chartArea.bottom);
-      ctx.strokeStyle = 'rgba(180,180,200,0.15)';
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(200,210,230,0.45)';
+      ctx.lineWidth = 0.6;
+      ctx.setLineDash([3,3]);
       ctx.stroke();
+      ctx.setLineDash([]);
       ctx.restore();
     }
   };
@@ -2661,14 +2670,14 @@ function renderChart(prices, disclosures, patternData) {
       },
       scales:{
         x:{
-          ticks:{color:'#7a8fa3',font:{family:'Inter',size:10},maxTicksLimit:10,maxRotation:0},
+          ticks:{color:'#7a8fa3',font:{family:'Inter',size:12},maxTicksLimit:10,maxRotation:0},
           grid:{color:'rgba(255,255,255,0.05)'},
           border:{color:'rgba(255,255,255,0.07)'}
         },
         y:{
           min: useCandle ? Math.min(...prices.filter(p=>p.low).map(p=>p.low)) * 0.99 : undefined,
           max: useCandle ? Math.max(...prices.filter(p=>p.high).map(p=>p.high)) * 1.01 : undefined,
-          ticks:{color:'#7a8fa3',font:{family:'Inter',size:10},
+          ticks:{color:'#8a9fb3',font:{family:'Inter',size:12},
             callback:v=>v>=10000000?(v/10000000).toFixed(1)+'천만':v>=1000000?(v/10000).toFixed(0)+'만':v>=10000?(v/10000).toFixed(1)+'만':v.toLocaleString()
           },
           grid:{color:'rgba(255,255,255,0.05)'},
@@ -3527,6 +3536,8 @@ function openModal(name) {
     document.getElementById('contactEmail').value = '';
     document.getElementById('contactMsg').value = '';
     document.getElementById('contactCount').textContent = '(0/2000)';
+    const btn = document.getElementById('contactSendBtn');
+    if(btn){btn.disabled=false;btn.style.opacity='1';btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> 보내기';}
   }
 }
 
@@ -3534,27 +3545,68 @@ function closeModal(name) {
   document.getElementById('modal-' + name).style.display = 'none';
   document.body.style.overflow = '';
 }
+// EmailJS 초기화 (공개 키)
+(function() {
+  if (typeof emailjs !== 'undefined') {
+    emailjs.init({ publicKey: 'YOUR_EMAILJS_PUBLIC_KEY' });
+  }
+})();
+
 function sendContactForm() {
-  const email = document.getElementById('contactEmail').value.trim();
-  const msg = document.getElementById('contactMsg').value.trim();
+  const emailEl = document.getElementById('contactEmail');
+  const msgEl = document.getElementById('contactMsg');
+  const btnEl = document.getElementById('contactSendBtn');
+  const email = emailEl.value.trim();
+  const msg = msgEl.value.trim();
+
+  // 10자 미만 검증
   if (msg.length < 10) {
-    const ta = document.getElementById('contactMsg');
-    ta.style.borderColor = 'rgba(229,62,62,0.5)';
-    setTimeout(() => ta.style.borderColor = 'rgba(255,255,255,0.09)', 1500);
+    msgEl.style.borderColor = 'rgba(229,62,62,0.6)';
+    msgEl.placeholder = '최소 10자 이상 작성해주세요.';
+    msgEl.style.animation = 'shake 0.3s ease';
+    setTimeout(() => {
+      msgEl.style.borderColor = 'rgba(255,255,255,0.09)';
+      msgEl.style.animation = '';
+      msgEl.placeholder = '문의 내용을 자유롭게 적어주세요. (최소 10자)';
+    }, 2000);
     return;
   }
-  const subject = encodeURIComponent('[FACT CHART] 문의/제휴');
-  const body = encodeURIComponent((email ? '답장 이메일: ' + email + '\n\n' : '') + msg);
-  // mailto 링크를 숨김 a 태그로 열기 (바로 메일 앱 오픈)
-  const a = document.createElement('a');
-  a.href = 'mailto:kim.tj129@gmail.com?subject=' + subject + '&body=' + body;
-  a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  // 완료 화면으로 전환
-  document.getElementById('contactForm').style.display = 'none';
-  document.getElementById('contactDone').style.display = 'block';
+
+  btnEl.disabled = true;
+  btnEl.style.opacity = '0.6';
+  btnEl.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 전송 중...';
+
+  // EmailJS로 전송 시도
+  const serviceId = 'service_factchart';
+  const templateId = 'template_contact';
+  const params = {
+    from_email: email || '(이메일 미입력)',
+    message: msg,
+    to_email: 'kim.tj129@gmail.com'
+  };
+
+  function showDone() {
+    document.getElementById('contactForm').style.display = 'none';
+    document.getElementById('contactDone').style.display = 'block';
+  }
+
+  if (typeof emailjs !== 'undefined' && emailjs._options && emailjs._options.publicKey !== 'YOUR_EMAILJS_PUBLIC_KEY') {
+    emailjs.send(serviceId, templateId, params)
+      .then(showDone)
+      .catch(() => {
+        // EmailJS 실패 시 mailto 폴백
+        const subject = encodeURIComponent('[FACT CHART] 문의/제휴');
+        const body = encodeURIComponent((email ? '답장 이메일: ' + email + '\n\n' : '') + msg);
+        window.open('mailto:kim.tj129@gmail.com?subject=' + subject + '&body=' + body, '_blank');
+        showDone();
+      });
+  } else {
+    // EmailJS 미설정 시 mailto 폴백
+    const subject = encodeURIComponent('[FACT CHART] 문의/제휴');
+    const body = encodeURIComponent((email ? '답장 이메일: ' + email + '\n\n' : '') + msg);
+    window.open('mailto:kim.tj129@gmail.com?subject=' + subject + '&body=' + body, '_blank');
+    showDone();
+  }
 }
 
 
@@ -3650,20 +3702,20 @@ document.addEventListener('keydown', e => {
       <div class="modal-divider"></div>
       <div style="display:flex;flex-direction:column;gap:16px">
         <div>
-          <label style="font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;display:block;margin-bottom:8px">이메일 <span style="opacity:0.5;text-transform:none;letter-spacing:0">(답장이 필요하면)</span></label>
+          <label style="font-size:13px;font-weight:500;color:var(--text2);display:block;margin-bottom:8px">이메일 <span style="opacity:0.5;text-transform:none;letter-spacing:0">(답장이 필요하면)</span></label>
           <input id="contactEmail" type="email" placeholder="you@example.com"
             style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:10px;padding:11px 14px;font-family:var(--sans);font-size:14px;color:var(--text);outline:none;box-sizing:border-box;transition:border-color 0.15s"
             onfocus="this.style.borderColor='rgba(0,229,160,0.4)'" onblur="this.style.borderColor='rgba(255,255,255,0.09)'">
         </div>
         <div>
-          <label style="font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;display:block;margin-bottom:8px">메시지 <span style="color:#e53e3e;text-transform:none">*</span> <span id="contactCount" style="opacity:0.4;text-transform:none;letter-spacing:0;font-weight:400">(0/2000)</span></label>
+          <label style="font-size:13px;font-weight:500;color:var(--text2);display:block;margin-bottom:8px">메시지 <span style="color:#e53e3e;text-transform:none">*</span> <span id="contactCount" style="opacity:0.4;text-transform:none;letter-spacing:0;font-weight:400">(0/2000)</span></label>
           <textarea id="contactMsg" rows="5" placeholder="문의 내용을 자유롭게 적어주세요. (최소 10자)"
             oninput="document.getElementById('contactCount').textContent='('+this.value.length+'/2000)'"
             maxlength="2000"
             style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:10px;padding:11px 14px;font-family:var(--sans);font-size:14px;color:var(--text);outline:none;resize:none;box-sizing:border-box;transition:border-color 0.15s;line-height:1.6"
             onfocus="this.style.borderColor='rgba(0,229,160,0.4)'" onblur="this.style.borderColor='rgba(255,255,255,0.09)'"></textarea>
         </div>
-        <button onclick="sendContactForm()"
+        <button id="contactSendBtn" onclick="sendContactForm()"
           style="background:var(--accent);color:#060a0e;font-family:var(--sans);font-size:14px;font-weight:700;padding:13px 20px;border-radius:10px;cursor:pointer;border:none;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity 0.15s"
           onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
