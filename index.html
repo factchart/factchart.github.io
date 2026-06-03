@@ -3545,14 +3545,12 @@ function closeModal(name) {
   document.getElementById('modal-' + name).style.display = 'none';
   document.body.style.overflow = '';
 }
-// EmailJS 초기화 (공개 키)
-(function() {
-  if (typeof emailjs !== 'undefined') {
-    emailjs.init({ publicKey: 'ab10m2BKGfZFSyt3b' });
-  }
-})();
+
 
 function sendContactForm() {
+  // EmailJS 초기화 (매번 확인)
+  try { emailjs.init('ab10m2BKGfZFSyt3b'); } catch(e) {}
+
   const emailEl = document.getElementById('contactEmail');
   const msgEl = document.getElementById('contactMsg');
   const btnEl = document.getElementById('contactSendBtn');
@@ -3591,21 +3589,12 @@ function sendContactForm() {
     document.getElementById('contactDone').style.display = 'block';
   }
 
-  if (typeof emailjs !== 'undefined') {
+  try {
     emailjs.send(serviceId, templateId, params)
       .then(showDone)
-      .catch(() => {
-        // EmailJS 실패 시 mailto 폴백
-        const subject = encodeURIComponent('[FACT CHART] 문의/제휴');
-        const body = encodeURIComponent((email ? '답장 이메일: ' + email + '\n\n' : '') + msg);
-        window.open('mailto:kim.tj129@gmail.com?subject=' + subject + '&body=' + body, '_blank');
-        showDone();
-      });
-  } else {
-    // EmailJS 미설정 시 mailto 폴백
-    const subject = encodeURIComponent('[FACT CHART] 문의/제휴');
-    const body = encodeURIComponent((email ? '답장 이메일: ' + email + '\n\n' : '') + msg);
-    window.open('mailto:kim.tj129@gmail.com?subject=' + subject + '&body=' + body, '_blank');
+      .catch(err => { console.error('EmailJS 오류:', err); showDone(); });
+  } catch(e) {
+    console.error('EmailJS 초기화 실패:', e);
     showDone();
   }
 }
