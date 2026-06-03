@@ -72,7 +72,7 @@ const CandlestickPlugin = {
     if (!ohlc || !ohlc.length) return;
     ctx.save();
     const visibleCount = ohlc.length;
-    const barW = Math.max(2, Math.min(14, (right - left) / visibleCount * 0.6));
+    const barW = Math.max(1, Math.min(20, (right - left) / visibleCount * 0.65));
     ohlc.forEach((d, i) => {
       if (!d) return;
       const xPx = x.getPixelForValue(i);
@@ -2078,13 +2078,10 @@ tr.disc-highlight {
 
         <div class="chart-legend">
           <div class="legend-item">
-            <div class="legend-line" style="background:#00e5a0"></div>종가
-          </div>
-          <div class="legend-item">
-            <div class="legend-diamond" style="background:#e53e3e"></div>공시 발생일
+            <div style="width:10px;height:10px;border-radius:50%;background:rgba(0,229,160,0.3);border:1.5px solid #00e5a0;flex-shrink:0"></div>공시 발생일
           </div>
           <div class="legend-item" id="legendPattern" style="display:none">
-            <div class="legend-line" style="border-top:2px dashed #f6ad55;background:transparent;"></div>유사 패턴 평균
+            <div class="legend-line" style="background:#f6ad55;height:2.5px;border:none;"></div>유사 패턴 평균
           </div>
         </div>
       </div>
@@ -2461,6 +2458,7 @@ function applyPattern() {
 function renderChart(prices, disclosures, patternData) {
   const container = document.getElementById('chartContainer');
   container.innerHTML = '<canvas id="myChart"></canvas>';
+  if (window._pulseRAF) { cancelAnimationFrame(window._pulseRAF); window._pulseRAF = null; }
   if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
   if (!prices.length) { container.innerHTML='<div class="error">주가 데이터 없음</div>'; return; }
 
@@ -2492,11 +2490,16 @@ function renderChart(prices, disclosures, patternData) {
       label:'공시',
       data:prices.map(p=>discMap[p.date]?p.price:null),
       borderColor:'transparent',
-      backgroundColor:'#e53e3e',
-      pointRadius:prices.map(p=>discMap[p.date]?7:0),
-      pointStyle:'rectRot',
-      pointHoverRadius:9,
-      pointHoverBackgroundColor:'#e53e3e',
+      backgroundColor:'rgba(0,229,160,0.3)',
+      borderColor2:'#00e5a0',
+      pointRadius:prices.map(p=>discMap[p.date]?8:0),
+      pointStyle: 'circle',
+      pointBackgroundColor: 'rgba(0,229,160,0.25)',
+      pointBorderColor: '#00e5a0',
+      pointBorderWidth: 1.5,
+      pointHoverRadius:11,
+      pointHoverBackgroundColor:'rgba(0,229,160,0.4)',
+      pointHoverBorderColor:'#00e5a0',
       showLine:false, order:1
     }
   ];
@@ -2506,8 +2509,7 @@ function renderChart(prices, disclosures, patternData) {
       label:'패턴평균',
       data:patternData,
       borderColor:'#f6ad55',
-      borderWidth:1.5,
-      borderDash:[5,4],
+      borderWidth:2.5,
       pointRadius:0,
       pointHoverRadius:4,
       pointHoverBackgroundColor:'#f6ad55',
@@ -2516,8 +2518,45 @@ function renderChart(prices, disclosures, patternData) {
     });
   }
 
+  // 공시 마커 pulse 애니메이션
+  let pulsePhase = 0;
+  let pulseRAF = null;
+  function animatePulse() {
+    pulsePhase = (pulsePhase + 0.05) % (Math.PI * 2);
+    if (chartInstance) chartInstance.draw();
+    pulseRAF = window._pulseRAF = requestAnimationFrame(animatePulse);
+  }
+  if (window._pulseRAF) cancelAnimationFrame(window._pulseRAF);
+  window._pulseRAF = requestAnimationFrame(animatePulse);
+  pulseRAF = window._pulseRAF;
+
   const discLinePlugin = {
     id: 'discLine',
+    afterDatasetsDraw(chart) {
+      // 공시 pulse 그리기
+      const { ctx, scales } = chart;
+      const ds1 = chart.data.datasets[1];
+      if (!ds1) return;
+      chart.data.labels.forEach((label, i) => {
+        if (!discMap[label]) return;
+        const x = scales.x.getPixelForValue(i);
+        const y = scales.y.getPixelForValue(ds1.data[i]);
+        if (!y || isNaN(y)) return;
+        const pulse = 0.5 + 0.5 * Math.sin(pulsePhase); // 0~1
+        const radius = 6 + pulse * 5; // 6~11
+        const alpha = 0.15 + pulse * 0.25; // 0.15~0.4
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0,229,160,${alpha})`;
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0,229,160,0.7)';
+        ctx.fill();
+        ctx.restore();
+      });
+    },
     afterDraw(chart) {
       const { ctx, chartArea, scales } = chart;
       const hoveredIdx = chart._hoveredIndex;
