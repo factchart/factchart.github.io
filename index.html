@@ -63,17 +63,16 @@
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script>
-// 캔들스틱 커스텀 플러그인
+// 캔들스틱 커스텀 플러그인 (afterDraw 방식 — type:'line' 유지)
 const CandlestickPlugin = {
   id: 'candlestick',
-  beforeDatasetsDraw(chart, args, opts) {
-    const {ctx, chartArea:{left,right,top,bottom}, scales:{x,y}} = chart;
-    const ds = chart.data.datasets[0];
-    if (!ds || ds.type !== 'candlestick_custom') return;
-    const ohlc = ds.ohlcData;
+  afterDraw(chart) {
+    const {ctx, chartArea:{left,right}, scales:{x,y}} = chart;
+    const ohlc = chart._candleData;
     if (!ohlc || !ohlc.length) return;
     ctx.save();
-    const barW = Math.max(2, Math.min(12, (right - left) / ohlc.length * 0.7));
+    const visibleCount = ohlc.length;
+    const barW = Math.max(2, Math.min(14, (right - left) / visibleCount * 0.6));
     ohlc.forEach((d, i) => {
       if (!d) return;
       const xPx = x.getPixelForValue(i);
@@ -83,23 +82,18 @@ const CandlestickPlugin = {
       const cY = y.getPixelForValue(d.c);
       const up = d.c >= d.o;
       const color = up ? '#e53e3e' : '#3182ce';
-      // 심지 (high-low)
+      // 심지
       ctx.beginPath();
       ctx.strokeStyle = color;
       ctx.lineWidth = 1;
       ctx.moveTo(xPx, hY);
       ctx.lineTo(xPx, lY);
       ctx.stroke();
-      // 몸통 (open-close)
+      // 몸통
       const bodyTop = Math.min(oY, cY);
       const bodyH = Math.max(1, Math.abs(cY - oY));
-      ctx.fillStyle = up ? color : color;
+      ctx.fillStyle = color;
       ctx.fillRect(xPx - barW/2, bodyTop, barW, bodyH);
-      if (!up) {
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 0.5;
-        ctx.strokeRect(xPx - barW/2, bodyTop, barW, bodyH);
-      }
     });
     ctx.restore();
   }
@@ -2563,8 +2557,6 @@ function renderChart(prices, disclosures, patternData) {
   const ohlcArr = prices.map(p => p.open ? {o:p.open, h:p.high, l:p.low, c:p.close} : null);
   const useCandle = ohlcArr.some(d => d !== null);
   if (useCandle && datasets[0]) {
-    datasets[0].type = 'candlestick_custom';
-    datasets[0].ohlcData = ohlcArr;
     datasets[0].data = prices.map(p => p.close);
     datasets[0].borderColor = 'transparent';
     datasets[0].backgroundColor = 'transparent';
@@ -2602,6 +2594,7 @@ function renderChart(prices, disclosures, patternData) {
     },
     plugins:[discLinePlugin]
   });
+  if (useCandle) chartInstance._candleData = ohlcArr;
 
   canvas.addEventListener('mousemove', e => {
     const pts = chartInstance.getElementsAtEventForMode(e, 'index', {intersect:false}, true);
