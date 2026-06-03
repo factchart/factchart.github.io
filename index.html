@@ -2630,9 +2630,9 @@ function renderChart(prices, disclosures, patternData) {
       ctx.beginPath();
       ctx.moveTo(x, chartArea.top);
       ctx.lineTo(x, chartArea.bottom);
-      ctx.strokeStyle = 'rgba(200,215,235,0.3)';
-      ctx.lineWidth = 0.5;
-      ctx.setLineDash([2,5]);
+      ctx.strokeStyle = 'rgba(200,215,235,0.1)';
+      ctx.lineWidth = 0.3;
+      ctx.setLineDash([1,6]);
       ctx.stroke();
       ctx.setLineDash([]);
       ctx.restore();
@@ -2640,7 +2640,9 @@ function renderChart(prices, disclosures, patternData) {
   };
 
   const canvas = document.getElementById('myChart');
-  canvas.style.cursor = 'crosshair';
+  // 작은 커스텀 crosshair 커서 (10px)
+  const cursorSvg = encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><line x1="8" y1="2" x2="8" y2="14" stroke="rgba(200,215,235,0.5)" stroke-width="0.8"/><line x1="2" y1="8" x2="14" y2="8" stroke="rgba(200,215,235,0.5)" stroke-width="0.8"/></svg>');
+  canvas.style.cursor = 'url("data:image/svg+xml,' + cursorSvg + '") 8 8, crosshair';
 
   const total = prices.length;
   _zoomTotal = total;
