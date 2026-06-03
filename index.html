@@ -3579,9 +3579,8 @@ function sendContactForm() {
   const templateId = 'template_pboqi36';
   const params = {
     name: email || '(이메일 미입력)',
-    from_email: email || '(이메일 미입력)',
     message: msg,
-    email: email || ''
+    time: new Date().toLocaleString('ko-KR')
   };
 
   function showDone() {
