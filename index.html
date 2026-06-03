@@ -3548,7 +3548,7 @@ function closeModal(name) {
 // EmailJS 초기화 (공개 키)
 (function() {
   if (typeof emailjs !== 'undefined') {
-    emailjs.init({ publicKey: 'YOUR_EMAILJS_PUBLIC_KEY' });
+    emailjs.init({ publicKey: 'ab10m2BKGfZFSyt3b' });
   }
 })();
 
@@ -3577,12 +3577,13 @@ function sendContactForm() {
   btnEl.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 전송 중...';
 
   // EmailJS로 전송 시도
-  const serviceId = 'service_factchart';
-  const templateId = 'template_contact';
+  const serviceId = 'service_wgtx0lg';
+  const templateId = 'template_etsd1uv';
   const params = {
+    name: email || '(이메일 미입력)',
     from_email: email || '(이메일 미입력)',
     message: msg,
-    to_email: 'kim.tj129@gmail.com'
+    email: email || ''
   };
 
   function showDone() {
@@ -3590,7 +3591,7 @@ function sendContactForm() {
     document.getElementById('contactDone').style.display = 'block';
   }
 
-  if (typeof emailjs !== 'undefined' && emailjs._options && emailjs._options.publicKey !== 'YOUR_EMAILJS_PUBLIC_KEY') {
+  if (typeof emailjs !== 'undefined') {
     emailjs.send(serviceId, templateId, params)
       .then(showDone)
       .catch(() => {
