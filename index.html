@@ -75,27 +75,37 @@ const CandlestickPlugin = {
     const zoomMin = chart.options.scales.x.min ?? 0;
     const zoomMax = chart.options.scales.x.max ?? ohlc.length - 1;
     const visibleCount = Math.max(1, zoomMax - zoomMin + 1);
-    const barW = Math.max(1, Math.min(24, (right - left) / visibleCount * 0.8));
+    // 픽셀 간격 계산으로 꽉 차게
+    const pixelPerBar = (right - left) / visibleCount;
+    const barW = Math.max(1, pixelPerBar * 0.85);
+    const wickW = Math.max(1, Math.min(2, barW * 0.15));
+
     ohlc.forEach((d, i) => {
       if (!d) return;
+      // 화면 밖 스킵
+      if (i < zoomMin || i > zoomMax) return;
       const xPx = x.getPixelForValue(i);
       const oY = y.getPixelForValue(d.o);
       const hY = y.getPixelForValue(d.h);
       const lY = y.getPixelForValue(d.l);
       const cY = y.getPixelForValue(d.c);
       const up = d.c >= d.o;
-      const color = up ? '#e53e3e' : '#3182ce';
+      // 상승: 빨강, 하락: 파랑 (반투명)
+      const solidColor = up ? 'rgba(229,62,62,0.75)' : 'rgba(49,130,206,0.75)';
+      const wickColor  = up ? 'rgba(229,62,62,0.6)'  : 'rgba(49,130,206,0.6)';
+
       // 심지
       ctx.beginPath();
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = wickColor;
+      ctx.lineWidth = wickW;
       ctx.moveTo(xPx, hY);
       ctx.lineTo(xPx, lY);
       ctx.stroke();
+
       // 몸통
       const bodyTop = Math.min(oY, cY);
       const bodyH = Math.max(1, Math.abs(cY - oY));
-      ctx.fillStyle = color;
+      ctx.fillStyle = solidColor;
       ctx.fillRect(xPx - barW/2, bodyTop, barW, bodyH);
     });
     ctx.restore();
@@ -2620,9 +2630,9 @@ function renderChart(prices, disclosures, patternData) {
       ctx.beginPath();
       ctx.moveTo(x, chartArea.top);
       ctx.lineTo(x, chartArea.bottom);
-      ctx.strokeStyle = 'rgba(200,210,230,0.45)';
-      ctx.lineWidth = 0.6;
-      ctx.setLineDash([3,3]);
+      ctx.strokeStyle = 'rgba(180,200,220,0.2)';
+      ctx.lineWidth = 0.5;
+      ctx.setLineDash([2,4]);
       ctx.stroke();
       ctx.setLineDash([]);
       ctx.restore();
@@ -2630,7 +2640,7 @@ function renderChart(prices, disclosures, patternData) {
   };
 
   const canvas = document.getElementById('myChart');
-  canvas.style.cursor = 'crosshair';
+  canvas.style.cursor = 'default';
 
   const total = prices.length;
   _zoomTotal = total;
