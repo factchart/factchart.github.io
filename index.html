@@ -71,7 +71,9 @@ const CandlestickPlugin = {
     const ohlc = chart._candleData;
     if (!ohlc || !ohlc.length) return;
     ctx.save();
-    const visibleCount = ohlc.length;
+    const zoomMin = chart.options.scales.x.min ?? 0;
+    const zoomMax = chart.options.scales.x.max ?? ohlc.length - 1;
+    const visibleCount = Math.max(1, zoomMax - zoomMin + 1);
     const barW = Math.max(1, Math.min(20, (right - left) / visibleCount * 0.65));
     ohlc.forEach((d, i) => {
       if (!d) return;
@@ -2055,7 +2057,7 @@ tr.disc-highlight {
               <input type="checkbox" id="patternToggle" onchange="togglePattern()" checked>
               <span class="toggle-slider"></span>
             </label>
-            <span class="toggle-label active" id="toggleLabel">패턴 복기 ON</span><span class="toggle-desc" id="toggleDesc">같은 공시가 발생했을 때 주가가 어떻게 움직였는지 평균 패턴을 차트에 표시합니다</span>
+            <span class="toggle-label active" id="toggleLabel">패턴 복기 ON</span><span class="toggle-desc" id="toggleDesc">동일 공시 발생 시 과거 주가 패턴을 차트에 겹쳐 보여줍니다</span>
           </div>
           <span class="pattern-info" id="patternInfo"></span>
         </div>
@@ -2492,12 +2494,12 @@ function renderChart(prices, disclosures, patternData) {
       borderColor:'transparent',
       backgroundColor:'rgba(0,229,160,0.3)',
       borderColor2:'#00e5a0',
-      pointRadius:prices.map(p=>discMap[p.date]?8:0),
+      pointRadius:prices.map(p=>discMap[p.date]?4:0),
       pointStyle: 'circle',
       pointBackgroundColor: 'rgba(0,229,160,0.25)',
       pointBorderColor: '#00e5a0',
       pointBorderWidth: 1.5,
-      pointHoverRadius:11,
+      pointHoverRadius:7,
       pointHoverBackgroundColor:'rgba(0,229,160,0.4)',
       pointHoverBorderColor:'#00e5a0',
       showLine:false, order:1
@@ -2542,17 +2544,17 @@ function renderChart(prices, disclosures, patternData) {
         const x = scales.x.getPixelForValue(i);
         const y = scales.y.getPixelForValue(ds1.data[i]);
         if (!y || isNaN(y)) return;
-        const pulse = 0.5 + 0.5 * Math.sin(pulsePhase); // 0~1
-        const radius = 6 + pulse * 5; // 6~11
-        const alpha = 0.15 + pulse * 0.25; // 0.15~0.4
+        const pulse = 0.5 + 0.5 * Math.sin(pulsePhase);
+        const radius = 4 + pulse * 3; // 4~7 (작게)
+        const alpha = 0.08 + pulse * 0.12; // 0.08~0.20 (어둡게)
         ctx.save();
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(0,229,160,${alpha})`;
         ctx.fill();
         ctx.beginPath();
-        ctx.arc(x, y, 5, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0,229,160,0.7)';
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0,229,160,0.45)';
         ctx.fill();
         ctx.restore();
       });
