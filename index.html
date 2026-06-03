@@ -2630,19 +2630,17 @@ function renderChart(prices, disclosures, patternData) {
       ctx.beginPath();
       ctx.moveTo(x, chartArea.top);
       ctx.lineTo(x, chartArea.bottom);
-      ctx.strokeStyle = 'rgba(200,215,235,0.1)';
-      ctx.lineWidth = 0.3;
-      ctx.setLineDash([1,6]);
-      ctx.stroke();
+      // 작은 십자선 — 마우스 위치 기준 ±12px만
+      ctx.strokeStyle = 'rgba(210,220,240,0.35)';
+      ctx.lineWidth = 0.6;
       ctx.setLineDash([]);
+      ctx.stroke();
       ctx.restore();
     }
   };
 
   const canvas = document.getElementById('myChart');
-  // 작은 커스텀 crosshair 커서 (10px)
-  const cursorSvg = encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><line x1="8" y1="2" x2="8" y2="14" stroke="rgba(200,215,235,0.5)" stroke-width="0.8"/><line x1="2" y1="8" x2="14" y2="8" stroke="rgba(200,215,235,0.5)" stroke-width="0.8"/></svg>');
-  canvas.style.cursor = 'url("data:image/svg+xml,' + cursorSvg + '") 8 8, crosshair';
+  canvas.style.cursor = 'crosshair';
 
   const total = prices.length;
   _zoomTotal = total;
@@ -2702,11 +2700,14 @@ function renderChart(prices, disclosures, patternData) {
   if (useCandle) chartInstance._candleData = ohlcArr;
 
   canvas.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    if (chartInstance) chartInstance._mouseY = e.clientY - rect.top;
     const pts = chartInstance.getElementsAtEventForMode(e, 'index', {intersect:false}, true);
     chartInstance._hoveredIndex = pts.length ? pts[0].index : null;
     chartInstance.draw();
   });
   canvas.addEventListener('mouseleave', () => {
+    if (chartInstance) chartInstance._mouseY = null;
     chartInstance._hoveredIndex = null;
     chartInstance.draw();
   });
