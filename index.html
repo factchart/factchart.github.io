@@ -3548,7 +3548,7 @@ function initTicker() {
     const prev = prices[prices.length-2];
     const price = last[1];
     const chg = ((price - prev[1]) / prev[1] * 100);
-    const priceStr = Number(price).toLocaleString('ko-KR');
+    const priceStr = Number(typeof price === 'object' ? price[price.length-1] : price).toLocaleString('ko-KR');
     const chgStr = (chg>=0?'▲ +':'▼ ') + Math.abs(chg).toFixed(2)+'%';
     const cls = Math.abs(chg)<0.01?'flat':chg>0?'up':'down';
     ['', 'b'].forEach(suffix => {
@@ -3638,6 +3638,64 @@ document.addEventListener('keydown', e => {
     ['terms','privacy','disclaimer','contact'].forEach(closeModal);
   }
 });
+
+// ════════════════════════════════════════
+// 실시간 시세 (한국투자증권 API → realtime.json)
+// ════════════════════════════════════════
+let realtimeData = null;
+
+async function fetchRealtime() {
+  try {
+    const res = await fetch('/realtime.json?t=' + Date.now());
+    if (!res.ok) return;
+    realtimeData = await res.json();
+    applyRealtimePrice();
+  } catch(e) {}
+}
+
+function applyRealtimePrice() {
+  if (!realtimeData || !currentStock) return;
+  const p = realtimeData.prices[currentStock];
+  if (!p) return;
+  const priceEl  = document.getElementById('currentPrice');
+  const changeEl = document.getElementById('currentChange');
+  if (priceEl) priceEl.textContent = p.price.toLocaleString('ko-KR') + '원';
+  if (changeEl) {
+    const sign = p.change >= 0 ? '▲' : '▼';
+    changeEl.textContent = sign + ' ' + Math.abs(p.change).toFixed(2) + '%';
+    changeEl.className = 'price-change ' + (p.change >= 0 ? 'up' : 'down');
+  }
+  updateTickerRealtime();
+}
+
+function updateTickerRealtime() {
+  if (!realtimeData) return;
+  Object.entries(realtimeData.prices).forEach(function([name, p]) {
+    const priceEl  = document.querySelector('[data-tkp="' + name + '"]');
+    const changeEl = document.querySelector('[data-tkc="' + name + '"]');
+    if (priceEl) priceEl.textContent = p.price.toLocaleString('ko-KR');
+    if (changeEl) {
+      const sign = p.change >= 0 ? '▲' : '▼';
+      changeEl.textContent = sign + ' ' + Math.abs(p.change).toFixed(2) + '%';
+      changeEl.className = p.change >= 0 ? 'ticker-chg up' : 'ticker-chg down';
+    }
+  });
+}
+
+function startRealtimePolling() {
+  fetchRealtime();
+  setInterval(function() {
+    const now = new Date();
+    const kst = new Date(now.toLocaleString('en-US', {timeZone:'Asia/Seoul'}));
+    const day = kst.getDay();
+    const t = kst.getHours() * 60 + kst.getMinutes();
+    if (day >= 1 && day <= 5 && t >= 9*60 && t < 15*60+36) {
+      fetchRealtime();
+    }
+  }, 30000);
+}
+
+document.addEventListener('DOMContentLoaded', startRealtimePolling);
 
 </script>
 <!-- 푸터 -->
