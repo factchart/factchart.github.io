@@ -3495,7 +3495,28 @@ function initMarketStatus() {
   positionMarketBadge();
   window.addEventListener('resize', positionMarketBadge);
 
-  // 한국 시간 기준 장 운영: 평일 09:00~15:30
+  // 한국 공휴일 + 임시 휴장일 (YYYYMMDD)
+  const KR_HOLIDAYS = new Set([
+    // 2025
+    '20250101','20250127','20250128','20250129','20250130','20250131',
+    '20250301','20250505','20250506','20250506','20250602','20250606',
+    '20250815','20251003','20251009','20251225',
+    // 2026
+    '20260101','20260216','20260217','20260218','20260219','20260220',
+    '20260301','20260505','20260606','20260603', // 20260603 = 오늘 선거일
+    '20260815','20260924','20260925','20260926','20261003','20261009','20261225',
+    // 임시휴장
+    '20261231', // 연말 임시휴장
+  ]);
+
+  function isHoliday(kst) {
+    const y = kst.getFullYear();
+    const m = String(kst.getMonth()+1).padStart(2,'0');
+    const d = String(kst.getDate()).padStart(2,'0');
+    return KR_HOLIDAYS.has('' + y + m + d);
+  }
+
+  // 한국 시간 기준 장 운영: 평일 09:00~15:30 (공휴일 제외)
   function checkMarket() {
     const now = new Date();
     const kst = new Date(now.toLocaleString('en-US', {timeZone:'Asia/Seoul'}));
@@ -3503,7 +3524,7 @@ function initMarketStatus() {
     const h = kst.getHours(), m = kst.getMinutes();
     const timeVal = h * 60 + m;
     const isWeekday = day >= 1 && day <= 5;
-    const isOpen = isWeekday && timeVal >= 9*60 && timeVal < 15*60+30;
+    const isOpen = isWeekday && !isHoliday(kst) && timeVal >= 9*60 && timeVal < 15*60+30;
     const dot = document.getElementById('marketDot');
     const label = document.getElementById('marketLabel');
     const wrap = document.getElementById('marketStatus');
