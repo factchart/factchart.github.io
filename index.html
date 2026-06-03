@@ -2264,8 +2264,8 @@ async function supabaseFetch(table, params) {
 // 종목 주가 + 공시 로드 (Supabase)
 async function loadStockFromSupabase(stockName) {
   const [prices, discs] = await Promise.all([
-    supabaseFetch('prices', 'stock_name=eq.' + encodeURIComponent(stockName) + '&order=date.asc&select=date,open,high,low,close'),
-    supabaseFetch('disclosures', 'stock_name=eq.' + encodeURIComponent(stockName) + '&order=date.asc&select=date,type,title,change,rcp_no')
+    supabaseFetch('prices', 'stock_name=eq.' + encodeURIComponent(stockName) + '&order=date.asc&select=date,open,high,low,close&limit=5000'),
+    supabaseFetch('disclosures', 'stock_name=eq.' + encodeURIComponent(stockName) + '&order=date.asc&select=date,type,title,change,rcp_no&limit=5000')
   ]);
   return {
     prices: prices.map(p => p.open
@@ -2273,12 +2273,12 @@ async function loadStockFromSupabase(stockName) {
       : [p.date, p.close]
     ),
     disclosures: discs.map(d => ({
-      date: d.date,
+      date: d.date ? d.date.slice(0,10) : '',
       name: stockName,
-      type: d.type,
-      title: d.title,
-      change: String(d.change),
-      rcpNo: d.rcp_no
+      type: d.type || '기타',
+      title: d.title || '',
+      change: d.change != null ? String(d.change) : '0',
+      rcpNo: d.rcp_no || ''
     }))
   };
 }
@@ -2870,6 +2870,7 @@ async function fetchNewsBriefing(stockName) {
 
   const body = document.getElementById('newsBriefingBody');
   const sub = document.getElementById('newsPanelSub');
+  if (!body || !sub) return;
   sub.textContent = stockName + ' — AI 뉴스 분석 중...';
   body.innerHTML = '<div class="news-loading"><div class="news-spinner"></div>관련 뉴스를 수집하고 있습니다...</div>';
 
@@ -3063,6 +3064,7 @@ async function fetchNewsBriefing(stockName) {
 
   const body = document.getElementById('newsBriefingBody');
   const sub = document.getElementById('newsPanelSub');
+  if (!body || !sub) return;
   sub.textContent = stockName + ' — AI 뉴스 분석 중...';
   body.innerHTML = '<div class="news-loading"><div class="news-spinner"></div>관련 뉴스를 수집하고 있습니다...</div>';
 
