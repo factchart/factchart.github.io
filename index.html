@@ -563,9 +563,10 @@ body {
   position: sticky;
   top: 72px;
 }
-/* 데스크탑: 멘토 카드를 왼쪽 종목 선택 줄 높이만큼 내려 차트 패널 시작선에 정렬 */
+/* 데스크탑: 오른쪽 컬럼 전체를 종목 선택 줄 높이만큼 내려 차트 패널 시작선에 정렬.
+   margin(높이에 미포함)을 컬럼에 사용 → sticky 스크롤을 막지 않고, 카드를 닫아도 위치 유지 */
 @media (min-width: 1025px) {
-  .right-col > #mentorCard { margin-top: 70px; }
+  .right-col { margin-top: 70px; }
 }
 
 /* ── 차트 패널 ── */
@@ -754,7 +755,7 @@ body {
   padding: 16px 18px;
   background: linear-gradient(135deg, rgba(246,173,85,0.07), rgba(246,173,85,0.02));
   border: 1px solid var(--border2);
-  border-top: 3px solid var(--gold);
+  border-top: 2px solid var(--gold);
   border-radius: 12px;
   animation: mentorIn 0.4s ease;
 }
