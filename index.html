@@ -743,6 +743,39 @@ body {
   margin-left: auto;
 }
 
+/* ── 멘토 해석 카드 ── */
+.mentor-card {
+  margin: 0 0 14px 0;
+  padding: 16px 18px;
+  background: linear-gradient(135deg, rgba(246,173,85,0.07), rgba(246,173,85,0.02));
+  border: 1px solid var(--border2);
+  border-left: 3px solid var(--gold);
+  border-radius: 12px;
+  animation: mentorIn 0.4s ease;
+}
+@keyframes mentorIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.mentor-head {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 13px; font-weight: 700; color: var(--gold);
+  margin-bottom: 9px; letter-spacing: -0.01em;
+}
+.mentor-body { font-size: 14px; line-height: 1.65; color: var(--text2); }
+.mentor-body b { color: var(--text); font-weight: 700; }
+.mentor-body .up { color: var(--up); font-weight: 700; }
+.mentor-body .down { color: var(--down); font-weight: 700; }
+.mentor-note {
+  margin-top: 10px; padding-top: 9px;
+  border-top: 1px dashed var(--border2);
+  font-size: 11.5px; color: var(--text3); line-height: 1.5;
+}
+@media (max-width: 480px) {
+  .mentor-card { padding: 13px 14px; }
+  .mentor-body { font-size: 13px; }
+}
+
 /* ── 공시 유형 선택 ── */
 .type-select-wrap {
   display: none;
@@ -2134,6 +2167,8 @@ tr.disc-highlight {
           <div class="stat-pill"><span class="stat-pill-label">최대 하락</span><span class="stat-pill-val down" id="statMin">—</span></div>
         </div>
 
+        <div class="mentor-card" id="mentorCard" style="display:none"></div>
+
         <div class="chart-body">
           <div id="chartContainer"><div class="loading">종목을 선택하세요</div></div>
         </div>
@@ -2504,6 +2539,7 @@ function togglePattern() {
     document.getElementById('patternStats').classList.remove('visible');
     document.getElementById('legendPattern').style.display = 'none';
     selectedType = null;
+    document.getElementById('mentorCard').style.display = 'none';
     const prices = (allData.prices[currentStock]||[]).map(p=>p.length===5?{date:p[0],open:p[1],high:p[2],low:p[3],close:p[4],price:p[4]}:{date:p[0],price:p[1],close:p[1]});
     const disclosures = allData.disclosures.filter(d=>d.name===currentStock);
     renderChart(prices, disclosures, null);
@@ -2523,6 +2559,10 @@ function applyPattern() {
   const prices = (allData.prices[currentStock]||[]).map(p=>p.length===5?{date:p[0],open:p[1],high:p[2],low:p[3],close:p[4],price:p[4]}:{date:p[0],price:p[1],close:p[1]});
   const disclosures = allData.disclosures.filter(d=>d.name===currentStock);
   const typeDiscs = disclosures.filter(d=>d.type===selectedType);
+
+  // 멘토 해석 카드 갱신 (선택된 공시 유형 기준)
+  renderMentorCard(prices, disclosures, selectedType);
+
   const changes = typeDiscs.map(d=>{
     const raw = String(d.change).replace('%','').trim();
     const v = parseFloat(raw);
@@ -3239,6 +3279,106 @@ function externalTooltip(context, discMap, patternData, prices) {
   } else { ttPattern.style.display='none'; }
 
   tooltip.style.display='block';
+}
+
+// ════════════════════════════════════════
+// 멘토 해석 레이어 — "잠깐, 이건 알고 가세요"
+// 공시 발생 후 N거래일 주가 변동을 계산해 친근한 문장으로 번역
+// ════════════════════════════════════════
+function computeMentorInsight(prices, disclosures, focusType) {
+  if (!prices || prices.length < 6 || !disclosures || disclosures.length === 0) return null;
+
+  // 날짜 → prices 인덱스 맵 (거래일 기준 N일 후 탐색용)
+  const idxByDate = {};
+  prices.forEach(function(p, i) { idxByDate[p.date] = i; });
+
+  // 공시일의 거래일 인덱스 찾기 (정확히 없으면 그 이후 첫 거래일)
+  function tradingIndexOnOrAfter(date) {
+    if (idxByDate[date] != null) return idxByDate[date];
+    for (let i = 0; i < prices.length; i++) {
+      if (prices[i].date >= date) return i;
+    }
+    return -1;
+  }
+
+  // focusType 공시들만 분석 (없으면 전체)
+  const targets = disclosures.filter(function(d) {
+    return !focusType || d.type === focusType;
+  });
+  if (targets.length === 0) return null;
+
+  const horizons = [5, 20]; // 단기 5거래일, 중기 20거래일
+  const results = {};
+  horizons.forEach(function(h) { results[h] = []; });
+
+  targets.forEach(function(d) {
+    const base = tradingIndexOnOrAfter(d.date);
+    if (base < 0) return;
+    const baseClose = prices[base].close;
+    if (!baseClose) return;
+    horizons.forEach(function(h) {
+      const fut = base + h;
+      if (fut < prices.length && prices[fut].close) {
+        const chg = (prices[fut].close - baseClose) / baseClose * 100;
+        results[h].push(chg);
+      }
+    });
+  });
+
+  return { type: focusType || '공시', samples: targets.length, horizons: results };
+}
+
+function renderMentorCard(prices, disclosures, focusType) {
+  const card = document.getElementById('mentorCard');
+  if (!card) return;
+  const insight = computeMentorInsight(prices, disclosures, focusType);
+  if (!insight) { card.style.display = 'none'; return; }
+
+  const typeLabel = insight.type;
+  const stock = currentStock;
+
+  // 5거래일 표본 기준으로 신뢰도 판단
+  const arr5 = insight.horizons[5] || [];
+  const arr20 = insight.horizons[20] || [];
+  const n = arr5.length;
+
+  function stat(arr) {
+    if (arr.length === 0) return null;
+    const up = arr.filter(function(c){return c > 0;}).length;
+    const avg = arr.reduce(function(a,b){return a+b;},0) / arr.length;
+    return { n: arr.length, up: up, pct: Math.round(up/arr.length*100), avg: avg };
+  }
+  const s5 = stat(arr5), s20 = stat(arr20);
+
+  let bodyHtml = '';
+
+  if (n < 3) {
+    // 안전장치: 표본 부족 → 확률 단언 금지
+    bodyHtml = '<b>"' + stock + '"</b>의 <b>' + typeLabel + '</b> 공시는 최근 사례가 '
+      + insight.samples + '건뿐이라, 아직 패턴을 말하기엔 일러요. '
+      + '숫자보다 회사가 왜 이 공시를 냈는지부터 살펴보는 게 좋아요.';
+  } else {
+    const dir5 = s5.avg >= 0 ? '<span class="up">+' + s5.avg.toFixed(1) + '%</span>'
+                             : '<span class="down">' + s5.avg.toFixed(1) + '%</span>';
+    bodyHtml = '<b>"' + stock + '"</b>는 최근 <b>' + typeLabel + '</b> 공시가 <b>' + n + '번</b> 있었어요. '
+      + '공시 직후 <b>5거래일</b> 동안 평균 ' + dir5 + ' 움직였고, '
+      + n + '번 중 ' + s5.up + '번 올랐습니다 <b>(' + s5.pct + '%)</b>.';
+    if (s20 && s20.n >= 3) {
+      const dir20 = s20.avg >= 0 ? '<span class="up">+' + s20.avg.toFixed(1) + '%</span>'
+                                 : '<span class="down">' + s20.avg.toFixed(1) + '%</span>';
+      bodyHtml += ' <b>20거래일</b> 뒤엔 평균 ' + dir20 + '이었어요.';
+    }
+    // 멘토의 한마디: 당일 추격의 함정 일깨우기 (사실 기반, 조언 아님)
+    if (Math.abs(s5.avg) < 1 && s5.pct >= 40 && s5.pct <= 60) {
+      bodyHtml += ' 보시다시피 방향이 거의 반반이라, "공시 떴으니 오르겠지"라고 단정하긴 어려운 종목이에요.';
+    }
+  }
+
+  card.innerHTML =
+    '<div class="mentor-head">💡 잠깐, 이건 알고 가세요</div>'
+    + '<div class="mentor-body">' + bodyHtml + '</div>'
+    + '<div class="mentor-note">※ 과거 데이터일 뿐 미래 수익을 보장하지 않아요. 매수·매도 권유가 아니라, 스스로 점검해보시라는 참고 자료예요.</div>';
+  card.style.display = 'block';
 }
 
 function renderStatsPanel(disclosures) {
