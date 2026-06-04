@@ -563,6 +563,10 @@ body {
   position: sticky;
   top: 72px;
 }
+/* 데스크탑: 멘토 카드를 왼쪽 종목 선택 줄 높이만큼 내려 차트 패널 시작선에 정렬 */
+@media (min-width: 1025px) {
+  .right-col > #mentorCard { margin-top: 70px; }
+}
 
 /* ── 차트 패널 ── */
 .chart-panel {
@@ -745,11 +749,12 @@ body {
 
 /* ── 멘토 해석 카드 ── */
 .mentor-card {
+  position: relative;
   margin: 0 0 14px 0;
   padding: 16px 18px;
   background: linear-gradient(135deg, rgba(246,173,85,0.07), rgba(246,173,85,0.02));
   border: 1px solid var(--border2);
-  border-left: 3px solid var(--gold);
+  border-top: 3px solid var(--gold);
   border-radius: 12px;
   animation: mentorIn 0.4s ease;
 }
@@ -761,7 +766,17 @@ body {
   display: flex; align-items: center; gap: 7px;
   font-size: 13px; font-weight: 700; color: var(--gold);
   margin-bottom: 9px; letter-spacing: -0.01em;
+  padding-right: 22px;
 }
+.mentor-close {
+  position: absolute;
+  top: 12px; right: 14px;
+  background: none; border: none; padding: 0;
+  font-size: 18px; line-height: 1;
+  color: var(--text3); cursor: pointer;
+  transition: color 0.15s;
+}
+.mentor-close:hover { color: var(--text); }
 .mentor-body { font-size: 14px; line-height: 1.65; color: var(--text2); }
 .mentor-body b { color: var(--text); font-weight: 700; }
 .mentor-body .up { color: var(--up); font-weight: 700; }
@@ -3374,7 +3389,8 @@ function renderMentorCard(prices, disclosures, focusType) {
   }
 
   card.innerHTML =
-    '<div class="mentor-head">💡 잠깐, 이건 알고 가세요</div>'
+    '<button class="mentor-close" onclick="document.getElementById(\'mentorCard\').style.display=\'none\'" aria-label="닫기">&times;</button>'
+    + '<div class="mentor-head">💡 잠깐, 이건 알고 가세요</div>'
     + '<div class="mentor-body">' + bodyHtml + '</div>'
     + '<div class="mentor-note">※ 과거 데이터일 뿐 미래 수익을 보장하지 않아요. 매수·매도 권유가 아니라, 스스로 점검해보시라는 참고 자료예요.</div>';
   card.style.display = 'block';
