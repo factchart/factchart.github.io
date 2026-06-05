@@ -502,6 +502,7 @@ body {
 
 .stock-search-opt:last-child { border-bottom: none; }
 .stock-search-opt:hover { background: rgba(0,208,132,0.08); color: var(--accent); }
+.stock-search-opt.active { background: rgba(0,208,132,0.14); color: var(--accent); }
 .stock-search-opt mark {
   background: none;
   color: var(--accent);
@@ -566,7 +567,9 @@ body {
 /* 데스크탑: 오른쪽 컬럼 전체를 종목 선택 줄 높이만큼 내려 차트 패널 시작선에 정렬.
    margin(높이에 미포함)을 컬럼에 사용 → sticky 스크롤을 막지 않고, 카드를 닫아도 위치 유지 */
 @media (min-width: 1025px) {
-  .right-col { margin-top: 70px; }
+@media (min-width: 1025px) {
+  .right-col { margin-top: 70px; transition: margin-top 0.15s ease; }
+  .right-col.stuck { margin-top: 0; }
 }
 
 /* ── 차트 패널 ── */
@@ -2521,13 +2524,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     grid.style.cursor = 'grab';
   }
+
+  // right-col이 sticky로 상단(72px)에 붙으면 초기 정렬 여백(70px) 제거
+  const rc = document.querySelector('.right-col');
+  if (rc && window.innerWidth >= 1025) {
+    const onScroll = () => {
+      const stuck = rc.classList.contains('stuck');
+      const top = rc.getBoundingClientRect().top;
+      // 이력 임계: 붙을 땐 72px 도달, 떨어질 땐 72+70px 넘어설 때 (깜빡임 방지)
+      if (!stuck && top <= 73) rc.classList.add('stuck');
+      else if (stuck && top >= 72 + 70) rc.classList.remove('stuck');
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
 });
 
-let searchTopMatch = null;
+let searchMatches = [];
+let searchIdx = -1;
 function filterStocks(q) {
   const dd = document.getElementById('stockSearchDropdown');
   const val = q.trim();
-  searchTopMatch = null;
+  searchMatches = [];
+  searchIdx = -1;
   if (!val) { dd.classList.remove('open'); return; }
   // 공백으로 나눈 모든 단어가 종목명에 포함되면 매칭 (순서 무관)
   const words = val.toLowerCase().split(/\s+/).filter(Boolean);
@@ -2536,18 +2555,52 @@ function filterStocks(q) {
     return words.every(w => name.includes(w));
   });
   if (!matched.length) { dd.innerHTML = '<div class="stock-search-opt" style="color:var(--text3)">검색 결과 없음</div>'; dd.classList.add('open'); return; }
-  searchTopMatch = matched[0];
+  searchMatches = matched;
   // 입력한 각 단어를 하이라이트
   const re = new RegExp('(' + words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|') + ')', 'gi');
-  dd.innerHTML = matched.map(s =>
-    `<div class="stock-search-opt" onclick="selectFromSearch('${s}')">${s.replace(re,'<mark>$1</mark>')}</div>`
+  dd.innerHTML = matched.map((s, i) =>
+    `<div class="stock-search-opt" data-idx="${i}" onclick="selectFromSearch('${s}')" onmousemove="setSearchIdx(${i})">${s.replace(re,'<mark>$1</mark>')}</div>`
   ).join('');
   dd.classList.add('open');
 }
 
+function setSearchIdx(i) {
+  searchIdx = i;
+  const dd = document.getElementById('stockSearchDropdown');
+  dd.querySelectorAll('.stock-search-opt').forEach((el, idx) => {
+    el.classList.toggle('active', idx === searchIdx);
+  });
+}
+
 function handleSearchKey(e) {
-  if (e.key === 'Enter' && searchTopMatch) {
-    selectFromSearch(searchTopMatch);
+  const dd = document.getElementById('stockSearchDropdown');
+  if (!dd.classList.contains('open') || !searchMatches.length) {
+    if (e.key === 'Enter' && searchMatches[0]) selectFromSearch(searchMatches[0]);
+    return;
+  }
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    searchIdx = (searchIdx + 1) % searchMatches.length;
+    updateSearchHighlight();
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    searchIdx = (searchIdx - 1 + searchMatches.length) % searchMatches.length;
+    updateSearchHighlight();
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    const pick = searchIdx >= 0 ? searchMatches[searchIdx] : searchMatches[0];
+    if (pick) selectFromSearch(pick);
+  } else if (e.key === 'Escape') {
+    dd.classList.remove('open');
+  }
+}
+
+function updateSearchHighlight() {
+  const dd = document.getElementById('stockSearchDropdown');
+  const opts = dd.querySelectorAll('.stock-search-opt');
+  opts.forEach((el, idx) => el.classList.toggle('active', idx === searchIdx));
+  if (searchIdx >= 0 && opts[searchIdx]) {
+    opts[searchIdx].scrollIntoView({ block: 'nearest' });
   }
 }
 
@@ -2643,6 +2696,9 @@ async function selectStock(name) {
 
   // 뉴스 브리핑 비동기 호출
   fetchNewsBriefing(name);
+
+  // 장중이면 이 종목 실시간 현재가 즉시 조회 (on-demand)
+  if (typeof isMarketOpen === 'function' && isMarketOpen()) fetchRealtime();
 }
 
 function togglePattern() {
@@ -3978,58 +4034,66 @@ document.addEventListener('keydown', e => {
 });
 
 // ════════════════════════════════════════
-// 실시간 시세 (한국투자증권 API → realtime.json)
+// 실시간 시세 (한국투자증권 KIS → Apps Script 웹앱 on-demand)
 // ════════════════════════════════════════
-let realtimeData = null;
+// ▼▼ 배포 후 여기에 Apps Script 웹앱 URL을 넣으세요 ▼▼
+const KIS_PROXY_URL = 'https://script.google.com/macros/s/배포후_웹앱_ID/exec';
+// ▲▲ (Apps Script → 배포 → 새 배포 → 웹앱 → URL 복사) ▲▲
 
+let realtimePrice = null;
+
+// 현재 보고 있는 종목 1개만 실시간 조회 (on-demand)
 async function fetchRealtime() {
+  if (!currentStock) return;
+  if (!KIS_PROXY_URL || KIS_PROXY_URL.indexOf('배포후') !== -1) return; // 미설정 시 건너뜀
   try {
-    const res = await fetch('/realtime.json?t=' + Date.now());
+    const url = KIS_PROXY_URL + '?action=price&stock=' + encodeURIComponent(currentStock) + '&t=' + Date.now();
+    const res = await fetch(url);
     if (!res.ok) return;
-    realtimeData = await res.json();
-    applyRealtimePrice();
+    const data = await res.json();
+    if (data && data.prices && data.prices[currentStock]) {
+      realtimePrice = data.prices[currentStock];
+      applyRealtimePrice();
+    }
   } catch(e) {}
 }
 
 function applyRealtimePrice() {
-  if (!realtimeData || !currentStock) return;
-  const p = realtimeData.prices[currentStock];
-  if (!p) return;
+  if (!realtimePrice || !currentStock) return;
+  const p = realtimePrice;
   const priceEl  = document.getElementById('currentPrice');
   const changeEl = document.getElementById('currentChange');
-  if (priceEl) priceEl.textContent = p.price.toLocaleString('ko-KR') + '원';
+  const latestEl = document.getElementById('latestPrice');
+  if (priceEl)  priceEl.textContent  = p.price.toLocaleString('ko-KR') + '원';
+  if (latestEl) latestEl.textContent = p.price.toLocaleString('ko-KR') + '원';
   if (changeEl) {
     const sign = p.change >= 0 ? '▲' : '▼';
     changeEl.textContent = sign + ' ' + Math.abs(p.change).toFixed(2) + '%';
     changeEl.className = 'price-change ' + (p.change >= 0 ? 'up' : 'down');
   }
-  updateTickerRealtime();
+  // 티커바에서 현재 종목 항목도 갱신
+  const tkp = document.querySelector('[data-tkp="' + currentStock + '"]');
+  const tkc = document.querySelector('[data-tkc="' + currentStock + '"]');
+  if (tkp) tkp.textContent = p.price.toLocaleString('ko-KR');
+  if (tkc) {
+    const sign = p.change >= 0 ? '▲' : '▼';
+    tkc.textContent = sign + ' ' + Math.abs(p.change).toFixed(2) + '%';
+    tkc.className = p.change >= 0 ? 'ticker-chg up' : 'ticker-chg down';
+  }
 }
 
-function updateTickerRealtime() {
-  if (!realtimeData) return;
-  Object.entries(realtimeData.prices).forEach(function([name, p]) {
-    const priceEl  = document.querySelector('[data-tkp="' + name + '"]');
-    const changeEl = document.querySelector('[data-tkc="' + name + '"]');
-    if (priceEl) priceEl.textContent = p.price.toLocaleString('ko-KR');
-    if (changeEl) {
-      const sign = p.change >= 0 ? '▲' : '▼';
-      changeEl.textContent = sign + ' ' + Math.abs(p.change).toFixed(2) + '%';
-      changeEl.className = p.change >= 0 ? 'ticker-chg up' : 'ticker-chg down';
-    }
-  });
+function isMarketOpen() {
+  const now = new Date();
+  const kst = new Date(now.toLocaleString('en-US', {timeZone:'Asia/Seoul'}));
+  const day = kst.getDay();
+  const t = kst.getHours() * 60 + kst.getMinutes();
+  return (day >= 1 && day <= 5 && t >= 9*60 && t < 15*60+36);
 }
 
 function startRealtimePolling() {
   fetchRealtime();
   setInterval(function() {
-    const now = new Date();
-    const kst = new Date(now.toLocaleString('en-US', {timeZone:'Asia/Seoul'}));
-    const day = kst.getDay();
-    const t = kst.getHours() * 60 + kst.getMinutes();
-    if (day >= 1 && day <= 5 && t >= 9*60 && t < 15*60+36) {
-      fetchRealtime();
-    }
+    if (isMarketOpen()) fetchRealtime();
   }, 30000);
 }
 
