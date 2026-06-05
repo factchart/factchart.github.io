@@ -750,13 +750,14 @@ body {
 /* ── 멘토 해석 카드 ── */
 /* ── 전구 토글 + 종목명 행 ── */
 .stock-name-row {
-  display: flex;
+  display: flex !important;
+  flex-direction: row !important;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
 }
 .mentor-bulb {
   position: relative;
-  width: 21px; height: 21px;
+  width: 22px; height: 22px;
   flex-shrink: 0;
   background: none; border: none; padding: 0;
   cursor: pointer;
@@ -794,8 +795,8 @@ body {
 }
 .thermo-head {
   display: flex; align-items: center; gap: 6px;
-  font-size: 13px; font-weight: 600; color: var(--sig);
-  margin-bottom: 14px; transition: color 0.3s;
+  font-size: 13px; font-weight: 600; color: var(--text);
+  margin-bottom: 26px;
 }
 .thermo-main { display: flex; align-items: stretch; gap: 18px; }
 .thermo-gauge { position: relative; width: 28px; flex-shrink: 0; }
@@ -846,15 +847,21 @@ body {
   font-size: 11px; color: var(--text3); line-height: 1.5;
 }
 
+.bulb-wrap { position: relative; flex-shrink: 0; }
 .mentor-card {
-  position: relative;
-  margin: 0 0 14px 0;
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  z-index: 100;
+  width: 340px;
+  max-width: 80vw;
   padding: 16px 18px;
-  background: linear-gradient(135deg, rgba(246,173,85,0.07), rgba(246,173,85,0.02));
+  background: linear-gradient(135deg, rgba(28,34,48,0.98), rgba(19,25,38,0.98));
   border: 1px solid var(--border2);
   border-top: 2px solid var(--gold);
   border-radius: 12px;
-  animation: mentorIn 0.4s ease;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+  animation: mentorIn 0.25s ease;
 }
 @keyframes mentorIn {
   from { opacity: 0; transform: translateY(-6px); }
@@ -2239,13 +2246,16 @@ tr.disc-highlight {
         <div class="chart-panel-header">
           <div class="stock-info-left">
             <div class="stock-name-row">
-              <button id="mentorBulb" class="mentor-bulb" aria-label="멘토 설명 보기" onclick="toggleMentor()">
-                <span class="bulb-halo" id="bulbHalo"></span>
-                <svg id="bulbIcon" class="bulb-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M9 18h6"/><path d="M10 22h4"/>
-                  <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/>
-                </svg>
-              </button>
+              <div class="bulb-wrap">
+                <button id="mentorBulb" class="mentor-bulb" aria-label="멘토 설명 보기" onclick="toggleMentor(event)">
+                  <span class="bulb-halo" id="bulbHalo"></span>
+                  <svg id="bulbIcon" class="bulb-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M9 18h6"/><path d="M10 22h4"/>
+                    <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/>
+                  </svg>
+                </button>
+                <div class="mentor-card" id="mentorCard" style="display:none"></div>
+              </div>
               <div class="chart-stock-name" id="currentStockName">—</div>
             </div>
             <div class="stock-meta" id="stockMeta">
@@ -2346,7 +2356,6 @@ tr.disc-highlight {
 
     <!-- 오른쪽: 통계 패널 -->
     <div class="right-col">
-      <div class="mentor-card" id="mentorCard" style="display:none"></div>
       <div class="thermo-card" id="thermoCard" style="display:none">
         <div class="thermo-head">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
@@ -3688,21 +3697,36 @@ function renderMentorCard(prices, disclosures, focusType) {
   }
 }
 
-function toggleMentor() {
+function toggleMentor(e) {
+  if (e) e.stopPropagation();
   const card = document.getElementById('mentorCard');
   const bulb = document.getElementById('mentorBulb');
   const halo = document.getElementById('bulbHalo');
   if (!card) return;
   const open = card.style.display !== 'none';
   card.style.display = open ? 'none' : 'block';
-  if (!open && bulb && halo) {
-    halo.classList.remove('on');   // 한 번 보면 pulse 끄기
-    bulb.classList.add('seen');    // 전구 회색으로
+  if (!open) {
+    if (halo) halo.classList.remove('on');
+    if (bulb) bulb.classList.add('seen');
+    // 바깥 클릭 시 닫기
+    setTimeout(function(){
+      document.addEventListener('click', closeMentorOutside);
+    }, 0);
+  }
+}
+
+function closeMentorOutside(e) {
+  const card = document.getElementById('mentorCard');
+  const wrap = document.querySelector('.bulb-wrap');
+  if (card && wrap && !wrap.contains(e.target)) {
+    card.style.display = 'none';
+    document.removeEventListener('click', closeMentorOutside);
   }
 }
 
 function closeMentor() {
   document.getElementById('mentorCard').style.display = 'none';
+  document.removeEventListener('click', closeMentorOutside);
 }
 
 // ════════════════════════════════════════
