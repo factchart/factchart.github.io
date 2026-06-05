@@ -2130,7 +2130,7 @@ tr.disc-highlight {
             </div>
           </div>
           <div class="stock-search-wrap">
-            <input type="text" id="stockSearch" class="stock-search" placeholder="종목명 검색" oninput="filterStocks(this.value)" autocomplete="off">
+            <input type="text" id="stockSearch" class="stock-search" placeholder="종목명 검색" oninput="filterStocks(this.value)" onkeydown="handleSearchKey(event)" autocomplete="off">
             <span class="stock-search-icon">⌕</span>
             <div class="stock-search-dropdown" id="stockSearchDropdown"></div>
           </div>
@@ -2276,18 +2276,80 @@ tr.disc-highlight {
 <script>
 
 const STOCK_META = {
-  '삼성전자':       { sector:'반도체·전자',   desc:'글로벌 메모리·파운드리', ticker:'005930' },
-  'SK하이닉스':     { sector:'반도체',        desc:'HBM·DRAM 세계 2위',     ticker:'000660' },
-  '현대차':         { sector:'자동차',        desc:'완성차·EV·수소',         ticker:'005380' },
-  '카카오':         { sector:'IT·플랫폼',     desc:'메신저·콘텐츠·금융',     ticker:'035720' },
-  'NAVER':          { sector:'IT·플랫폼',     desc:'검색·커머스·AI',         ticker:'035420' },
-  'LG에너지솔루션': { sector:'2차전지',       desc:'EV배터리 세계 2위',      ticker:'373220' },
-  '한화에어로스페이스': { sector:'방산·항공', desc:'엔진·우주·K-방산',       ticker:'012450' },
-  'KB금융':         { sector:'금융',          desc:'국내 1위 금융그룹',      ticker:'105560' },
-  'HD현대':         { sector:'조선·에너지',   desc:'세계 1위 조선그룹',      ticker:'267250' },
-  '두산에너빌리티': { sector:'원전·에너지',   desc:'SMR·원전 핵심설비',      ticker:'034020' },
-  '셀트리온':       { sector:'바이오·제약',    desc:'항체 바이오시밀러 1위',   ticker:'068270' },
-  'POSCO홀딩스':    { sector:'철강·소재',      desc:'철강·이차전지소재',        ticker:'005490' },
+  '삼성전자': { sector:'반도체·전자', desc:'글로벌 메모리·파운드리', ticker:'005930' },
+  'SK하이닉스': { sector:'반도체', desc:'HBM·DRAM 메모리', ticker:'000660' },
+  '현대차': { sector:'자동차', desc:'완성차·EV·수소', ticker:'005380' },
+  'LG에너지솔루션': { sector:'2차전지', desc:'EV배터리', ticker:'373220' },
+  '한화에어로스페이스': { sector:'방산·항공', desc:'엔진·우주·방산', ticker:'012450' },
+  'KB금융': { sector:'금융', desc:'국내 대형 금융그룹', ticker:'105560' },
+  'NAVER': { sector:'IT·플랫폼', desc:'검색·커머스·AI', ticker:'035420' },
+  '카카오': { sector:'IT·플랫폼', desc:'메신저·콘텐츠·금융', ticker:'035720' },
+  'HD현대': { sector:'조선·에너지', desc:'조선·정유 지주', ticker:'267250' },
+  '두산에너빌리티': { sector:'원전·에너지', desc:'원전·발전설비', ticker:'034020' },
+  '삼성바이오로직스': { sector:'바이오·제약', desc:'바이오 CDMO', ticker:'207940' },
+  '셀트리온': { sector:'바이오·제약', desc:'항체 바이오시밀러', ticker:'068270' },
+  'POSCO홀딩스': { sector:'철강·소재', desc:'철강·이차전지소재', ticker:'005490' },
+  '기아': { sector:'자동차', desc:'완성차·EV', ticker:'000270' },
+  '삼성SDI': { sector:'2차전지', desc:'배터리·전자재료', ticker:'006400' },
+  '현대모비스': { sector:'자동차부품', desc:'모듈·전동화 부품', ticker:'012330' },
+  'LG화학': { sector:'화학·소재', desc:'석유화학·첨단소재', ticker:'051910' },
+  'SK이노베이션': { sector:'에너지·화학', desc:'정유·배터리', ticker:'096770' },
+  '삼성물산': { sector:'상사·건설', desc:'상사·건설·패션', ticker:'028260' },
+  'SK': { sector:'지주', desc:'SK그룹 지주', ticker:'034730' },
+  '현대글로비스': { sector:'물류', desc:'종합물류·유통', ticker:'086280' },
+  'KT&G': { sector:'필수소비재', desc:'담배·건강기능식품', ticker:'033780' },
+  'SK텔레콤': { sector:'통신', desc:'이동통신·AI', ticker:'017670' },
+  '신한지주': { sector:'금융', desc:'대형 금융지주', ticker:'055550' },
+  '하나금융지주': { sector:'금융', desc:'대형 금융지주', ticker:'086790' },
+  '우리금융지주': { sector:'금융', desc:'금융지주', ticker:'316140' },
+  '메리츠금융지주': { sector:'금융', desc:'보험·증권 지주', ticker:'138040' },
+  'LG전자': { sector:'전자·가전', desc:'가전·전장', ticker:'066570' },
+  '삼성전기': { sector:'전자부품', desc:'MLCC·기판', ticker:'009150' },
+  'SK스퀘어': { sector:'투자지주', desc:'반도체·ICT 투자', ticker:'402340' },
+  'LG': { sector:'지주', desc:'LG그룹 지주', ticker:'003550' },
+  '한국전력': { sector:'전력·유틸리티', desc:'전력 공급', ticker:'015760' },
+  '포스코퓨처엠': { sector:'2차전지소재', desc:'양극재·음극재', ticker:'003670' },
+  '고려아연': { sector:'비철금속', desc:'아연·제련', ticker:'010130' },
+  'HD현대중공업': { sector:'조선', desc:'조선·해양', ticker:'329180' },
+  '한국조선해양': { sector:'조선', desc:'조선 지주', ticker:'009540' },
+  '삼성중공업': { sector:'조선', desc:'조선·해양플랜트', ticker:'010140' },
+  '현대제철': { sector:'철강', desc:'철강 제조', ticker:'004020' },
+  '한화시스템': { sector:'방산·IT', desc:'방산전자·ICT', ticker:'272210' },
+  '카카오뱅크': { sector:'금융·핀테크', desc:'인터넷전문은행', ticker:'323410' },
+  '크래프톤': { sector:'게임', desc:'배틀그라운드', ticker:'259960' },
+  '엔씨소프트': { sector:'게임', desc:'MMORPG', ticker:'036570' },
+  '넷마블': { sector:'게임', desc:'모바일게임', ticker:'251270' },
+  '카카오페이': { sector:'핀테크', desc:'간편결제·금융', ticker:'377300' },
+  'KT': { sector:'통신', desc:'이동통신·미디어', ticker:'030200' },
+  'S-Oil': { sector:'에너지', desc:'정유·석유화학', ticker:'010950' },
+  'HMM': { sector:'해운', desc:'컨테이너 해운', ticker:'011200' },
+  'CJ제일제당': { sector:'식품', desc:'식품·바이오', ticker:'097950' },
+  '아모레퍼시픽': { sector:'화장품', desc:'뷰티·코스메틱', ticker:'090430' },
+  'LG생활건강': { sector:'생활소비재', desc:'화장품·생활용품', ticker:'051900' },
+  '한미반도체': { sector:'반도체장비', desc:'후공정 장비', ticker:'042700' },
+  '하이브': { sector:'엔터테인먼트', desc:'K-POP·레이블', ticker:'352820' },
+  '삼성생명': { sector:'보험', desc:'생명보험', ticker:'032830' },
+  '삼성화재': { sector:'보험', desc:'손해보험', ticker:'000810' },
+  'DB손해보험': { sector:'보험', desc:'손해보험', ticker:'005830' },
+  '기업은행': { sector:'금융', desc:'중소기업 금융', ticker:'024110' },
+  '현대건설': { sector:'건설', desc:'종합건설', ticker:'000720' },
+  'GS건설': { sector:'건설', desc:'종합건설', ticker:'006360' },
+  '코웨이': { sector:'생활가전', desc:'렌탈·환경가전', ticker:'021240' },
+  '이마트': { sector:'유통', desc:'대형마트·리테일', ticker:'139480' },
+  '에코프로비엠': { sector:'2차전지소재', desc:'양극재', ticker:'247540' },
+  '에코프로': { sector:'2차전지소재', desc:'이차전지 소재 지주', ticker:'086520' },
+  '알테오젠': { sector:'바이오', desc:'바이오 플랫폼', ticker:'196170' },
+  '리가켐바이오': { sector:'바이오', desc:'ADC 신약', ticker:'141080' },
+  'HLB': { sector:'바이오', desc:'항암 신약', ticker:'028300' },
+  '펄어비스': { sector:'게임', desc:'검은사막', ticker:'263750' },
+  '카카오게임즈': { sector:'게임', desc:'게임 퍼블리싱', ticker:'293490' },
+  'HPSP': { sector:'반도체장비', desc:'고압 어닐링 장비', ticker:'403870' },
+  '레인보우로보틱스': { sector:'로봇', desc:'협동로봇·휴머노이드', ticker:'277810' },
+  '클래시스': { sector:'미용의료기기', desc:'에스테틱 의료기기', ticker:'214150' },
+  '파마리서치': { sector:'바이오·미용', desc:'리쥬란·필러', ticker:'214450' },
+  '솔브레인': { sector:'반도체소재', desc:'전자재료·식각액', ticker:'357780' },
+  '리노공업': { sector:'반도체부품', desc:'테스트 핀·소켓', ticker:'058470' },
+  '루닛': { sector:'의료AI', desc:'AI 영상진단', ticker:'328130' },
 };
 
 const STOCKS = [
@@ -2428,20 +2490,65 @@ document.addEventListener('DOMContentLoaded', () => {
   if (grid) {
     grid.addEventListener('scroll', updateArrows);
     setTimeout(updateArrows, 300);
+
+    // 클릭 후 좌/우 드래그로 스크롤
+    let isDown = false, startX = 0, startScroll = 0, moved = 0;
+    grid.addEventListener('mousedown', (e) => {
+      isDown = true; moved = 0;
+      startX = e.pageX;
+      startScroll = grid.scrollLeft;
+      grid.style.cursor = 'grabbing';
+      grid.style.scrollBehavior = 'auto';
+    });
+    window.addEventListener('mouseup', () => {
+      if (!isDown) return;
+      isDown = false;
+      grid.style.cursor = '';
+      grid.style.scrollBehavior = 'smooth';
+      // 드래그였으면 직후 클릭(종목 선택) 1회 무시
+      if (moved > 6) {
+        const block = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
+        grid.addEventListener('click', block, { capture: true, once: true });
+        setTimeout(() => grid.removeEventListener('click', block, true), 50);
+      }
+      setTimeout(updateArrows, 150);
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!isDown) return;
+      const dx = e.pageX - startX;
+      moved = Math.max(moved, Math.abs(dx));
+      grid.scrollLeft = startScroll - dx;
+    });
+    grid.style.cursor = 'grab';
   }
 });
 
+let searchTopMatch = null;
 function filterStocks(q) {
   const dd = document.getElementById('stockSearchDropdown');
   const val = q.trim();
+  searchTopMatch = null;
   if (!val) { dd.classList.remove('open'); return; }
-  const matched = STOCKS.filter(s => s.toLowerCase().includes(val.toLowerCase()));
+  // 공백으로 나눈 모든 단어가 종목명에 포함되면 매칭 (순서 무관)
+  const words = val.toLowerCase().split(/\s+/).filter(Boolean);
+  const matched = STOCKS.filter(s => {
+    const name = s.toLowerCase();
+    return words.every(w => name.includes(w));
+  });
   if (!matched.length) { dd.innerHTML = '<div class="stock-search-opt" style="color:var(--text3)">검색 결과 없음</div>'; dd.classList.add('open'); return; }
-  const re = new RegExp('(' + val.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
+  searchTopMatch = matched[0];
+  // 입력한 각 단어를 하이라이트
+  const re = new RegExp('(' + words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|') + ')', 'gi');
   dd.innerHTML = matched.map(s =>
     `<div class="stock-search-opt" onclick="selectFromSearch('${s}')">${s.replace(re,'<mark>$1</mark>')}</div>`
   ).join('');
   dd.classList.add('open');
+}
+
+function handleSearchKey(e) {
+  if (e.key === 'Enter' && searchTopMatch) {
+    selectFromSearch(searchTopMatch);
+  }
 }
 
 function selectFromSearch(name) {
