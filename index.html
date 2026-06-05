@@ -561,11 +561,9 @@ body {
 .left-col { min-width: 0; }
 
 .right-col {
-  position: sticky;
-  top: 72px;
+  position: static;
 }
-/* 데스크탑: 오른쪽 컬럼을 왼쪽 종목 선택 줄 높이만큼 내려 차트 패널(종목명) 시작선에 정렬.
-   margin은 sticky 박스 높이에 포함되지 않아 스크롤을 막지 않음. */
+/* 데스크탑: 오른쪽 컬럼을 왼쪽 종목 선택 줄 높이만큼 내려 차트 패널(종목명) 시작선에 정렬. */
 @media (min-width: 1025px) {
   .right-col { margin-top: 70px; }
 }
@@ -750,6 +748,104 @@ body {
 }
 
 /* ── 멘토 해석 카드 ── */
+/* ── 전구 토글 + 종목명 행 ── */
+.stock-name-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.mentor-bulb {
+  position: relative;
+  width: 21px; height: 21px;
+  flex-shrink: 0;
+  background: none; border: none; padding: 0;
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.bulb-svg {
+  width: 16px; height: 16px;
+  color: var(--gold);
+  position: relative; z-index: 1;
+  transition: color 0.2s;
+}
+.bulb-halo {
+  position: absolute; inset: -3px;
+  border-radius: 50%;
+}
+.bulb-halo.on {
+  background: radial-gradient(circle, rgba(246,173,85,0.25), transparent 70%);
+  animation: bulbLure 2.2s ease-in-out infinite;
+}
+@keyframes bulbLure {
+  0%,100% { box-shadow: 0 0 5px 1px rgba(246,173,85,0.4), 0 0 11px 2px rgba(246,173,85,0.16); }
+  50%     { box-shadow: 0 0 9px 2px rgba(246,173,85,0.8), 0 0 20px 5px rgba(246,173,85,0.32); }
+}
+.mentor-bulb.seen .bulb-svg { color: var(--text3); }
+
+/* ── 온도계 카드 ── */
+.thermo-card {
+  --sig: #1D9E75;
+  margin: 0 0 14px 0;
+  padding: 16px 18px;
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-top: 2px solid var(--sig);
+  border-radius: 12px;
+}
+.thermo-head {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 600; color: var(--sig);
+  margin-bottom: 14px; transition: color 0.3s;
+}
+.thermo-main { display: flex; align-items: stretch; gap: 18px; }
+.thermo-gauge { position: relative; width: 28px; flex-shrink: 0; }
+.thermo-track {
+  position: absolute; inset: 0;
+  background: rgba(255,255,255,0.05);
+  border-radius: 14px; border: 0.5px solid var(--border2);
+}
+.thermo-fill {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  background: var(--sig); border-radius: 14px;
+  transition: height 0.6s, background 0.3s;
+}
+.thermo-ball {
+  position: absolute; left: 50%;
+  transform: translate(-50%, 50%);
+  width: 34px; height: 34px;
+  background: var(--sig); border-radius: 50%;
+  border: 3px solid #ffffff;
+  transition: background 0.3s, bottom 0.6s;
+}
+.thermo-label { font-size: 19px; font-weight: 600; color: var(--sig); transition: color 0.3s; }
+.thermo-sub { font-size: 12.5px; color: var(--text2); margin-top: 6px; line-height: 1.5; }
+.thermo-timeline-wrap {
+  margin-top: 18px; padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.thermo-tl-head {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 14px;
+}
+.thermo-tl-track { position: relative; height: 32px; }
+.thermo-tl-line {
+  position: absolute; left: 0; right: 0; top: 50%;
+  height: 2px; background: rgba(255,255,255,0.08); border-radius: 1px;
+}
+.tl-dot {
+  position: absolute; top: 50%;
+  width: 10px; height: 10px; border-radius: 50%;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--card);
+  cursor: pointer; transition: transform 0.15s;
+}
+.tl-dot:hover { transform: translate(-50%, -50%) scale(1.5); }
+.thermo-note {
+  margin-top: 14px; padding-top: 10px;
+  border-top: 1px dashed var(--border2);
+  font-size: 11px; color: var(--text3); line-height: 1.5;
+}
+
 .mentor-card {
   position: relative;
   margin: 0 0 14px 0;
@@ -1713,7 +1809,7 @@ tr.disc-highlight {
 
   /* ── 티커 ── */
   .ticker-bar { height: 30px; margin: 8px 0; overflow: hidden; }
-  .ticker-track { display: flex; flex-wrap: nowrap; width: max-content; }
+  .ticker-track { display: flex; flex-wrap: nowrap; width: max-content; animation: tickerScroll 68s linear infinite; }
   .ticker-item { font-size: 11px; padding: 0 16px; gap: 6px; white-space: nowrap; flex-shrink: 0; }
   .ticker-name { font-size: 10px; }
   .ticker-price { font-size: 11px; }
@@ -2142,7 +2238,16 @@ tr.disc-highlight {
       <div class="chart-panel">
         <div class="chart-panel-header">
           <div class="stock-info-left">
-            <div class="chart-stock-name" id="currentStockName">—</div>
+            <div class="stock-name-row">
+              <button id="mentorBulb" class="mentor-bulb" aria-label="멘토 설명 보기" onclick="toggleMentor()">
+                <span class="bulb-halo" id="bulbHalo"></span>
+                <svg id="bulbIcon" class="bulb-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M9 18h6"/><path d="M10 22h4"/>
+                  <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/>
+                </svg>
+              </button>
+              <div class="chart-stock-name" id="currentStockName">—</div>
+            </div>
             <div class="stock-meta" id="stockMeta">
               <span class="stock-sector" id="stockSector">—</span>
               <span class="stock-sep">·</span>
@@ -2242,6 +2347,37 @@ tr.disc-highlight {
     <!-- 오른쪽: 통계 패널 -->
     <div class="right-col">
       <div class="mentor-card" id="mentorCard" style="display:none"></div>
+      <div class="thermo-card" id="thermoCard" style="display:none">
+        <div class="thermo-head">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
+          공시 이상징후 온도계
+        </div>
+        <div class="thermo-main">
+          <div class="thermo-gauge">
+            <div class="thermo-track"></div>
+            <div class="thermo-fill" id="thermoFill" style="height:50%"></div>
+            <div class="thermo-ball" id="thermoBall" style="bottom:50%"></div>
+          </div>
+          <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+            <div class="thermo-label" id="thermoLabel">—</div>
+            <div class="thermo-sub" id="thermoSub">—</div>
+          </div>
+        </div>
+        <div class="thermo-timeline-wrap">
+          <div class="thermo-tl-head">
+            <span style="font-size:12px; color:var(--text2);">최근 90일 공시 흐름</span>
+            <span style="font-size:11px; color:var(--text3);" id="thermoTlCount">—</span>
+          </div>
+          <div class="thermo-tl-track">
+            <div class="thermo-tl-line"></div>
+            <div id="thermoTimeline" style="position:absolute; inset:0;"></div>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:10.5px; color:var(--text3); margin-top:6px;">
+            <span>3개월 전</span><span>오늘</span>
+          </div>
+        </div>
+        <div class="thermo-note">※ 과거 공시 빈도일 뿐 미래를 보장하지 않아요. 매수·매도 권유가 아닌 참고 자료예요.</div>
+      </div>
       <div class="stats-panel">
         <div class="stats-panel-header">
           <div class="stats-panel-title">통계 분석</div>
@@ -2663,6 +2799,7 @@ async function selectStock(name) {
   renderTable(disclosures);
   renderTypeFilter(disclosures);
   renderStatsPanel(disclosures);
+  renderThermometer(disclosures);
 
   // 사례수 최다 유형 자동 선택
   if (types.length > 0) {
@@ -3537,10 +3674,107 @@ function renderMentorCard(prices, disclosures, focusType) {
   }
 
   card.innerHTML =
-    '<button class="mentor-close" onclick="document.getElementById(\'mentorCard\').style.display=\'none\'" aria-label="닫기">&times;</button>'
+    '<button class="mentor-close" onclick="closeMentor()" aria-label="닫기">&times;</button>'
     + '<div class="mentor-head">💡 잠깐, 이건 알고 가세요</div>'
     + '<div class="mentor-body">' + bodyHtml + '</div>'
     + '<div class="mentor-note">※ 과거 데이터일 뿐 미래 수익을 보장하지 않아요. 매수·매도 권유가 아니라, 스스로 점검해보시라는 참고 자료예요.</div>';
+  // 표시는 전구가 제어 — 새 종목 선택 시 카드는 닫고 전구 pulse를 다시 켬
+  card.style.display = 'none';
+  const bulb = document.getElementById('mentorBulb');
+  const halo = document.getElementById('bulbHalo');
+  if (bulb && halo) {
+    bulb.classList.remove('seen');
+    halo.classList.add('on');
+  }
+}
+
+function toggleMentor() {
+  const card = document.getElementById('mentorCard');
+  const bulb = document.getElementById('mentorBulb');
+  const halo = document.getElementById('bulbHalo');
+  if (!card) return;
+  const open = card.style.display !== 'none';
+  card.style.display = open ? 'none' : 'block';
+  if (!open && bulb && halo) {
+    halo.classList.remove('on');   // 한 번 보면 pulse 끄기
+    bulb.classList.add('seen');    // 전구 회색으로
+  }
+}
+
+function closeMentor() {
+  document.getElementById('mentorCard').style.display = 'none';
+}
+
+// ════════════════════════════════════════
+// 공시 이상징후 온도계 + 타임라인
+// ════════════════════════════════════════
+// 6유형 → 호악재 신호 (악재성 데이터는 분류기 확장 후 자동 보강)
+var SIGNAL_WEIGHT = {
+  '자사주': 20, '배당': 15, '대규모계약': 18, '실적발표': 10, '투자결정': 8, '풍문해명': -12
+};
+var SIG_COLOR = { teal:'#1D9E75', amber:'#f6ad55', red:'#e53e3e' };
+
+function renderThermometer(disclosures) {
+  const card = document.getElementById('thermoCard');
+  if (!card) return;
+  if (!disclosures || disclosures.length === 0) { card.style.display = 'none'; return; }
+
+  // 최근순 정렬
+  const sorted = disclosures.slice().sort(function(a,b){ return a.date < b.date ? 1 : -1; });
+  const recent10 = sorted.slice(0, 10);
+
+  let score = 0, good = 0, warn = 0;
+  recent10.forEach(function(d){
+    const w = SIGNAL_WEIGHT[d.type] || 0;
+    score += w;
+    if (w > 0) good++; else if (w < 0) warn++;
+  });
+
+  // 구간 판정
+  let sig, label, sub;
+  if (score <= -30) {
+    sig = SIG_COLOR.red; label = '주의 구간';
+    sub = '최근 공시 ' + recent10.length + '건 중 <b style="color:'+SIG_COLOR.red+'">주의성 ' + warn + '건</b>. 주주가치에 영향을 줄 수 있는 공시가 보이는 구간이에요.';
+  } else if (score < 30) {
+    sig = SIG_COLOR.amber; label = '관찰 구간';
+    sub = '최근 공시 ' + recent10.length + '건 중 호재성 ' + good + '건, 주의성 ' + warn + '건. 특별히 한쪽으로 치우치지 않은 구간이에요.';
+  } else {
+    sig = SIG_COLOR.teal; label = '주주환원 활발';
+    sub = '최근 공시 ' + recent10.length + '건 중 <b style="color:#3182ce">호재성 ' + good + '건</b>, 주의성 ' + warn + '건. 주주가치를 높이는 공시가 자주 보이는 구간이에요.';
+  }
+
+  // 온도계 높이 (지수 -60~+60 → 8~92%)
+  const pct = Math.max(8, Math.min(92, (score + 60) / 120 * 100));
+
+  card.style.setProperty('--sig', sig);
+  document.getElementById('thermoFill').style.height = pct + '%';
+  document.getElementById('thermoBall').style.bottom = pct + '%';
+  document.getElementById('thermoLabel').textContent = label;
+  document.getElementById('thermoSub').innerHTML = sub;
+
+  // 타임라인 도트 (최근 90일)
+  const tl = document.getElementById('thermoTimeline');
+  const cnt = document.getElementById('thermoTlCount');
+  tl.innerHTML = '';
+  const today = new Date();
+  const start = new Date(today.getTime() - 90*24*60*60*1000);
+  const within = sorted.filter(function(d){
+    const dt = new Date(d.date);
+    return dt >= start && dt <= today;
+  });
+  cnt.textContent = '총 ' + within.length + '건';
+  within.forEach(function(d){
+    const dt = new Date(d.date);
+    const posPct = (dt - start) / (today - start) * 100;
+    const w = SIGNAL_WEIGHT[d.type] || 0;
+    const dot = document.createElement('div');
+    dot.className = 'tl-dot';
+    dot.style.left = Math.max(1, Math.min(99, posPct)) + '%';
+    dot.style.background = w >= 0 ? '#3182ce' : '#e53e3e';
+    dot.title = d.date.slice(5) + ' ' + d.type;
+    tl.appendChild(dot);
+  });
+
   card.style.display = 'block';
 }
 
