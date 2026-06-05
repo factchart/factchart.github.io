@@ -564,12 +564,10 @@ body {
   position: sticky;
   top: 72px;
 }
-/* 데스크탑: 오른쪽 컬럼 전체를 종목 선택 줄 높이만큼 내려 차트 패널 시작선에 정렬.
-   margin(높이에 미포함)을 컬럼에 사용 → sticky 스크롤을 막지 않고, 카드를 닫아도 위치 유지 */
+/* 데스크탑: 오른쪽 컬럼을 왼쪽 종목 선택 줄 높이만큼 내려 차트 패널(종목명) 시작선에 정렬.
+   margin은 sticky 박스 높이에 포함되지 않아 스크롤을 막지 않음. */
 @media (min-width: 1025px) {
-@media (min-width: 1025px) {
-  .right-col { margin-top: 70px; transition: margin-top 0.15s ease; }
-  .right-col.stuck { margin-top: 0; }
+  .right-col { margin-top: 64px; }
 }
 
 /* ── 차트 패널 ── */
@@ -2523,20 +2521,6 @@ document.addEventListener('DOMContentLoaded', () => {
       grid.scrollLeft = startScroll - dx;
     });
     grid.style.cursor = 'grab';
-  }
-
-  // right-col이 sticky로 상단(72px)에 붙으면 초기 정렬 여백(70px) 제거
-  const rc = document.querySelector('.right-col');
-  if (rc && window.innerWidth >= 1025) {
-    const onScroll = () => {
-      const stuck = rc.classList.contains('stuck');
-      const top = rc.getBoundingClientRect().top;
-      // 이력 임계: 붙을 땐 72px 도달, 떨어질 땐 72+70px 넘어설 때 (깜빡임 방지)
-      if (!stuck && top <= 73) rc.classList.add('stuck');
-      else if (stuck && top >= 72 + 70) rc.classList.remove('stuck');
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
   }
 });
 
