@@ -1133,14 +1133,18 @@ tbody td {
 
 /* 공시이력 H1: 당일/5일/20일 3기간 변동률 */
 .td-3chg {
-  text-align: left;
+  text-align: right;
   white-space: nowrap;
+}
+.chg-block {
+  display: inline-flex;
+  gap: 10px;
+  text-align: left;
 }
 .chg-grp {
   display: inline-grid;
   justify-items: start;
   width: 52px;
-  margin-left: 0;
   vertical-align: top;
 }
 .chg-lbl {
@@ -1154,6 +1158,7 @@ tbody td {
 .hcell-na { font-size: 13px; color: var(--text3); }
 @media (max-width: 768px) {
   .chg-grp { width: 44px; }
+  .chg-block { gap: 6px; }
   .hcell { font-size: 11.5px; }
   .chg-lbl { font-size: 8.5px; }
 }
@@ -4074,14 +4079,16 @@ function renderTableRows(disclosures) {
       <td>${typeBadge}</td>
       <td>${titleCell}</td>
       <td class="td-3chg">
-        <span class="chg-grp"><span class="chg-lbl">당일</span>${cell(ch.d0)}</span>
-        <span class="chg-grp"><span class="chg-lbl">5일</span>${cell(ch.d5)}</span>
-        <span class="chg-grp"><span class="chg-lbl">20일</span>${cell(ch.d20)}</span>
+        <span class="chg-block">
+          <span class="chg-grp"><span class="chg-lbl">당일</span>${cell(ch.d0)}</span>
+          <span class="chg-grp"><span class="chg-lbl">5일</span>${cell(ch.d5)}</span>
+          <span class="chg-grp"><span class="chg-lbl">20일</span>${cell(ch.d20)}</span>
+        </span>
       </td>
     </tr>`;
   }).join('');
   c.innerHTML=`<table>
-    <thead><tr><th>날짜</th><th>유형</th><th>공시 제목</th><th style="text-align:left">공시 후 변동률</th></tr></thead>
+    <thead><tr><th>날짜</th><th>유형</th><th>공시 제목</th><th style="text-align:right">공시 후 변동률</th></tr></thead>
     <tbody>${rows}</tbody>
   </table>`;
 }
