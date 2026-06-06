@@ -587,6 +587,73 @@ body {
   gap: 18px;
 }
 
+/* 패널 탭 (크롬 브라우저형) */
+.panel-tabs {
+  display: flex;
+  gap: 3px;
+  padding: 0 0 0 12px;
+  background: transparent;
+}
+.ptab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px 15px;
+  font-size: 15px;
+  font-weight: 500;
+  font-family: var(--sans);
+  color: #5a6678;
+  background: #0c0f17;
+  border: 1px solid rgba(255,255,255,0.05);
+  border-bottom: none;
+  border-radius: 11px 11px 0 0;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ptab:hover { color: #9fb0c2; }
+.ptab.active {
+  color: var(--text);
+  font-weight: 600;
+  background: var(--surface, #131926);
+  border-color: var(--border);
+  position: relative;
+  z-index: 2;
+}
+.ptab svg { stroke: currentColor; }
+@media (max-width: 768px) {
+  .ptab { padding: 12px 18px 13px; font-size: 13px; }
+}
+
+/* 기업분석 탭 내용 */
+.tab-panel { padding: 0; }
+#tabCompany { padding: 22px 24px; }
+.comp-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 10px; }
+.comp-grid2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-bottom: 22px; }
+.comp-card { background: var(--bg2,#0f1421); border-radius: 9px; padding: 14px; }
+.comp-k { font-size: 11px; color: var(--text3); }
+.comp-v { font-size: 18px; font-weight: 700; color: var(--text); margin-top: 4px; }
+.comp-v.sm { font-size: 14px; font-weight: 600; line-height: 1.4; }
+.comp-section-title { font-size: 14px; font-weight: 600; color: var(--text); margin: 6px 0 12px; }
+.comp-sub { font-size: 11px; font-weight: 400; color: var(--text3); }
+.fin-wrap { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 24px; }
+.fin-block { background: var(--bg2,#0f1421); border-radius: 10px; padding: 14px; }
+.fin-label { font-size: 12px; color: var(--text2); margin-bottom: 12px; }
+.fin-bars { display: flex; align-items: flex-end; gap: 10px; height: 90px; }
+.fin-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+.fin-val { font-size: 11.5px; font-weight: 700; line-height: 1; }
+.fin-val.up { color: var(--up); } .fin-val.down { color: var(--down); } .fin-val.flat { color: var(--text3); }
+.fin-bar-track { width: 100%; flex: 1; display: flex; align-items: flex-end; margin: 5px 0; }
+.fin-bar { width: 100%; border-radius: 3px 3px 0 0; min-height: 3px; }
+.fin-bar.up { background: var(--up); } .fin-bar.down { background: var(--down); } .fin-bar.flat { background: var(--text3); }
+.fin-yr { font-size: 10px; color: var(--text3); }
+.comp-soon { background: var(--bg2,#0f1421); border: 1px dashed rgba(255,255,255,0.12); border-radius: 10px; padding: 18px; font-size: 12.5px; color: var(--text3); text-align: center; margin-bottom: 22px; }
+.comp-foot { font-size: 10.5px; color: var(--text3); line-height: 1.5; }
+.company-empty { padding: 40px; text-align: center; color: var(--text3); font-size: 13px; }
+@media (max-width: 768px) {
+  .comp-grid { grid-template-columns: 1fr 1fr; }
+  .fin-wrap { grid-template-columns: 1fr; }
+}
+
 .stock-info-left {
   display: flex;
   flex-direction: column;
@@ -2357,6 +2424,17 @@ tr.disc-highlight {
 
       <!-- 차트 패널 -->
       <div class="chart-panel">
+        <div class="panel-tabs" id="panelTabs">
+          <button class="ptab active" data-tab="chart" onclick="switchTab('chart')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>
+            공시 × 주가
+          </button>
+          <button class="ptab" data-tab="company" onclick="switchTab('company')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
+            기업 분석
+          </button>
+        </div>
+        <div class="tab-panel" id="tabChart">
         <div class="chart-panel-header">
           <div class="stock-info-left">
             <div class="stock-name-row">
@@ -2430,7 +2508,11 @@ tr.disc-highlight {
             <div class="legend-line" style="background:#f6ad55;height:2.5px;border:none;"></div>유사 패턴 평균
           </div>
         </div>
-      </div>
+        </div><!-- /tabChart -->
+        <div class="tab-panel" id="tabCompany" style="display:none">
+          <div id="companyBody"><div class="loading">기업 정보를 불러오는 중…</div></div>
+        </div><!-- /tabCompany -->
+      </div><!-- /chart-panel -->
 
 
       <!-- 실시간 티커 바 (차트↔공시이력 사이) -->
@@ -2929,6 +3011,8 @@ async function selectStock(name) {
   renderStatsPanel(disclosures);
   renderThermometer(disclosures);
   renderHook(disclosures);
+  // 기업분석 탭이 열려있으면 새 종목으로 갱신
+  if (activeTab === 'company') renderCompany(currentStock);
 
   // 사례수 최다 유형 자동 선택
   if (types.length > 0) {
@@ -3168,12 +3252,20 @@ function renderChart(prices, disclosures, patternData) {
       if (!discMap[label]) return;
       const x = scales.x.getPixelForValue(hoveredIdx);
       ctx.save();
+      // 흰색 반투명 세로 바 인디케이터 (초록 원보다 두껍게)
+      const barW = 6;
+      const grad = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+      grad.addColorStop(0, 'rgba(255,255,255,0.02)');
+      grad.addColorStop(0.5, 'rgba(255,255,255,0.16)');
+      grad.addColorStop(1, 'rgba(255,255,255,0.02)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(x - barW/2, chartArea.top, barW, chartArea.bottom - chartArea.top);
+      // 중앙 밝은 코어 라인
       ctx.beginPath();
       ctx.moveTo(x, chartArea.top);
       ctx.lineTo(x, chartArea.bottom);
-      // 작은 십자선 — 마우스 위치 기준 ±12px만
-      ctx.strokeStyle = 'rgba(210,220,240,0.35)';
-      ctx.lineWidth = 0.6;
+      ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+      ctx.lineWidth = 1;
       ctx.setLineDash([]);
       ctx.stroke();
       ctx.restore();
@@ -3735,6 +3827,103 @@ function changesByHorizon(prices, date) {
     }
   });
   return out;
+}
+
+// ════════════════════════════════════════
+// 탭 전환 (공시×주가 / 기업분석)
+// ════════════════════════════════════════
+let activeTab = 'chart';
+const companyCache = {};
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.ptab').forEach(function(b){
+    b.classList.toggle('active', b.dataset.tab === tab);
+  });
+  document.getElementById('tabChart').style.display   = (tab === 'chart') ? '' : 'none';
+  document.getElementById('tabCompany').style.display = (tab === 'company') ? '' : 'none';
+  if (tab === 'company') renderCompany(currentStock);
+}
+
+async function renderCompany(name) {
+  const body = document.getElementById('companyBody');
+  if (!body) return;
+  body.innerHTML = '<div class="loading">기업 정보를 불러오는 중…</div>';
+
+  let info = companyCache[name];
+  if (!info) {
+    try {
+      const rows = await supabaseFetch('company_info',
+        'stock_name=eq.' + encodeURIComponent(name) + '&select=*&limit=1');
+      info = (rows && rows.length) ? rows[0] : null;
+      companyCache[name] = info;
+    } catch (e) { info = null; }
+  }
+  if (!info) { body.innerHTML = '<div class="company-empty">기업 정보가 아직 준비되지 않았어요.</div>'; return; }
+
+  // 현재가 → 시가총액 계산
+  const prices = (allData.prices[name]||[]);
+  const last = prices.length ? prices[prices.length-1] : null;
+  const lastClose = last ? (last.length===5 ? last[4] : last[1]) : null;
+  const shares = info.shares ? Number(info.shares) : null;
+  const mktCap = (lastClose && shares) ? lastClose * shares : null;
+
+  function won(v){ // 원 단위 → 조/억 표기
+    if (v == null || isNaN(v)) return '—';
+    const abs = Math.abs(v);
+    if (abs >= 1e12) return (v/1e12).toFixed(1) + '조';
+    if (abs >= 1e8)  return (v/1e8).toFixed(0) + '억';
+    return v.toLocaleString() + '원';
+  }
+  function shareFmt(v){ if(!v) return '—'; return (v/1e8).toFixed(2) + '억주'; }
+  function estFmt(s){ if(!s||s.length<8) return '—'; return s.slice(0,4)+'.'+s.slice(4,6)+'.'+s.slice(6,8); }
+
+  // 매출/영익/순익 3개년 막대
+  function bars(y0,y1,y2,label){
+    const vals = [y2,y1,y0].map(function(x){ return x==null?null:Number(x); });
+    const valid = vals.filter(function(x){ return x!=null; });
+    if (!valid.length) return '';
+    const maxAbs = Math.max.apply(null, valid.map(Math.abs), 1);
+    const yrs = ['전전기','전기','당기'];
+    let h = '<div class="fin-block"><div class="fin-label">'+label+'</div><div class="fin-bars">';
+    vals.forEach(function(v,i){
+      const ht = v==null?2:Math.max(Math.round(Math.abs(v)/maxAbs*100),3);
+      const cls = v==null?'flat':(v>=0?'up':'down');
+      h += '<div class="fin-col"><span class="fin-val '+cls+'">'+won(v)+'</span>'
+        + '<div class="fin-bar-track"><div class="fin-bar '+cls+'" style="height:'+ht+'%"></div></div>'
+        + '<span class="fin-yr">'+yrs[i]+'</span></div>';
+    });
+    h += '</div></div>';
+    return h;
+  }
+
+  let html = '';
+  // 상단 핵심 지표
+  html += '<div class="comp-grid">';
+  html += '<div class="comp-card"><div class="comp-k">시가총액</div><div class="comp-v">'+won(mktCap)+'</div></div>';
+  html += '<div class="comp-card"><div class="comp-k">발행주식수</div><div class="comp-v">'+shareFmt(shares)+'</div></div>';
+  html += '<div class="comp-card"><div class="comp-k">상장(설립)</div><div class="comp-v">'+estFmt(info.est_date)+'</div></div>';
+  html += '</div>';
+  html += '<div class="comp-grid2">';
+  html += '<div class="comp-card"><div class="comp-k">대표이사</div><div class="comp-v sm">'+(info.ceo||'—')+'</div></div>';
+  html += '<div class="comp-card"><div class="comp-k">결산월</div><div class="comp-v sm">'+(info.acc_month?info.acc_month+'월':'—')+'</div></div>';
+  html += '</div>';
+
+  // 재무 추이
+  html += '<div class="comp-section-title">실적 추이 <span class="comp-sub">(DART 사업보고서 · 최근 3개년)</span></div>';
+  html += '<div class="fin-wrap">';
+  html += bars(info.revenue_y0,info.revenue_y1,info.revenue_y2,'매출액');
+  html += bars(info.op_income_y0,info.op_income_y1,info.op_income_y2,'영업이익');
+  html += bars(info.net_income_y0,info.net_income_y1,info.net_income_y2,'당기순이익');
+  html += '</div>';
+
+  // 컨센서스 (준비 중)
+  html += '<div class="comp-section-title">예상 실적 · 투자의견</div>';
+  html += '<div class="comp-soon">증권사 컨센서스(예상 매출·영업이익·목표주가)는 준비 중이에요.</div>';
+
+  html += '<div class="comp-foot">데이터 출처: 금융감독원 전자공시(DART) · 시가총액은 최근 종가×발행주식수로 계산한 참고치예요.</div>';
+
+  body.innerHTML = html;
 }
 
 // ════════════════════════════════════════
