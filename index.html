@@ -580,33 +580,44 @@ body {
 
 .chart-panel-header {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: space-between;
   padding: 20px 24px;
   border-bottom: 1px solid var(--border);
-  gap: 20px;
+  gap: 18px;
 }
 
 .stock-info-left {
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
-/* hook 박스 — 종목명과 가격 사이 (검색 유입자용 첫인상) */
+/* hook 박스 — 우측 대형 카드 (검색 유입자용 첫인상) */
 .hook-box {
   flex: 1;
-  max-width: 360px;
   background: var(--bg2, #0f1421);
-  border-left: 2px solid var(--gold);
-  border-radius: 0;
-  padding: 10px 16px;
+  border: 1px solid rgba(246,173,85,0.28);
+  border-radius: 10px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
-.hook-q { font-size: 12px; color: var(--text2); }
-.hook-a { font-size: 15px; font-weight: 500; color: var(--text); margin-top: 4px; }
+.hook-q { font-size: 13px; color: var(--text2); }
+.hook-q b { font-weight: 700; color: var(--gold); }
+.hook-a { font-size: 22px; font-weight: 600; color: var(--text); margin-top: 8px; line-height: 1.3; }
 .hook-a b { font-weight: 700; }
+.hook-link {
+  font-size: 11.5px; color: var(--accent);
+  margin-top: 12px; padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
 @media (max-width: 768px) {
-  .hook-box { max-width: 100%; width: 100%; margin-top: 12px; }
+  .chart-panel-header { flex-direction: column; }
+  .hook-box { width: 100%; }
+  .hook-a { font-size: 18px; }
 }
 
 .chart-stock-name {
@@ -656,13 +667,14 @@ body {
 }
 
 .price-block {
-  text-align: right;
+  text-align: left;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 2px;
   flex-shrink: 0;
   justify-content: flex-start;
+  margin-top: 14px;
 }
 
 .price-value {
@@ -2367,18 +2379,19 @@ tr.disc-highlight {
               <span class="stock-sep">·</span>
               <span class="stock-ticker" id="stockTicker">—</span>
             </div>
+            <div class="price-block">
+              <div class="market-status" id="marketStatus">
+                <span class="market-dot" id="marketDot"></span>
+                <span id="marketLabel">—</span>
+              </div>
+              <div class="price-value" id="latestPrice">—</div>
+              <div class="price-change" id="priceChange">—</div>
+            </div>
           </div>
           <div class="hook-box" id="hookBox" style="display:none">
             <div class="hook-q" id="hookQ">—</div>
             <div class="hook-a" id="hookA">—</div>
-          </div>
-          <div class="price-block">
-            <div class="market-status" id="marketStatus">
-              <span class="market-dot" id="marketDot"></span>
-              <span id="marketLabel">—</span>
-            </div>
-            <div class="price-value" id="latestPrice">—</div>
-            <div class="price-change" id="priceChange">—</div>
+            <div class="hook-link" id="hookLink">↓ 아래 차트의 초록 점이 그 공시들이에요</div>
           </div>
         </div>
 
@@ -4314,33 +4327,8 @@ function initMarketStatus() {
 
   // 모바일: stock-info-left에 종목명+뱃지 flex row로 묶기
   function positionMarketBadge() {
-    const ms = document.getElementById('marketStatus');
-    const nameEl = document.getElementById('currentStockName');
-    const priceBlock = document.querySelector('.price-block');
-    const infoLeft = document.querySelector('.stock-info-left');
-    if (!ms || !nameEl || !priceBlock || !infoLeft) return;
-
-    if (window.innerWidth <= 768) {
-      // stock-info-left 첫 번째 자식으로 name+badge 묶음 div 생성
-      let nameRow = document.getElementById('mobileNameRow');
-      if (!nameRow) {
-        nameRow = document.createElement('div');
-        nameRow.id = 'mobileNameRow';
-        nameRow.className = 'mobile-name-row';
-        infoLeft.insertBefore(nameRow, infoLeft.firstChild);
-      }
-      if (ms.parentElement !== nameRow) nameRow.appendChild(ms);
-      ms.style.marginBottom = '0';
-    } else {
-      // 데스크톱: 종목명은 stock-name-row(전구 옆)에 HTML로 고정됨 — 옮기지 않음.
-      // 시장뱃지(ms)만 price-block 첫 번째로 복귀
-      if (priceBlock && ms.parentElement !== priceBlock) {
-        priceBlock.insertBefore(ms, priceBlock.firstChild);
-      }
-      ms.style.marginBottom = '';
-      const nr = document.getElementById('mobileNameRow');
-      if (nr && nr.parentElement) nr.parentElement.removeChild(nr);
-    }
+    // 새 레이아웃: market-status가 price-block 안에 HTML로 고정됨.
+    // 가격 블록 전체가 왼쪽 컬럼에 세로 배치되므로 JS 재배치 불필요.
   }
   positionMarketBadge();
   window.addEventListener('resize', positionMarketBadge);
