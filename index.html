@@ -753,18 +753,18 @@ body {
   display: flex !important;
   flex-direction: row !important;
   align-items: center;
-  gap: 10px;
+  gap: 16px;
 }
 .mentor-bulb {
   position: relative;
-  width: 22px; height: 22px;
+  width: 11px; height: 11px;
   flex-shrink: 0;
   background: none; border: none; padding: 0;
   cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center;
 }
 .bulb-svg {
-  width: 16px; height: 16px;
+  width: 8px; height: 8px;
   color: var(--gold);
   position: relative; z-index: 1;
   transition: color 0.2s;
@@ -1130,6 +1130,33 @@ tbody td {
 .td-change.down { color: var(--down); }
 .td-change.neutral { color: var(--text3); }
 
+/* 공시이력 H1: 당일/5일/20일 3기간 변동률 */
+.td-3chg {
+  text-align: right;
+  white-space: nowrap;
+}
+.chg-grp {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-left: 14px;
+  vertical-align: top;
+}
+.chg-lbl {
+  font-size: 9.5px;
+  color: var(--text3);
+  line-height: 1.3;
+}
+.hcell { font-size: 13px; font-weight: 600; line-height: 1.3; }
+.hcell.up { color: var(--up); }
+.hcell.down { color: var(--down); }
+.hcell-na { font-size: 13px; color: var(--text3); }
+@media (max-width: 768px) {
+  .chg-grp { margin-left: 8px; }
+  .hcell { font-size: 11.5px; }
+  .chg-lbl { font-size: 8.5px; }
+}
+
 .dart-link {
   font-family: var(--sans);
   font-size: 13px;
@@ -1182,6 +1209,52 @@ tbody td {
 }
 
 .stats-panel-body { padding: 16px 18px; }
+
+/* S1: 공시 후 평균 주가 변화 (3구간 막대) */
+.s1-section {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.s1-title { font-size: 12px; color: var(--text2); margin-bottom: 14px; }
+.s1-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  height: 96px;
+}
+.s1-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+}
+.s1-val { font-size: 14px; font-weight: 700; line-height: 1; }
+.s1-val.up { color: var(--up); }
+.s1-val.down { color: var(--down); }
+.s1-val.flat { color: var(--text3); }
+.s1-bar-track {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  margin: 6px 0;
+}
+.s1-bar {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  min-height: 3px;
+  transition: height 0.5s ease;
+}
+.s1-bar.up { background: var(--up); }
+.s1-bar.down { background: var(--down); }
+.s1-bar.flat { background: var(--text3); }
+.s1-lbl { font-size: 11px; color: var(--text3); }
+.s1-note { font-size: 10.5px; color: var(--text3); margin-top: 12px; text-align: center; line-height: 1.4; }
 
 .summary-grid {
   display: grid;
@@ -3590,6 +3663,34 @@ function externalTooltip(context, discMap, patternData, prices) {
 }
 
 // ════════════════════════════════════════
+// 공용: 개별 공시 1건의 당일/5일/20일 변동률 계산
+// 당일 = 공시일 종가 vs 전일 종가, N일 = 공시일 종가 vs N거래일 후 종가
+// ════════════════════════════════════════
+function changesByHorizon(prices, date) {
+  if (!prices || prices.length < 2) return null;
+  let base = -1;
+  for (let i = 0; i < prices.length; i++) {
+    if (prices[i].date >= date) { base = i; break; }
+  }
+  if (base < 0) return null;
+  const baseClose = prices[base].close;
+  if (!baseClose) return null;
+  const out = { d0: null, d5: null, d20: null };
+  // 당일: 전일 대비
+  if (base >= 1 && prices[base-1].close) {
+    out.d0 = (baseClose - prices[base-1].close) / prices[base-1].close * 100;
+  }
+  // N거래일 후: 공시일 종가 대비
+  [[5,'d5'],[20,'d20']].forEach(function(pair){
+    const fut = base + pair[0];
+    if (fut < prices.length && prices[fut].close) {
+      out[pair[1]] = (prices[fut].close - baseClose) / baseClose * 100;
+    }
+  });
+  return out;
+}
+
+// ════════════════════════════════════════
 // 멘토 해석 레이어 — "잠깐, 이건 알고 가세요"
 // 공시 발생 후 N거래일 주가 변동을 계산해 친근한 문장으로 번역
 // ════════════════════════════════════════
@@ -3738,6 +3839,24 @@ var SIGNAL_WEIGHT = {
 };
 var SIG_COLOR = { teal:'#1D9E75', amber:'#f6ad55', red:'#e53e3e' };
 
+// 공시 1건의 신호 가중치 (방향 포함). 주의공시는 title로 세부 판정.
+function signalWeightOf(d) {
+  if (d.type === '주의공시') {
+    const t = String(d.title || '').replace(/\s/g, '');
+    if (/관리종목|상장적격성/.test(t) || (/상장폐지/.test(t) && !/해외증권시장/.test(t))) return -50;
+    if (/횡령|배임/.test(t)) return -45;
+    if (/영업정지|영업중단/.test(t)) return -40;
+    if (/유상증자결정/.test(t)) return (/종속회사|자회사/.test(t)) ? -10 : -25;
+    if (/감자결정/.test(t)) return -25;
+    if (/전환사채권발행|전환사채발행/.test(t)) return -20;
+    if (/신주인수권부사채권발행/.test(t)) return -20;
+    if (/교환사채권발행/.test(t)) return -15;
+    if (/소송등의제기|소송제기/.test(t)) return -12;
+    return -15; // 기타 주의공시 기본값
+  }
+  return SIGNAL_WEIGHT[d.type] || 0;
+}
+
 function renderThermometer(disclosures) {
   const card = document.getElementById('thermoCard');
   if (!card) return;
@@ -3749,7 +3868,7 @@ function renderThermometer(disclosures) {
 
   let score = 0, good = 0, warn = 0;
   recent10.forEach(function(d){
-    const w = SIGNAL_WEIGHT[d.type] || 0;
+    const w = signalWeightOf(d);
     score += w;
     if (w > 0) good++; else if (w < 0) warn++;
   });
@@ -3790,12 +3909,13 @@ function renderThermometer(disclosures) {
   within.forEach(function(d){
     const dt = new Date(d.date);
     const posPct = (dt - start) / (today - start) * 100;
-    const w = SIGNAL_WEIGHT[d.type] || 0;
+    const w = signalWeightOf(d);
     const dot = document.createElement('div');
     dot.className = 'tl-dot';
     dot.style.left = Math.max(1, Math.min(99, posPct)) + '%';
     dot.style.background = w >= 0 ? '#3182ce' : '#e53e3e';
-    dot.title = d.date.slice(5) + ' ' + d.type;
+    const labelTxt = (d.type === '주의공시' && d.title) ? d.title : d.type;
+    dot.title = d.date.slice(5) + ' ' + labelTxt;
     tl.appendChild(dot);
   });
 
@@ -3813,60 +3933,78 @@ function renderStatsPanel(disclosures) {
 
   sub.textContent = currentStock + ' — ' + disclosures.length + '건 분석';
 
+  // prices 기반 당일/5일/20일 변동률 계산
+  const prices = (allData.prices[currentStock]||[]).map(p=>p.length===5?{date:p[0],close:p[4]}:{date:p[0],close:p[1]});
+  const acc = { d0:[], d5:[], d20:[] };
   const typeStats = {};
   disclosures.forEach(function(d) {
-    const raw = String(d.change).replace('%','').trim();
-    const v = parseFloat(raw);
-    const pct = isNaN(v) ? null : (Math.abs(v) < 1 ? v * 100 : v);
-    if (!typeStats[d.type]) typeStats[d.type] = { sum: 0, count: 0, up: 0 };
-    if (pct !== null) {
-      typeStats[d.type].sum += pct;
+    const ch = changesByHorizon(prices, d.date);
+    if (!ch) return;
+    if (ch.d0 != null) acc.d0.push(ch.d0);
+    if (ch.d5 != null) acc.d5.push(ch.d5);
+    if (ch.d20 != null) acc.d20.push(ch.d20);
+    // 유형별은 5일 기준(공시 영향이 드러나는 대표 기간)
+    if (!typeStats[d.type]) typeStats[d.type] = { sum:0, count:0, up:0 };
+    if (ch.d5 != null) {
+      typeStats[d.type].sum += ch.d5;
       typeStats[d.type].count++;
-      if (pct >= 0) typeStats[d.type].up++;
+      if (ch.d5 >= 0) typeStats[d.type].up++;
     }
   });
+  function avg(arr){ return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null; }
+  const a0 = avg(acc.d0), a5 = avg(acc.d5), a20 = avg(acc.d20);
 
-  const allVals = disclosures.map(function(d) {
-    const raw = String(d.change).replace('%','').trim();
-    const v = parseFloat(raw);
-    return isNaN(v) ? null : (Math.abs(v) < 1 ? v * 100 : v);
-  }).filter(v => v !== null);
-
-  const totalAvg = allVals.length ? allVals.reduce((a,b)=>a+b,0)/allVals.length : 0;
-  const upRate = allVals.length ? Math.round(allVals.filter(v=>v>=0).length/allVals.length*100) : 0;
-  const maxVal = allVals.length ? Math.max(...allVals) : 0;
+  // 요약 카드용 (5일 기준 대표값)
+  const totalAvg = a5 != null ? a5 : 0;
+  const upRate = acc.d5.length ? Math.round(acc.d5.filter(v=>v>=0).length/acc.d5.length*100) : 0;
+  const maxVal = acc.d5.length ? Math.max(...acc.d5) : 0;
 
   const types = Object.keys(typeStats).sort((a,b)=>{
     const avgA = typeStats[a].count ? typeStats[a].sum/typeStats[a].count : 0;
     const avgB = typeStats[b].count ? typeStats[b].sum/typeStats[b].count : 0;
     return avgB - avgA;
   });
-
   const maxAbs = Math.max(...types.map(t=>typeStats[t].count?Math.abs(typeStats[t].sum/typeStats[t].count):0), 1);
 
-  let html = '<div class="summary-grid">';
+  // ── S1: 공시 후 평균 주가 변화 (당일→5일→20일 3구간 막대) ──
+  const periods = [{k:'당일',v:a0},{k:'5일',v:a5},{k:'20일',v:a20}];
+  const maxMag = Math.max(...periods.map(p=>p.v!=null?Math.abs(p.v):0), 1);
+  let html = '<div class="s1-section"><div class="s1-title">공시 후 평균 주가 변화</div><div class="s1-bars">';
+  periods.forEach(function(p){
+    const h = p.v!=null ? Math.max(Math.round(Math.abs(p.v)/maxMag*100), 3) : 3;
+    const cls = p.v==null ? 'flat' : (p.v>=0?'up':'down');
+    const valTxt = p.v!=null ? (p.v>=0?'+':'')+p.v.toFixed(1)+'%' : '—';
+    html += `<div class="s1-col">
+      <span class="s1-val ${cls}">${valTxt}</span>
+      <div class="s1-bar-track"><div class="s1-bar ${cls}" style="height:${h}%"></div></div>
+      <span class="s1-lbl">${p.k}</span>
+    </div>`;
+  });
+  html += '</div><div class="s1-note">공시 당일은 잔잔해도, 시간이 지나며 영향이 드러나요</div></div>';
+
+  html += '<div class="summary-grid">';
   html += `<div class="summary-card"><div class="summary-val neutral">${disclosures.length}</div><div class="summary-lbl">총 공시</div></div>`;
-  html += `<div class="summary-card"><div class="summary-val ${totalAvg>=0?'up':'down'}">${totalAvg>=0?'+':''}${totalAvg.toFixed(2)}%</div><div class="summary-lbl">평균 수익률</div></div>`;
-  html += `<div class="summary-card"><div class="summary-val neutral">${upRate}%</div><div class="summary-lbl">상승 확률</div></div>`;
+  html += `<div class="summary-card"><div class="summary-val ${totalAvg>=0?'up':'down'}">${totalAvg>=0?'+':''}${totalAvg.toFixed(2)}%</div><div class="summary-lbl">5일 평균</div></div>`;
+  html += `<div class="summary-card"><div class="summary-val neutral">${upRate}%</div><div class="summary-lbl">5일 상승확률</div></div>`;
   html += `<div class="summary-card"><div class="summary-val up">+${maxVal.toFixed(2)}%</div><div class="summary-lbl">최고 반응</div></div>`;
   html += '</div>';
 
-  html += '<div class="type-stat-section"><div class="type-stat-label">유형별 평균 수익률</div>';
+  html += '<div class="type-stat-section"><div class="type-stat-label">유형별 평균 수익률 <span style="color:var(--text3);font-weight:400;font-size:10px">(공시 후 5일)</span></div>';
   types.forEach(t => {
     const s = typeStats[t];
     if (!s.count) return;
-    const avg = s.sum/s.count;
-    const width = Math.max(Math.round(Math.abs(avg)/maxAbs*100), 20);
-    const cls = avg>=0?'up':'down';
+    const av = s.sum/s.count;
+    const width = Math.max(Math.round(Math.abs(av)/maxAbs*100), 20);
+    const cls = av>=0?'up':'down';
     html += `<div class="type-stat-row">
       <div class="type-stat-name">${t}</div>
-      <div class="type-stat-track"><div class="type-stat-fill ${cls}" style="width:${width}%">${avg>=0?'+':''}${avg.toFixed(2)}%</div></div>
+      <div class="type-stat-track"><div class="type-stat-fill ${cls}" style="width:${width}%">${av>=0?'+':''}${av.toFixed(2)}%</div></div>
       <div class="type-stat-count">${s.count}건</div>
     </div>`;
   });
   html += '</div>';
 
-  html += '<div class="dist-section"><div class="type-stat-label" style="margin-top:8px">상승 / 하락 분포</div>';
+  html += '<div class="dist-section"><div class="type-stat-label" style="margin-top:8px">상승 / 하락 분포 <span style="color:var(--text3);font-weight:400;font-size:10px">(공시 후 5일)</span></div>';
   types.forEach(t => {
     const s = typeStats[t];
     if (!s.count) return;
@@ -3908,16 +4046,17 @@ function renderTable(disclosures) {
 function renderTableRows(disclosures) {
   const c = document.getElementById('tableContainer');
   if (!disclosures.length) { c.innerHTML='<div class="loading">공시 데이터 없음</div>'; return; }
+  // 현재 종목 prices (당일/5일/20일 계산용)
+  const prices = (allData.prices[currentStock]||[]).map(p=>p.length===5?{date:p[0],close:p[4]}:{date:p[0],close:p[1]});
   const sorted = [...disclosures].sort((a,b)=>b.date.localeCompare(a.date));
+  function cell(v){
+    if (v == null || isNaN(v)) return '<span class="hcell-na">—</span>';
+    const cls = v>=0?'up':'down';
+    const txt = (v>=0?'+':'')+v.toFixed(1)+'%';
+    return `<span class="hcell ${cls}">${txt}</span>`;
+  }
   const rows = sorted.map(d=>{
-    const raw = String(d.change).replace('%','').trim();
-    const chgVal = parseFloat(raw);
-    let cls='neutral', txt=d.change||'—';
-    if (!isNaN(chgVal)) {
-      const pct = Math.abs(chgVal)<1?chgVal*100:chgVal;
-      cls=pct>=0?'up':'down';
-      txt=(pct>=0?'▲ +':'▼ ')+Math.abs(pct).toFixed(2)+'%';
-    }
+    const ch = changesByHorizon(prices, d.date) || {d0:null,d5:null,d20:null};
     const color = TYPE_COLORS[d.type]||'#334155';
     const typeBadge = `<span class="td-type" style="background:${color}18;color:${color};border:1px solid ${color}35">${d.type||'기타'}</span>`;
     const dartUrl = d.rcpNo && d.rcpNo !== '' && d.rcpNo !== 'undefined'
@@ -3929,11 +4068,15 @@ function renderTableRows(disclosures) {
       <td class="td-date">${d.date}</td>
       <td>${typeBadge}</td>
       <td>${titleCell}</td>
-      <td class="td-change ${cls}">${txt}</td>
+      <td class="td-3chg">
+        <span class="chg-grp"><span class="chg-lbl">당일</span>${cell(ch.d0)}</span>
+        <span class="chg-grp"><span class="chg-lbl">5일</span>${cell(ch.d5)}</span>
+        <span class="chg-grp"><span class="chg-lbl">20일</span>${cell(ch.d20)}</span>
+      </td>
     </tr>`;
   }).join('');
   c.innerHTML=`<table>
-    <thead><tr><th>날짜</th><th>유형</th><th>공시 제목</th><th style="text-align:right">변동률</th></tr></thead>
+    <thead><tr><th>날짜</th><th>유형</th><th>공시 제목</th><th style="text-align:right">공시 후 변동률</th></tr></thead>
     <tbody>${rows}</tbody>
   </table>`;
 }
