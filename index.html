@@ -593,6 +593,22 @@ body {
   gap: 22px;
 }
 
+/* hook 박스 — 종목명과 가격 사이 (검색 유입자용 첫인상) */
+.hook-box {
+  flex: 1;
+  max-width: 360px;
+  background: var(--bg2, #0f1421);
+  border-left: 2px solid var(--gold);
+  border-radius: 0;
+  padding: 10px 16px;
+}
+.hook-q { font-size: 12px; color: var(--text2); }
+.hook-a { font-size: 15px; font-weight: 500; color: var(--text); margin-top: 4px; }
+.hook-a b { font-weight: 700; }
+@media (max-width: 768px) {
+  .hook-box { max-width: 100%; width: 100%; margin-top: 12px; }
+}
+
 .chart-stock-name {
   font-family: var(--sans);
   font-size: 34px;
@@ -2352,6 +2368,10 @@ tr.disc-highlight {
               <span class="stock-ticker" id="stockTicker">—</span>
             </div>
           </div>
+          <div class="hook-box" id="hookBox" style="display:none">
+            <div class="hook-q" id="hookQ">—</div>
+            <div class="hook-a" id="hookA">—</div>
+          </div>
           <div class="price-block">
             <div class="market-status" id="marketStatus">
               <span class="market-dot" id="marketDot"></span>
@@ -2895,6 +2915,7 @@ async function selectStock(name) {
   renderTypeFilter(disclosures);
   renderStatsPanel(disclosures);
   renderThermometer(disclosures);
+  renderHook(disclosures);
 
   // 사례수 최다 유형 자동 선택
   if (types.length > 0) {
@@ -3701,6 +3722,44 @@ function changesByHorizon(prices, date) {
     }
   });
   return out;
+}
+
+// ════════════════════════════════════════
+// Hook — 검색 유입자용 첫인상. 변동성(20일 절댓값) 최대 공시 유형을 질문형으로.
+// ════════════════════════════════════════
+function renderHook(disclosures) {
+  const box = document.getElementById('hookBox');
+  if (!box) return;
+  const prices = (allData.prices[currentStock]||[]).map(p=>p.length===5?{date:p[0],close:p[4]}:{date:p[0],close:p[1]});
+  if (!prices.length || !disclosures || !disclosures.length) { box.style.display='none'; return; }
+
+  const byType = {};
+  disclosures.forEach(function(d){
+    const ch = changesByHorizon(prices, d.date);
+    if (!ch || ch.d20 == null) return;
+    if (!byType[d.type]) byType[d.type] = [];
+    byType[d.type].push(ch.d20);
+  });
+
+  // 표본 3건 이상 중, 평균 20일 변동률 절댓값이 가장 큰 유형
+  let best = null;
+  Object.keys(byType).forEach(function(t){
+    const arr = byType[t];
+    if (arr.length < 3) return;
+    const avg = arr.reduce((a,b)=>a+b,0)/arr.length;
+    if (!best || Math.abs(avg) > Math.abs(best.avg)) {
+      best = { type:t, avg:avg, count:arr.length };
+    }
+  });
+
+  if (!best) { box.style.display='none'; return; }
+
+  const sign = best.avg >= 0 ? '+' : '';
+  const colorVal = best.avg >= 0 ? 'var(--up)' : 'var(--down)';
+  document.getElementById('hookQ').innerHTML = '<b>' + best.type + '</b> 공시 후, 주가는?';
+  document.getElementById('hookA').innerHTML =
+    '과거 <b>' + best.count + '번</b> 중 20일 뒤 평균 <b style="color:' + colorVal + '">' + sign + best.avg.toFixed(1) + '%</b>';
+  box.style.display = 'block';
 }
 
 // ════════════════════════════════════════
