@@ -775,12 +775,12 @@ body {
   border-radius: 50%;
 }
 .bulb-halo.on {
-  background: radial-gradient(circle, rgba(246,173,85,0.25), transparent 70%);
+  background: radial-gradient(circle, rgba(246,173,85,0.22), transparent 70%);
   animation: bulbLure 2.2s ease-in-out infinite;
 }
 @keyframes bulbLure {
-  0%,100% { box-shadow: 0 0 5px 1px rgba(246,173,85,0.4), 0 0 11px 2px rgba(246,173,85,0.16); }
-  50%     { box-shadow: 0 0 9px 2px rgba(246,173,85,0.8), 0 0 20px 5px rgba(246,173,85,0.32); }
+  0%,100% { box-shadow: 0 0 3px 0px rgba(246,173,85,0.4), 0 0 6px 1px rgba(246,173,85,0.15); }
+  50%     { box-shadow: 0 0 5px 1px rgba(246,173,85,0.7), 0 0 10px 2px rgba(246,173,85,0.28); }
 }
 .mentor-bulb.seen .bulb-svg { color: var(--text3); }
 
@@ -1133,12 +1133,12 @@ tbody td {
 
 /* 공시이력 H1: 당일/5일/20일 3기간 변동률 */
 .td-3chg {
-  text-align: right;
+  text-align: left;
   white-space: nowrap;
 }
 .chg-grp {
   display: inline-grid;
-  justify-items: end;
+  justify-items: start;
   width: 52px;
   margin-left: 0;
   vertical-align: top;
@@ -1838,6 +1838,10 @@ tr.disc-highlight {
     flex-wrap: nowrap;
     width: 100%;
   }
+  /* 전구를 종목명 텍스트 중앙에 정렬 */
+  .stock-name-row { align-items: center; gap: 12px; }
+  .stock-name-row .chart-stock-name { line-height: 1; }
+  .bulb-wrap { display: flex; align-items: center; }
 
   .stock-info-left { width: 100%; gap: 4px; }
   .chart-stock-name { font-size: 22px; }
@@ -4077,7 +4081,7 @@ function renderTableRows(disclosures) {
     </tr>`;
   }).join('');
   c.innerHTML=`<table>
-    <thead><tr><th>날짜</th><th>유형</th><th>공시 제목</th><th style="text-align:right">공시 후 변동률</th></tr></thead>
+    <thead><tr><th>날짜</th><th>유형</th><th>공시 제목</th><th style="text-align:left">공시 후 변동률</th></tr></thead>
     <tbody>${rows}</tbody>
   </table>`;
 }
