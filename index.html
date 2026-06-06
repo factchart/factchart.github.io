@@ -1156,9 +1156,13 @@ tbody td {
 .hcell.up { color: var(--up); }
 .hcell.down { color: var(--down); }
 .hcell-na { font-size: 13px; color: var(--text3); }
+/* 헤더를 데이터 블록(당일/5일/20일) 시작점에 맞춤 */
+.th-3chg { text-align: right !important; }
+.th-3chg span { display: inline-block; width: 176px; text-align: left; }
 @media (max-width: 768px) {
   .chg-grp { width: 44px; }
   .chg-block { gap: 6px; }
+  .th-3chg span { width: 144px; }
   .hcell { font-size: 11.5px; }
   .chg-lbl { font-size: 8.5px; }
 }
@@ -4088,7 +4092,7 @@ function renderTableRows(disclosures) {
     </tr>`;
   }).join('');
   c.innerHTML=`<table>
-    <thead><tr><th>날짜</th><th>유형</th><th>공시 제목</th><th style="text-align:right">공시 후 변동률</th></tr></thead>
+    <thead><tr><th>날짜</th><th>유형</th><th>공시 제목</th><th class="th-3chg"><span>공시 후 변동률</span></th></tr></thead>
     <tbody>${rows}</tbody>
   </table>`;
 }
