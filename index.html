@@ -592,10 +592,10 @@ body {
   flex-direction: column;
   flex-shrink: 0;
   background: var(--bg2, #0f1421);
-  border: 1px solid rgba(255,255,255,0.06);
+  border: 1px solid rgba(0,208,132,0.32);
   border-radius: 12px;
-  padding: 22px 24px;
-  width: 340px;
+  padding: 24px 28px;
+  width: 420px;
 }
 
 /* 패널 탭 (텍스트 밑줄형 — 토스 스타일) */
@@ -749,14 +749,19 @@ body {
 }
 
 .price-block {
-  text-align: left;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+  margin-top: 24px;
+}
+.price-main {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 6px;
-  flex-shrink: 0;
-  justify-content: flex-start;
-  margin-top: 24px;
+  gap: 4px;
 }
 
 .price-value {
@@ -1552,8 +1557,8 @@ tbody td {
   border-radius: 20px;
   white-space: nowrap;
   transition: all 0.3s;
-  align-self: flex-start;
-  margin-bottom: 2px;
+  align-self: flex-end;
+  margin-bottom: 4px;
 }
 
 .market-status.open {
@@ -2473,12 +2478,14 @@ tr.disc-highlight {
               <span class="stock-ticker" id="stockTicker">—</span>
             </div>
             <div class="price-block">
+              <div class="price-main">
+                <div class="price-value" id="latestPrice">—</div>
+                <div class="price-change" id="priceChange">—</div>
+              </div>
               <div class="market-status" id="marketStatus">
                 <span class="market-dot" id="marketDot"></span>
                 <span id="marketLabel">—</span>
               </div>
-              <div class="price-value" id="latestPrice">—</div>
-              <div class="price-change" id="priceChange">—</div>
             </div>
           </div>
           <div class="hook-box" id="hookBox" style="display:none">
