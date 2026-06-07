@@ -582,76 +582,9 @@ body {
   display: flex;
   align-items: stretch;
   justify-content: space-between;
-  padding: 20px 24px;
+  padding: 16px;
   border-bottom: 1px solid var(--border);
-  gap: 18px;
-}
-
-/* 패널 탭 (크롬 브라우저형) */
-.panel-tabs {
-  display: flex;
-  gap: 3px;
-  padding: 0 0 0 12px;
-  background: transparent;
-}
-.ptab {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 14px 28px 15px;
-  font-size: 15px;
-  font-weight: 500;
-  font-family: var(--sans);
-  color: #5a6678;
-  background: #0c0f17;
-  border: 1px solid rgba(255,255,255,0.05);
-  border-bottom: none;
-  border-radius: 11px 11px 0 0;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.ptab:hover { color: #9fb0c2; }
-.ptab.active {
-  color: var(--text);
-  font-weight: 600;
-  background: var(--surface, #131926);
-  border-color: var(--border);
-  position: relative;
-  z-index: 2;
-}
-.ptab svg { stroke: currentColor; }
-@media (max-width: 768px) {
-  .ptab { padding: 12px 18px 13px; font-size: 13px; }
-}
-
-/* 기업분석 탭 내용 */
-.tab-panel { padding: 0; }
-#tabCompany { padding: 22px 24px; }
-.comp-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 10px; }
-.comp-grid2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-bottom: 22px; }
-.comp-card { background: var(--bg2,#0f1421); border-radius: 9px; padding: 14px; }
-.comp-k { font-size: 11px; color: var(--text3); }
-.comp-v { font-size: 18px; font-weight: 700; color: var(--text); margin-top: 4px; }
-.comp-v.sm { font-size: 14px; font-weight: 600; line-height: 1.4; }
-.comp-section-title { font-size: 14px; font-weight: 600; color: var(--text); margin: 6px 0 12px; }
-.comp-sub { font-size: 11px; font-weight: 400; color: var(--text3); }
-.fin-wrap { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 24px; }
-.fin-block { background: var(--bg2,#0f1421); border-radius: 10px; padding: 14px; }
-.fin-label { font-size: 12px; color: var(--text2); margin-bottom: 12px; }
-.fin-bars { display: flex; align-items: flex-end; gap: 10px; height: 90px; }
-.fin-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
-.fin-val { font-size: 11.5px; font-weight: 700; line-height: 1; }
-.fin-val.up { color: var(--up); } .fin-val.down { color: var(--down); } .fin-val.flat { color: var(--text3); }
-.fin-bar-track { width: 100%; flex: 1; display: flex; align-items: flex-end; margin: 5px 0; }
-.fin-bar { width: 100%; border-radius: 3px 3px 0 0; min-height: 3px; }
-.fin-bar.up { background: var(--up); } .fin-bar.down { background: var(--down); } .fin-bar.flat { background: var(--text3); }
-.fin-yr { font-size: 10px; color: var(--text3); }
-.comp-soon { background: var(--bg2,#0f1421); border: 1px dashed rgba(255,255,255,0.12); border-radius: 10px; padding: 18px; font-size: 12.5px; color: var(--text3); text-align: center; margin-bottom: 22px; }
-.comp-foot { font-size: 10.5px; color: var(--text3); line-height: 1.5; }
-.company-empty { padding: 40px; text-align: center; color: var(--text3); font-size: 13px; }
-@media (max-width: 768px) {
-  .comp-grid { grid-template-columns: 1fr 1fr; }
-  .fin-wrap { grid-template-columns: 1fr; }
+  gap: 12px;
 }
 
 .stock-info-left {
@@ -659,6 +592,88 @@ body {
   flex-direction: column;
   gap: 6px;
   flex-shrink: 0;
+  background: var(--bg2, #0f1421);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 16px 18px;
+  min-width: 260px;
+}
+
+/* 패널 탭 (텍스트 밑줄형 — 토스 스타일) */
+.panel-tabs {
+  display: flex;
+  gap: 26px;
+  padding: 0 24px;
+  background: transparent;
+  border-bottom: 1px solid var(--border);
+}
+.ptab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 14px 2px;
+  font-size: 15px;
+  font-weight: 500;
+  font-family: var(--sans);
+  color: #5a6678;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.ptab:hover { color: #9fb0c2; }
+.ptab.active {
+  color: var(--text);
+  font-weight: 600;
+  border-bottom-color: var(--accent);
+}
+.ptab svg { stroke: currentColor; }
+@media (max-width: 768px) {
+  .ptab { padding: 12px 2px; font-size: 14px; }
+  .panel-tabs { gap: 18px; padding: 0 16px; }
+}
+
+/* 기업분석 탭 내용 (큰 카드 리디자인) */
+.tab-panel { padding: 0; }
+#tabCompany { padding: 18px; }
+.comp-card-big { background: var(--bg2,#0f1421); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 22px; }
+.comp-head { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+.comp-name { font-size: 20px; font-weight: 700; color: var(--text); }
+.comp-sub2 { font-size: 11px; color: var(--text3); margin-top: 3px; }
+.comp-cap { text-align: right; }
+.comp-cap-k { font-size: 11px; color: var(--text3); }
+.comp-cap-v { font-size: 20px; font-weight: 700; color: var(--text); margin-top: 2px; }
+.comp-quad { display: grid; grid-template-columns: repeat(4,1fr); gap: 1px; background: rgba(255,255,255,0.06); margin: 18px 0; border-radius: 8px; overflow: hidden; }
+.comp-q { background: var(--surface,#131926); padding: 13px; }
+.comp-q-k { font-size: 10.5px; color: var(--text3); }
+.comp-q-v { font-size: 15px; font-weight: 600; color: var(--text); margin-top: 3px; }
+.comp-sec { font-size: 13px; font-weight: 600; color: var(--text2); margin: 20px 0 4px; }
+.comp-sec-sub { font-size: 11px; font-weight: 400; color: var(--text3); margin-left: 6px; }
+.comp-minis { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 12px; }
+.cmini { background: var(--surface,#131926); border-radius: 9px; padding: 12px; }
+.cmini-top { display: flex; justify-content: space-between; font-size: 11px; color: var(--text2); margin-bottom: 10px; }
+.cmini-tr.up { color: var(--up); } .cmini-tr.down { color: var(--down); }
+.cmini-na { font-size: 10px; color: var(--text3); text-align: center; padding: 18px 0; }
+.cbars { display: flex; align-items: flex-end; gap: 6px; height: 64px; }
+.cbar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+.cbar-val { font-size: 10px; line-height: 1; margin-bottom: 3px; }
+.cbar-val.up { color: var(--up); font-weight: 700; } .cbar-val.down { color: var(--down); } .cbar-val.dim { color: #888; } .cbar-val.flat { color: var(--text3); }
+.cbar { width: 100%; border-radius: 2px; min-height: 3px; }
+.cbar.up { background: var(--up); } .cbar.down { background: var(--down); } .cbar.dim { background: #2b3a52; } .cbar.flat { background: #2b3a52; }
+.comp-yrs { font-size: 9.5px; color: var(--text3); text-align: center; margin-top: 6px; }
+.comp-ratios { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin: 18px 0; }
+.comp-r { background: var(--surface,#131926); border-radius: 8px; padding: 13px; text-align: center; }
+.comp-r-k { font-size: 10.5px; color: var(--text3); }
+.comp-r-v { font-size: 17px; font-weight: 700; margin-top: 3px; }
+.comp-r-v.up { color: var(--up); } .comp-r-v.down { color: var(--down); } .comp-r-v.dim { color: var(--text3); font-size: 13px; }
+.comp-soon { background: #0d1018; border: 1px dashed rgba(255,255,255,0.12); border-radius: 10px; padding: 16px; font-size: 12px; color: var(--text3); text-align: center; }
+.comp-foot { font-size: 10.5px; color: var(--text3); line-height: 1.5; margin-top: 16px; }
+.company-empty { padding: 40px; text-align: center; color: var(--text3); font-size: 13px; }
+@media (max-width: 768px) {
+  .comp-quad { grid-template-columns: 1fr 1fr; }
+  .comp-minis { grid-template-columns: 1fr; }
 }
 
 /* hook 박스 — 우측 대형 카드 (검색 유입자용 첫인상) */
@@ -2427,7 +2442,7 @@ tr.disc-highlight {
         <div class="panel-tabs" id="panelTabs">
           <button class="ptab active" data-tab="chart" onclick="switchTab('chart')">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>
-            공시 × 주가
+            공시 · 주가
           </button>
           <button class="ptab" data-tab="company" onclick="switchTab('company')">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
@@ -3861,67 +3876,94 @@ async function renderCompany(name) {
   }
   if (!info) { body.innerHTML = '<div class="company-empty">기업 정보가 아직 준비되지 않았어요.</div>'; return; }
 
-  // 현재가 → 시가총액 계산
   const prices = (allData.prices[name]||[]);
   const last = prices.length ? prices[prices.length-1] : null;
   const lastClose = last ? (last.length===5 ? last[4] : last[1]) : null;
   const shares = info.shares ? Number(info.shares) : null;
   const mktCap = (lastClose && shares) ? lastClose * shares : null;
 
-  function won(v){ // 원 단위 → 조/억 표기
+  function won(v){
     if (v == null || isNaN(v)) return '—';
     const abs = Math.abs(v);
     if (abs >= 1e12) return (v/1e12).toFixed(1) + '조';
-    if (abs >= 1e8)  return (v/1e8).toFixed(0) + '억';
-    return v.toLocaleString() + '원';
+    if (abs >= 1e8)  return Math.round(v/1e8).toLocaleString() + '억';
+    return Math.round(v).toLocaleString() + '원';
   }
+  function jo(v){ return (v==null||isNaN(v)) ? null : v/1e12; }  // 조 단위 숫자
   function shareFmt(v){ if(!v) return '—'; return (v/1e8).toFixed(2) + '억주'; }
-  function estFmt(s){ if(!s||s.length<8) return '—'; return s.slice(0,4)+'.'+s.slice(4,6)+'.'+s.slice(6,8); }
+  function estFmt(s){ if(!s||s.length<8) return '—'; return s.slice(0,4)+'.'+s.slice(4,6); }
+  const meta = info.industry_code ? '' : '';
 
-  // 매출/영익/순익 3개년 막대
-  function bars(y0,y1,y2,label){
-    const vals = [y2,y1,y0].map(function(x){ return x==null?null:Number(x); });
-    const valid = vals.filter(function(x){ return x!=null; });
-    if (!valid.length) return '';
-    const maxAbs = Math.max.apply(null, valid.map(Math.abs), 1);
-    const yrs = ['전전기','전기','당기'];
-    let h = '<div class="fin-block"><div class="fin-label">'+label+'</div><div class="fin-bars">';
-    vals.forEach(function(v,i){
-      const ht = v==null?2:Math.max(Math.round(Math.abs(v)/maxAbs*100),3);
-      const cls = v==null?'flat':(v>=0?'up':'down');
-      h += '<div class="fin-col"><span class="fin-val '+cls+'">'+won(v)+'</span>'
-        + '<div class="fin-bar-track"><div class="fin-bar '+cls+'" style="height:'+ht+'%"></div></div>'
-        + '<span class="fin-yr">'+yrs[i]+'</span></div>';
+  // 3개년 미니차트 (조 단위)
+  function miniChart(y0,y1,y2,label){
+    const vals = [jo(Number(y2)), jo(Number(y1)), jo(Number(y0))];
+    const valid = vals.filter(function(x){ return x!=null && !isNaN(x); });
+    if (!valid.length) return '<div class="cmini"><div class="cmini-top"><span>'+label+'</span></div><div class="cmini-na">데이터 없음</div></div>';
+    const maxAbs = Math.max.apply(null, valid.map(Math.abs), 0.1);
+    // 추세 화살표: 당기 vs 전기
+    const trend = (vals[2]!=null && vals[1]!=null) ? (vals[2] >= vals[1] ? '▲' : '▼') : '';
+    const trendCls = (vals[2]!=null && vals[1]!=null) ? (vals[2] >= vals[1] ? 'up' : 'down') : '';
+    let bars = '';
+    vals.forEach(function(v){
+      const ht = (v==null||isNaN(v)) ? 2 : Math.max(Math.round(Math.abs(v)/maxAbs*52), 3);
+      const isLast = (v === vals[2]);
+      const cls = (v==null) ? 'flat' : (v>=0 ? (isLast?'up':'dim') : 'down');
+      const lbl = (v==null||isNaN(v)) ? '-' : (v>=0?'':'') + v.toFixed(1);
+      const lblCls = (v==null)?'flat':(v>=0?(isLast?'up':'dim'):'down');
+      bars += '<div class="cbar-col"><span class="cbar-val '+lblCls+'">'+lbl+'</span>'
+        + '<div class="cbar '+cls+'" style="height:'+ht+'px"></div></div>';
     });
-    h += '</div></div>';
-    return h;
+    return '<div class="cmini"><div class="cmini-top"><span>'+label+'</span><span class="cmini-tr '+trendCls+'">'+trend+'</span></div>'
+      + '<div class="cbars">'+bars+'</div></div>';
   }
 
-  let html = '';
-  // 상단 핵심 지표
-  html += '<div class="comp-grid">';
-  html += '<div class="comp-card"><div class="comp-k">시가총액</div><div class="comp-v">'+won(mktCap)+'</div></div>';
-  html += '<div class="comp-card"><div class="comp-k">발행주식수</div><div class="comp-v">'+shareFmt(shares)+'</div></div>';
-  html += '<div class="comp-card"><div class="comp-k">상장(설립)</div><div class="comp-v">'+estFmt(info.est_date)+'</div></div>';
-  html += '</div>';
-  html += '<div class="comp-grid2">';
-  html += '<div class="comp-card"><div class="comp-k">대표이사</div><div class="comp-v sm">'+(info.ceo||'—')+'</div></div>';
-  html += '<div class="comp-card"><div class="comp-k">결산월</div><div class="comp-v sm">'+(info.acc_month?info.acc_month+'월':'—')+'</div></div>';
-  html += '</div>';
+  // 영업이익률 = 영업이익/매출 (계산)
+  var opMargin = null;
+  if (info.revenue_y0 && info.op_income_y0) {
+    opMargin = Number(info.op_income_y0) / Number(info.revenue_y0) * 100;
+  }
 
-  // 재무 추이
-  html += '<div class="comp-section-title">실적 추이 <span class="comp-sub">(DART 사업보고서 · 최근 3개년)</span></div>';
-  html += '<div class="fin-wrap">';
-  html += bars(info.revenue_y0,info.revenue_y1,info.revenue_y2,'매출액');
-  html += bars(info.op_income_y0,info.op_income_y1,info.op_income_y2,'영업이익');
-  html += bars(info.net_income_y0,info.net_income_y1,info.net_income_y2,'당기순이익');
-  html += '</div>';
+  const sectorTxt = (allData.meta && allData.meta[name] && allData.meta[name].sector) ? allData.meta[name].sector : '';
 
-  // 컨센서스 (준비 중)
-  html += '<div class="comp-section-title">예상 실적 · 투자의견</div>';
-  html += '<div class="comp-soon">증권사 컨센서스(예상 매출·영업이익·목표주가)는 준비 중이에요.</div>';
+  let html = '<div class="comp-card-big">';
+
+  // 헤더: 종목명 + 시총
+  html += '<div class="comp-head">'
+    + '<div><div class="comp-name">' + name + '</div>'
+    + '<div class="comp-sub2">' + info.dart_code + ' · ' + (info.ceo ? info.ceo.split(',')[0] : '') + '</div></div>'
+    + '<div class="comp-cap"><div class="comp-cap-k">시가총액</div><div class="comp-cap-v">' + won(mktCap) + '</div></div>'
+    + '</div>';
+
+  // 4분할 핵심지표
+  html += '<div class="comp-quad">'
+    + '<div class="comp-q"><div class="comp-q-k">발행주식수</div><div class="comp-q-v">' + shareFmt(shares) + '</div></div>'
+    + '<div class="comp-q"><div class="comp-q-k">대표이사</div><div class="comp-q-v">' + (info.ceo ? info.ceo.split(',')[0] : '—') + '</div></div>'
+    + '<div class="comp-q"><div class="comp-q-k">상장(설립)</div><div class="comp-q-v">' + estFmt(info.est_date) + '</div></div>'
+    + '<div class="comp-q"><div class="comp-q-k">결산월</div><div class="comp-q-v">' + (info.acc_month?info.acc_month+'월':'—') + '</div></div>'
+    + '</div>';
+
+  // 실적 추이 (3개 미니차트)
+  html += '<div class="comp-sec">실적 추이 <span class="comp-sec-sub">DART 사업보고서 · 최근 3개년 (단위: 조원)</span></div>';
+  html += '<div class="comp-minis">'
+    + miniChart(info.revenue_y0,info.revenue_y1,info.revenue_y2,'매출액')
+    + miniChart(info.op_income_y0,info.op_income_y1,info.op_income_y2,'영업이익')
+    + miniChart(info.net_income_y0,info.net_income_y1,info.net_income_y2,'당기순이익')
+    + '</div>';
+  html += '<div class="comp-yrs">2022 · 2023 · 2024</div>';
+
+  // 재무비율 (영업이익률은 계산, 배당은 준비중)
+  html += '<div class="comp-ratios">'
+    + '<div class="comp-r"><div class="comp-r-k">영업이익률</div><div class="comp-r-v ' + (opMargin>=0?'up':'down') + '">' + (opMargin!=null?opMargin.toFixed(1)+'%':'—') + '</div></div>'
+    + '<div class="comp-r"><div class="comp-r-k">주당배당금</div><div class="comp-r-v dim">준비중</div></div>'
+    + '<div class="comp-r"><div class="comp-r-k">배당수익률</div><div class="comp-r-v dim">준비중</div></div>'
+    + '</div>';
+
+  // 컨센서스 준비중
+  html += '<div class="comp-sec">예상 실적 · 투자의견</div>';
+  html += '<div class="comp-soon">증권사 컨센서스(예상 매출·목표주가)는 준비 중이에요.</div>';
 
   html += '<div class="comp-foot">데이터 출처: 금융감독원 전자공시(DART) · 시가총액은 최근 종가×발행주식수로 계산한 참고치예요.</div>';
+  html += '</div>';
 
   body.innerHTML = html;
 }
