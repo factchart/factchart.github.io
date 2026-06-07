@@ -4053,7 +4053,7 @@ function renderHook(disclosures) {
   document.getElementById('hookA').innerHTML =
     '과거 <b>' + best.count + '번</b> 중 20일 뒤 평균 <b style="color:' + colorVal + '">' + sign + best.avg.toFixed(1) + '%</b>';
   // 공유용 텍스트 저장
-  window._shareText = currentStock + ', ' + best.type + ' 공시 후 20일 평균 ' + sign + best.avg.toFixed(1) + '% (과거 ' + best.count + '번) — FACT CHART';
+  window._shareText = currentStock + ', ' + best.type + ' 공시 후 20일 평균 ' + sign + best.avg.toFixed(1) + '% - FACT CHART';
   box.style.display = 'block';
 }
 
@@ -4061,7 +4061,7 @@ function shareHook() {
   var text = window._shareText || (currentStock + ' — FACT CHART');
   var url = 'https://factchart.co.kr/?stock=' + encodeURIComponent(currentStock);
   if (navigator.share) {
-    navigator.share({ title: 'FACT CHART — ' + currentStock, text: text, url: url }).catch(function(){});
+    navigator.share({ text: text, url: url }).catch(function(){});
   } else {
     var full = text + '\n' + url;
     if (navigator.clipboard) {
