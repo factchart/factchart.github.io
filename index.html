@@ -126,9 +126,9 @@ Chart.register(CandlestickPlugin);
   --up: #e53e3e;
   --down: #3182ce;
   --gold: #f6ad55;
-  --text: #f0f4f8;
-  --text2: #c5d0dc;
-  --text3: #7a8fa3;
+  --text: #f2f5f9;
+  --text2: #cdd6e0;
+  --text3: #93a1b2;
   --sans: 'Pretendard', 'Noto Sans KR', sans-serif;
   --num: 'Inter', 'Pretendard', sans-serif;
   --radius: 10px;
@@ -582,21 +582,20 @@ body {
   display: flex;
   align-items: stretch;
   justify-content: space-between;
-  padding: 16px;
+  padding: 18px;
   border-bottom: 1px solid var(--border);
-  gap: 12px;
+  gap: 14px;
 }
 
 .stock-info-left {
   display: flex;
   flex-direction: column;
-  gap: 6px;
   flex-shrink: 0;
   background: var(--bg2, #0f1421);
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 12px;
-  padding: 16px 18px;
-  min-width: 260px;
+  padding: 22px 24px;
+  width: 340px;
 }
 
 /* 패널 탭 (텍스트 밑줄형 — 토스 스타일) */
@@ -681,19 +680,19 @@ body {
   flex: 1;
   background: var(--bg2, #0f1421);
   border: 1px solid rgba(246,173,85,0.28);
-  border-radius: 10px;
-  padding: 16px 18px;
+  border-radius: 12px;
+  padding: 24px 28px;
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
-.hook-q { font-size: 13px; color: var(--text2); }
+.hook-q { font-size: 15px; color: var(--text2); font-weight: 500; }
 .hook-q b { font-weight: 700; color: var(--gold); }
-.hook-a { font-size: 22px; font-weight: 600; color: var(--text); margin-top: 8px; line-height: 1.3; }
+.hook-a { font-size: 27px; font-weight: 700; color: var(--text); margin-top: 12px; line-height: 1.35; letter-spacing: -0.5px; }
 .hook-a b { font-weight: 700; }
 .hook-link {
-  font-size: 11.5px; color: var(--accent);
-  margin-top: 12px; padding-top: 10px;
+  font-size: 12.5px; color: var(--accent);
+  margin-top: 16px; padding-top: 14px;
   border-top: 1px solid rgba(255,255,255,0.06);
 }
 @media (max-width: 768px) {
@@ -704,11 +703,11 @@ body {
 
 .chart-stock-name {
   font-family: var(--sans);
-  font-size: 34px;
-  font-weight: 800;
+  font-size: 28px;
+  font-weight: 700;
   color: var(--text);
-  letter-spacing: -1px;
-  line-height: 1;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
 }
 
 .stock-meta {
@@ -716,6 +715,7 @@ body {
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
+  margin-top: 10px;
 }
 
 .stock-sector {
@@ -753,15 +753,15 @@ body {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
+  gap: 6px;
   flex-shrink: 0;
   justify-content: flex-start;
-  margin-top: 14px;
+  margin-top: 24px;
 }
 
 .price-value {
   font-family: var(--num);
-  font-size: 32px;
+  font-size: 34px;
   font-weight: 700;
   color: var(--text);
   letter-spacing: -1px;
@@ -1552,8 +1552,8 @@ tbody td {
   border-radius: 20px;
   white-space: nowrap;
   transition: all 0.3s;
-  align-self: flex-end;
-  margin-bottom: 10px;
+  align-self: flex-start;
+  margin-bottom: 2px;
 }
 
 .market-status.open {
