@@ -3958,11 +3958,15 @@ async function renderCompany(name) {
     + '</div>';
   html += '<div class="comp-yrs">2022 · 2023 · 2024</div>';
 
-  // 재무비율 (영업이익률은 계산, 배당은 준비중)
+  // 재무비율 (영업이익률 계산 + 배당 실데이터)
+  const dps = info.div_per_share ? Number(info.div_per_share) : null;
+  const dyield = info.div_yield ? Number(info.div_yield) : null;
+  function dpsFmt(){ return dps ? Math.round(dps).toLocaleString()+'원' : '—'; }
+  function dyFmt(){ return dyield ? dyield.toFixed(1)+'%' : '—'; }
   html += '<div class="comp-ratios">'
     + '<div class="comp-r"><div class="comp-r-k">영업이익률</div><div class="comp-r-v ' + (opMargin>=0?'up':'down') + '">' + (opMargin!=null?opMargin.toFixed(1)+'%':'—') + '</div></div>'
-    + '<div class="comp-r"><div class="comp-r-k">주당배당금</div><div class="comp-r-v dim">준비중</div></div>'
-    + '<div class="comp-r"><div class="comp-r-k">배당수익률</div><div class="comp-r-v dim">준비중</div></div>'
+    + '<div class="comp-r"><div class="comp-r-k">주당배당금</div><div class="comp-r-v">' + dpsFmt() + '</div></div>'
+    + '<div class="comp-r"><div class="comp-r-k">배당수익률</div><div class="comp-r-v">' + dyFmt() + '</div></div>'
     + '</div>';
 
   // 컨센서스 준비중
