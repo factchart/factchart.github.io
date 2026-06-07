@@ -2974,6 +2974,13 @@ async function selectStock(name) {
   selectedType = null;
   activeTypeFilter = '전체';
 
+  // URL을 현재 종목으로 갱신 (새로고침 없이, 공유·북마크용)
+  try {
+    var u = new URL(window.location);
+    u.searchParams.set('stock', name);
+    history.replaceState(null, '', u);
+  } catch (e) {}
+
   document.getElementById('patternToggle').checked = true;
   const lbl = document.getElementById('toggleLabel');
   lbl.textContent = '패턴 복기 ON';
@@ -4532,7 +4539,11 @@ fetch(DATA_URL)
   .then(data=>{
     allData = data;
     document.querySelector('#hstatDisc .hstat-val').textContent = data.disclosures.length;
-    selectStock('삼성전자');
+    // URL ?stock= 파라미터가 있으면 그 종목, 없으면 기본 삼성전자
+    var params = new URLSearchParams(window.location.search);
+    var reqStock = params.get('stock');
+    var validStock = reqStock && allData.prices && allData.prices[reqStock] ? reqStock : '삼성전자';
+    selectStock(validStock);
   })
   .then(() => {
     initMarketStatus();
