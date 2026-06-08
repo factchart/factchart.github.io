@@ -3180,17 +3180,30 @@ function togglePattern() {
     label.classList.add('active');
     document.getElementById('patternSelectWrap').classList.add('visible');
     document.getElementById('legendPattern').style.display = 'flex';
-    if (selectedType) applyPattern();
+    // OFF 때 보존해둔 유형 복원 (없으면 Hook 유형/첫 유형)
+    if (!selectedType && window._lastSelectedType) selectedType = window._lastSelectedType;
+    if (!selectedType) {
+      const types = [...new Set(allData.disclosures.filter(d=>d.name===currentStock).map(d=>d.type).filter(Boolean))];
+      if (window._hookType && types.indexOf(window._hookType)!==-1) selectedType = window._hookType;
+      else if (types.length) selectedType = types[0];
+    }
+    if (selectedType) {
+      document.querySelectorAll('.type-btn').forEach(b => {
+        b.classList.toggle('active', b.textContent === selectedType);
+      });
+      applyPattern();
+    }
   } else {
     label.textContent = '패턴 복기';
     label.classList.remove('active');
     document.getElementById('patternSelectWrap').classList.remove('visible');
     document.getElementById('patternStats').classList.remove('visible');
     document.getElementById('legendPattern').style.display = 'none';
-    selectedType = null;
+    window._lastSelectedType = selectedType;  // 다시 켤 때 복원용으로 기억
     document.getElementById('mentorCard').style.display = 'none';
     const prices = (allData.prices[currentStock]||[]).map(p=>p.length===5?{date:p[0],open:p[1],high:p[2],low:p[3],close:p[4],price:p[4]}:{date:p[0],price:p[1],close:p[1]});
     const disclosures = allData.disclosures.filter(d=>d.name===currentStock);
+    // 패턴평균은 숨기되, 점은 선택 유형 기준 유지 (selectedType 보존)
     renderChart(prices, disclosures, null);
   }
 }
