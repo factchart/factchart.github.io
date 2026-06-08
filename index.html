@@ -3149,14 +3149,19 @@ async function selectStock(name) {
   // 기업분석 탭이 열려있으면 새 종목으로 갱신
   if (activeTab === 'company') renderCompany(currentStock);
 
-  // 사례수 최다 유형 자동 선택
+  // 차트 기본 선택 유형 = Hook 카드 유형(가장 최근 공시 유형)과 일치.
+  // renderHook이 위에서 window._hookType을 세팅함. 없으면 사례수 최다로 폴백.
   if (types.length > 0) {
-    let bestType = types[0], bestCount = -1;
-    types.forEach(t => {
-      const cnt = disclosures.filter(d => d.type === t).length;
-      if (cnt > bestCount) { bestCount = cnt; bestType = t; }
-    });
-    selectedType = bestType;
+    let chosen = (window._hookType && types.indexOf(window._hookType) !== -1) ? window._hookType : null;
+    if (!chosen) {
+      let bestType = types[0], bestCount = -1;
+      types.forEach(t => {
+        const cnt = disclosures.filter(d => d.type === t).length;
+        if (cnt > bestCount) { bestCount = cnt; bestType = t; }
+      });
+      chosen = bestType;
+    }
+    selectedType = chosen;
     document.querySelectorAll('.type-btn').forEach(b => {
       b.classList.toggle('active', b.textContent === selectedType);
     });
@@ -3358,33 +3363,24 @@ function renderChart(prices, disclosures, patternData) {
       if (!ds1) return;
       chart.data.labels.forEach((label, i) => {
         if (!discMap[label]) return;
+        // 유형이 선택된 경우, 그 유형을 포함한 공시만 점 표시 (나머지는 숨김)
+        const sel = (typeof selectedType !== 'undefined' && selectedType);
+        if (sel && !discMap[label].some(d=>d.type===selectedType)) return;
         const x = scales.x.getPixelForValue(i);
         const y = scales.y.getPixelForValue(ds1.data[i]);
         if (!y || isNaN(y)) return;
-        // 유형이 선택된 경우: 선택 유형 포함 마커는 진하게, 나머지는 희미하게
-        const sel = (typeof selectedType !== 'undefined' && selectedType);
-        const isHit = sel ? discMap[label].some(d=>d.type===selectedType) : true;
         const pulse = 0.5 + 0.5 * Math.sin(pulsePhase);
         const radius = 5 + pulse * 3.5; // 5~8.5
+        const alpha = 0.08 + pulse * 0.12;
         ctx.save();
-        if (isHit) {
-          // 강조: 기존 밝기 (선택 안 됐을 때와 동일)
-          const alpha = 0.08 + pulse * 0.12;
-          ctx.beginPath();
-          ctx.arc(x, y, radius, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(0,229,160,${alpha})`;
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(x, y, 3.5, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(0,229,160,0.95)';
-          ctx.fill();
-        } else {
-          // 비강조: 작고 흐릿한 점만 (펄스 없음)
-          ctx.beginPath();
-          ctx.arc(x, y, 2.5, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(0,229,160,0.14)';
-          ctx.fill();
-        }
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0,229,160,${alpha})`;
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0,229,160,0.85)';
+        ctx.fill();
         ctx.restore();
       });
     },
