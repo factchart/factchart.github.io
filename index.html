@@ -718,9 +718,8 @@ body {
 .hook-a { font-size: 27px; font-weight: 700; color: var(--text); margin-top: 12px; line-height: 1.35; letter-spacing: -0.5px; }
 .hook-a b { font-weight: 700; }
 .hook-link {
-  font-size: 12.5px; color: var(--accent); cursor: pointer; transition: opacity .15s;
+  font-size: 12.5px; color: var(--accent);
 }
-.hook-link:hover { opacity: 0.7; text-decoration: underline; }
 .hook-foot {
   display: flex;
   align-items: center;
@@ -844,6 +843,20 @@ body {
 .flip-col { display: inline-block; overflow: hidden; vertical-align: top; }
 .flip-col > .flip-inner { display: block; transition: transform .42s cubic-bezier(.22,1,.36,1); }
 .flip-col > .flip-inner > span { display: block; }
+
+/* 맨 위로 스크롤 버튼 */
+#toTopBtn {
+  position: fixed; right: 22px; bottom: 26px; z-index: 900;
+  width: 46px; height: 46px; border-radius: 50%;
+  background: rgba(20,28,42,0.86); border: 1px solid rgba(0,208,132,0.42);
+  color: #00d084; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.35); backdrop-filter: blur(6px);
+  opacity: 0; visibility: hidden; transform: translateY(10px);
+  transition: opacity .25s, transform .25s, visibility .25s;
+}
+#toTopBtn.show { opacity: 1; visibility: visible; transform: translateY(0); }
+#toTopBtn:hover { background: rgba(0,208,132,0.16); border-color: rgba(0,208,132,0.7); }
+@media (max-width: 600px) { #toTopBtn { right: 16px; bottom: 18px; width: 42px; height: 42px; } }
 
 /* ── 패턴 바 ── */
 .pattern-bar {
@@ -2553,7 +2566,7 @@ tr.disc-highlight {
             <div class="hook-q" id="hookQ">—</div>
             <div class="hook-a" id="hookA">—</div>
             <div class="hook-foot">
-              <span class="hook-link" id="hookLink" onclick="goToHookDisclosures()" role="button" tabindex="0">↓ 아래 차트의 초록 점이 그 공시들이에요</span>
+              <span class="hook-link" id="hookLink">↓ 아래 차트의 초록 점을 누르면 해당 공시로 이동해요</span>
               <button class="hook-share" id="hookShare" onclick="shareHook()" aria-label="공유하기">
                 공유
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><polyline points="15 6 20 6 20 11"/><path d="M20 6l-9 9"/></svg>
@@ -3348,18 +3361,30 @@ function renderChart(prices, disclosures, patternData) {
         const x = scales.x.getPixelForValue(i);
         const y = scales.y.getPixelForValue(ds1.data[i]);
         if (!y || isNaN(y)) return;
+        // 유형이 선택된 경우: 선택 유형 포함 마커는 진하게, 나머지는 희미하게
+        const sel = (typeof selectedType !== 'undefined' && selectedType);
+        const isHit = sel ? discMap[label].some(d=>d.type===selectedType) : true;
         const pulse = 0.5 + 0.5 * Math.sin(pulsePhase);
-        const radius = 5 + pulse * 3.5; // 5~8.5 (+20%)
-        const alpha = 0.08 + pulse * 0.12; // 0.08~0.20 (어둡게)
+        const radius = 5 + pulse * 3.5; // 5~8.5
         ctx.save();
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0,229,160,${alpha})`;
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(x, y, 3.5, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0,229,160,0.45)';
-        ctx.fill();
+        if (isHit) {
+          // 강조: 기존 밝기 (선택 안 됐을 때와 동일)
+          const alpha = 0.08 + pulse * 0.12;
+          ctx.beginPath();
+          ctx.arc(x, y, radius, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(0,229,160,${alpha})`;
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(0,229,160,0.95)';
+          ctx.fill();
+        } else {
+          // 비강조: 작고 흐릿한 점만 (펄스 없음)
+          ctx.beginPath();
+          ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(0,229,160,0.14)';
+          ctx.fill();
+        }
         ctx.restore();
       });
     },
@@ -4174,6 +4199,7 @@ function renderHook(disclosures) {
   const prices = (allData.prices[currentStock]||[]).map(p=>p.length===5?{date:p[0],close:p[4]}:{date:p[0],close:p[1]});
   if (!prices.length || !disclosures || !disclosures.length) { box.style.display='none'; return; }
 
+  // 유형별 20일 변동률 수집
   const byType = {};
   disclosures.forEach(function(d){
     const ch = changesByHorizon(prices, d.date);
@@ -4182,16 +4208,27 @@ function renderHook(disclosures) {
     byType[d.type].push(ch.d20);
   });
 
-  // 표본 3건 이상 중, 평균 20일 변동률 절댓값이 가장 큰 유형
+  // 가장 최근에 발생한 공시의 '유형'을 선택 (표본 3건 이상인 유형 중에서).
+  // 최근 공시 유형이 표본 부족이면 그 다음 최근 유형으로 폴백.
+  const sorted = disclosures.slice().sort(function(a,b){ return (a.date<b.date?1:a.date>b.date?-1:0); });
   let best = null;
-  Object.keys(byType).forEach(function(t){
+  for (let i = 0; i < sorted.length; i++) {
+    const t = sorted[i].type;
     const arr = byType[t];
-    if (arr.length < 3) return;
+    if (!arr || arr.length < 3) continue;
     const avg = arr.reduce((a,b)=>a+b,0)/arr.length;
-    if (!best || Math.abs(avg) > Math.abs(best.avg)) {
+    best = { type:t, avg:avg, count:arr.length };
+    break;
+  }
+  // 표본 3건 이상 유형이 전혀 없으면, 가장 최근 유형으로 표본 수 무관 폴백
+  if (!best && sorted.length) {
+    const t = sorted[0].type;
+    const arr = byType[t] || [];
+    if (arr.length) {
+      const avg = arr.reduce((a,b)=>a+b,0)/arr.length;
       best = { type:t, avg:avg, count:arr.length };
     }
-  });
+  }
 
   if (!best) { box.style.display='none'; return; }
 
@@ -4202,23 +4239,12 @@ function renderHook(disclosures) {
     '과거 <b>' + best.count + '번</b> 중 20일 뒤 평균 <b style="color:' + colorVal + '">' + sign + best.avg.toFixed(1) + '%</b>';
   // 공유용 텍스트 저장
   window._shareText = currentStock + ', ' + best.type + ' 공시 후 20일 평균 ' + sign + best.avg.toFixed(1) + '% - FACT CHART';
-  window._hookType = best.type;   // 클릭 이동 시 강조할 공시 유형
-  // 안내 문구를 '클릭 가능'으로
+  window._hookType = best.type;
   const linkEl = document.getElementById('hookLink');
   if (linkEl) {
-    linkEl.textContent = '↓ 아래 차트의 초록 점이 그 공시들이에요 (탭하면 이동)';
-    linkEl.style.cursor = 'pointer';
+    linkEl.textContent = '↓ 아래 차트의 초록 점을 누르면 해당 공시로 이동해요';
   }
   box.style.display = 'block';
-}
-
-// Hook 안내 클릭 → 차트로 스크롤 + Hook이 다루는 공시 유형 선택해 강조
-function goToHookDisclosures() {
-  if (window._hookType && typeof selectPatternType === 'function') {
-    selectPatternType(window._hookType);   // 해당 유형 패턴/마커 강조
-  }
-  const chart = document.getElementById('chartContainer');
-  if (chart) chart.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function shareHook() {
@@ -5151,6 +5177,18 @@ function isMarketOpen() {
   return (day >= 1 && day <= 5 && t >= 9*60 && t < 15*60+36);
 }
 
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+// 페이지 1/3 이상 스크롤 시 '맨 위로' 버튼 표시
+window.addEventListener('scroll', function() {
+  const btn = document.getElementById('toTopBtn');
+  if (!btn) return;
+  const threshold = (document.documentElement.scrollHeight - window.innerHeight) / 3;
+  if (window.scrollY > threshold && threshold > 0) btn.classList.add('show');
+  else btn.classList.remove('show');
+}, { passive: true });
+
 function startRealtimePolling() {
   fetchRealtime();
   setInterval(function() {
@@ -5284,5 +5322,8 @@ document.addEventListener('DOMContentLoaded', startRealtimePolling);
   </div>
 </div>
 
+<button id="toTopBtn" onclick="scrollToTop()" aria-label="맨 위로">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+</button>
 </body>
 </html>
