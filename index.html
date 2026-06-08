@@ -2854,6 +2854,9 @@ const TYPE_COLORS = {
 let currentStock = null;
 let chartInstance = null;
 let allData = null;
+let chartPrices = null;       // 현재 차트에 그려진 가격 배열(실시간 캔들 갱신용)
+let chartDisclosures = null;  // 현재 차트의 공시 배열(실시간 재렌더용)
+let todayCandleAdded = false; // 오늘 캔들이 차트에 추가됐는지
 let patternOn = true; // 기본값 ON
 let selectedType = null;
 let activeTypeFilter = '전체';
@@ -3071,16 +3074,28 @@ async function selectStock(name) {
 
   prices = (allData.prices[name]||[]).map(p=>p.length===5?{date:p[0],open:p[1],high:p[2],low:p[3],close:p[4],price:p[4]}:{date:p[0],price:p[1],close:p[1]});
   disclosures = allData.disclosures.filter(d=>d.name===name);
+  chartPrices = prices;        // 실시간 캔들 갱신이 참조할 배열
+  chartDisclosures = disclosures;
+  todayCandleAdded = false;    // 새 종목이므로 오늘 캔들 초기화
 
+  const marketOpenNow = (typeof isMarketOpen === 'function' && isMarketOpen());
   if (prices.length > 0) {
     const latest = prices[prices.length-1];
     const prev = prices[prices.length-2];
-    document.getElementById('latestPrice').textContent = Number(latest.price).toLocaleString('ko-KR')+'원';
-    if (prev) {
-      const chg = ((latest.price-prev.price)/prev.price*100).toFixed(2);
-      const el = document.getElementById('priceChange');
-      el.textContent = (chg>0?'▲ +':'▼ ')+Math.abs(chg)+'%';
-      el.className = 'price-change '+(chg>=0?'up':'down');
+    const latestEl = document.getElementById('latestPrice');
+    if (marketOpenNow) {
+      // 장중: 현재가 받아올 때까지 '불러오는 중' (과거 종가 노출 방지)
+      if (latestEl) latestEl.textContent = '불러오는 중…';
+    } else {
+      if (latestEl) latestEl.textContent = Number(latest.price).toLocaleString('ko-KR')+'원';
+      if (prev) {
+        const chg = ((latest.price-prev.price)/prev.price*100).toFixed(2);
+        const el = document.getElementById('priceChange');
+        if (el) {
+          el.textContent = (chg>0?'▲ +':'▼ ')+Math.abs(chg)+'%';
+          el.className = 'price-change '+(chg>=0?'up':'down');
+        }
+      }
     }
   }
 
@@ -4928,6 +4943,13 @@ function applyRealtimePrice() {
   const latestEl = document.getElementById('latestPrice');
   if (priceEl)  priceEl.textContent  = p.price.toLocaleString('ko-KR') + '원';
   if (latestEl) latestEl.textContent = p.price.toLocaleString('ko-KR') + '원';
+  // priceChange(과거 종가 기준)도 실시간 등락률로 갱신
+  const pcEl = document.getElementById('priceChange');
+  if (pcEl && typeof p.change === 'number') {
+    const sign = p.change >= 0 ? '▲ +' : '▼ ';
+    pcEl.textContent = sign + Math.abs(p.change).toFixed(2) + '%';
+    pcEl.className = 'price-change ' + (p.change >= 0 ? 'up' : 'down');
+  }
   if (changeEl) {
     const sign = p.change >= 0 ? '▲' : '▼';
     changeEl.textContent = sign + ' ' + Math.abs(p.change).toFixed(2) + '%';
@@ -4941,6 +4963,43 @@ function applyRealtimePrice() {
     const sign = p.change >= 0 ? '▲' : '▼';
     tkc.textContent = sign + ' ' + Math.abs(p.change).toFixed(2) + '%';
     tkc.className = p.change >= 0 ? 'ticker-chg up' : 'ticker-chg down';
+  }
+  // ── 차트에 오늘 캔들 추가/갱신 ──
+  updateTodayCandle(p);
+}
+
+// 장중 실시간가로 차트 끝에 '오늘 캔들'을 추가하거나 갱신
+function updateTodayCandle(p) {
+  if (!chartPrices || !chartPrices.length || !p || !p.price) return;
+  // 오늘 날짜(KST) YYYY-MM-DD
+  const kst = new Date(new Date().toLocaleString('en-US', {timeZone:'Asia/Seoul'}));
+  const today = kst.getFullYear() + '-'
+    + String(kst.getMonth()+1).padStart(2,'0') + '-'
+    + String(kst.getDate()).padStart(2,'0');
+  const last = chartPrices[chartPrices.length-1];
+  // KIS open/high/low가 있으면 OHLC, 없으면 현재가로 단순 캔들
+  const candle = {
+    date: today,
+    open:  p.open || p.price,
+    high:  p.high || p.price,
+    low:   p.low  || p.price,
+    close: p.price,
+    price: p.price
+  };
+  let changed = false;
+  if (last && last.date === today) {
+    // 이미 오늘 캔들이 있으면 값만 갱신
+    chartPrices[chartPrices.length-1] = candle;
+    changed = true;
+  } else if (!last || last.date < today) {
+    // 오늘 캔들이 없으면 추가
+    chartPrices.push(candle);
+    todayCandleAdded = true;
+    changed = true;
+  }
+  if (changed) {
+    // 공시/패턴 상태 유지한 채 차트만 다시 그림
+    renderChart(chartPrices, chartDisclosures || [], null);
   }
 }
 
