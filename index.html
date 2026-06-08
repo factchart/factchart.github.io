@@ -650,6 +650,10 @@ body {
 .comp-q-v { font-size: 15px; font-weight: 600; color: var(--text); margin-top: 3px; }
 .comp-sec { font-size: 13px; font-weight: 600; color: var(--text2); margin: 20px 0 4px; }
 .comp-sec-sub { font-size: 11px; font-weight: 400; color: var(--text3); margin-left: 6px; }
+.comp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; overflow: hidden; margin-top: 16px; }
+.comp-cell { background: var(--bg2,#0f1421); padding: 13px 15px; }
+.comp-cell-label { font-size: 11px; color: var(--text3); }
+.comp-cell-val { font-size: 15px; font-weight: 600; color: var(--text); margin-top: 3px; }
 .comp-minis { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 12px; }
 .cmini { background: var(--surface,#131926); border-radius: 9px; padding: 12px; }
 .cmini-top { display: flex; justify-content: space-between; font-size: 11px; color: var(--text2); margin-bottom: 10px; }
@@ -663,6 +667,28 @@ body {
 .cbar.up { background: var(--up); } .cbar.down { background: var(--down); } .cbar.dim { background: #2b3a52; } .cbar.flat { background: #2b3a52; }
 .comp-yrs { font-size: 9.5px; color: var(--text3); text-align: center; margin-top: 6px; }
 .comp-ratios { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin: 18px 0; }
+.rx-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
+.rx-card { background: var(--surface,#131926); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 16px; }
+.rx-top { display: flex; justify-content: space-between; align-items: baseline; }
+.rx-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.rx-en { font-size: 10.5px; color: var(--text3); margin-left: 6px; font-weight: 400; }
+.rx-val { font-size: 24px; font-weight: 700; }
+.rx-val.good, .rx-badge.good, .rx-note b.good { color: var(--accent); }
+.rx-bar-fill.good { background: var(--accent); }
+.rx-val.mid, .rx-badge.mid, .rx-note b.mid { color: var(--gold); }
+.rx-bar-fill.mid { background: var(--gold); }
+.rx-val.bad, .rx-badge.bad, .rx-note b.bad { color: var(--down); }
+.rx-bar-fill.bad { background: var(--down); }
+.rx-badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 6px; margin: 8px 0 10px; background: rgba(255,255,255,0.05); }
+.rx-desc { font-size: 13px; color: var(--text2); line-height: 1.6; }
+.rx-desc b, .rx-trend b, .rx-div b { color: var(--text); font-weight: 700; }
+.rx-bar { height: 7px; background: rgba(255,255,255,0.08); border-radius: 4px; margin: 12px 0 5px; overflow: hidden; }
+.rx-bar-fill { height: 100%; border-radius: 4px; }
+.rx-scale { display: flex; justify-content: space-between; font-size: 9.5px; color: var(--text3); }
+.rx-note { font-size: 11.5px; color: var(--text3); line-height: 1.55; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); }
+.rx-trend { font-size: 12px; color: var(--text2); line-height: 1.55; margin-top: 8px; background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 7px; }
+.rx-div { font-size: 13px; color: var(--text2); line-height: 1.6; background: var(--surface,#131926); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 14px 16px; margin: 12px 0; }
+@media (max-width: 768px) { .rx-wrap { grid-template-columns: 1fr; } }
 .comp-r { background: var(--surface,#131926); border-radius: 8px; padding: 13px; text-align: center; }
 .comp-r-k { font-size: 10.5px; color: var(--text3); }
 .comp-r-v { font-size: 17px; font-weight: 700; margin-top: 3px; }
@@ -3962,50 +3988,139 @@ async function renderCompany(name) {
       + '<div class="cbars">'+bars+'</div></div>';
   }
 
-  // 영업이익률 = 영업이익/매출 (계산)
-  var opMargin = null;
-  if (info.revenue_y0 && info.op_income_y0) {
-    opMargin = Number(info.op_income_y0) / Number(info.revenue_y0) * 100;
+  // ===== 풀이형 재무비율 =====
+  var rev0=Number(info.revenue_y0)||0, op0=Number(info.op_income_y0)||0, ni0=Number(info.net_income_y0)||0;
+  var asset0=Number(info.assets_y0)||0, liab0=Number(info.liab_y0)||0, eq0=Number(info.equity_y0)||0;
+  var asset1=Number(info.assets_y1)||0, liab1=Number(info.liab_y1)||0, eq1=Number(info.equity_y1)||0;
+  var ni1=Number(info.net_income_y1)||0, rev1=Number(info.revenue_y1)||0, op1=Number(info.op_income_y1)||0;
+
+  // 비율 계산
+  var debtRatio = (eq0>0) ? liab0/eq0*100 : null;
+  var roe = (eq0>0) ? ni0/eq0*100 : null;
+  var opMargin = (rev0>0) ? op0/rev0*100 : null;
+  var equityRatio = (asset0>0) ? eq0/asset0*100 : null;
+  // 전기 비교용
+  var debtRatioPrev = (eq1>0) ? liab1/eq1*100 : null;
+  var roePrev = (eq1>0) ? ni1/eq1*100 : null;
+  var opMarginPrev = (rev1>0) ? op1/rev1*100 : null;
+
+  // 공시 연결: 자본/부채 변동을 설명할 만한 공시 유형 탐지
+  var capEvents = (allData.disclosures||[]).filter(function(d){ return d[1]===name; });
+  function hasType(re){ return capEvents.some(function(d){ return re.test(d[3]||''); }); }
+  var hadRights = hasType(/유상증자|전환사채|신주인수권/);
+  var hadBuyback = hasType(/자기주식|자사주/);
+
+  function pct(v){ return v==null?'—':v.toFixed(1)+'%'; }
+  function trendTxt(cur, prev, unit){
+    if(cur==null||prev==null) return '';
+    var diff = cur-prev;
+    if(Math.abs(diff)<0.5) return '작년과 비슷한 수준이에요.';
+    return '작년 '+prev.toFixed(1)+unit+'에서 올해 '+cur.toFixed(1)+unit+'로 '+(diff>0?'올랐':'내렸')+'어요.';
   }
 
-  const sectorTxt = (allData.meta && allData.meta[name] && allData.meta[name].sector) ? allData.meta[name].sector : '';
+  // 지표 카드 빌더: 수치+등급+비유+기준선막대+설명+추세
+  function ratioCard(cfg){
+    if(cfg.value==null) return '';
+    var g = cfg.grade(cfg.value); // {label, cls}
+    var barPct = Math.max(2, Math.min(100, cfg.bar(cfg.value)));
+    var h = '<div class="rx-card">';
+    h += '<div class="rx-top"><span class="rx-name">'+cfg.name+'<span class="rx-en">'+cfg.en+'</span></span>'
+       + '<span class="rx-val '+g.cls+'">'+pct(cfg.value)+'</span></div>';
+    h += '<div class="rx-badge '+g.cls+'">'+g.label+'</div>';
+    h += '<div class="rx-desc">'+cfg.liken+'</div>';
+    h += '<div class="rx-bar"><div class="rx-bar-fill '+g.cls+'" style="width:'+barPct+'%"></div></div>';
+    h += '<div class="rx-scale">'+cfg.scale+'</div>';
+    h += '<div class="rx-note"><b class="'+g.cls+'">기준</b> '+cfg.guide+'</div>';
+    var tr = cfg.trend||'';
+    if(tr) h += '<div class="rx-trend">'+tr+'</div>';
+    return h+'</div>';
+  }
 
+  // ===== 카드 조립 시작 =====
   let html = '<div class="comp-card-big">';
 
-  // 헤더: 종목명 + 시총
+  // 헤더: 종목명 + 시가총액
   html += '<div class="comp-head">'
-    + '<div><div class="comp-name">' + name + '</div>'
-    + '<div class="comp-sub2">' + info.dart_code + ' · ' + (info.ceo ? info.ceo.split(',')[0] : '') + '</div></div>'
-    + '<div class="comp-cap"><div class="comp-cap-k">시가총액</div><div class="comp-cap-v">' + won(mktCap) + '</div></div>'
+    + '<div class="comp-name">'+name+'</div>'
+    + '<div class="comp-cap"><div class="comp-cap-k">시가총액</div>'
+    + '<div class="comp-cap-v">'+(mktCap!=null?won(mktCap):'—')+'</div></div>'
     + '</div>';
 
-  // 4분할 핵심지표
-  html += '<div class="comp-quad">'
-    + '<div class="comp-q"><div class="comp-q-k">발행주식수</div><div class="comp-q-v">' + shareFmt(shares) + '</div></div>'
-    + '<div class="comp-q"><div class="comp-q-k">대표이사</div><div class="comp-q-v">' + (info.ceo ? info.ceo.split(',')[0] : '—') + '</div></div>'
-    + '<div class="comp-q"><div class="comp-q-k">상장(설립)</div><div class="comp-q-v">' + estFmt(info.est_date) + '</div></div>'
-    + '<div class="comp-q"><div class="comp-q-k">결산월</div><div class="comp-q-v">' + (info.acc_month?info.acc_month+'월':'—') + '</div></div>'
+  // 4분할: 발행주식수 · 대표이사 · 상장(설립) · 결산월
+  html += '<div class="comp-grid">'
+    + '<div class="comp-cell"><div class="comp-cell-label">발행주식수</div><div class="comp-cell-val">'+shareFmt(shares)+'</div></div>'
+    + '<div class="comp-cell"><div class="comp-cell-label">대표이사</div><div class="comp-cell-val">'+(info.ceo||'—')+'</div></div>'
+    + '<div class="comp-cell"><div class="comp-cell-label">설립</div><div class="comp-cell-val">'+estFmt(info.est_date)+'</div></div>'
+    + '<div class="comp-cell"><div class="comp-cell-label">결산월</div><div class="comp-cell-val">'+(info.acc_month?info.acc_month+'월':'—')+'</div></div>'
     + '</div>';
 
-  // 실적 추이 (3개 미니차트)
-  html += '<div class="comp-sec">실적 추이 <span class="comp-sec-sub">DART 사업보고서 · 최근 3개년 (단위: 조원)</span></div>';
-  html += '<div class="comp-minis">'
-    + miniChart(info.revenue_y0,info.revenue_y1,info.revenue_y2,'매출액')
-    + miniChart(info.op_income_y0,info.op_income_y1,info.op_income_y2,'영업이익')
-    + miniChart(info.net_income_y0,info.net_income_y1,info.net_income_y2,'당기순이익')
+  // 실적 추이: 매출 · 영업이익 · 당기순이익 3개년 (조 단위)
+  html += '<div class="comp-sec">실적 추이 <span class="comp-sec-sub">최근 3개년 · 조 단위 · DART 기준</span></div>';
+  html += '<div class="cbars-row" style="display:flex;gap:10px;margin-top:8px">'
+    + miniChart(info.revenue_y0, info.revenue_y1, info.revenue_y2, '매출')
+    + miniChart(info.op_income_y0, info.op_income_y1, info.op_income_y2, '영업이익')
+    + miniChart(info.net_income_y0, info.net_income_y1, info.net_income_y2, '순이익')
     + '</div>';
-  html += '<div class="comp-yrs">2022 · 2023 · 2024</div>';
 
-  // 재무비율 (영업이익률 계산 + 배당 실데이터)
-  const dps = info.div_per_share ? Number(info.div_per_share) : null;
-  const dyield = info.div_yield ? Number(info.div_yield) : null;
-  function dpsFmt(){ return dps ? Math.round(dps).toLocaleString()+'원' : '—'; }
-  function dyFmt(){ return dyield ? dyield.toFixed(1)+'%' : '—'; }
-  html += '<div class="comp-ratios">'
-    + '<div class="comp-r"><div class="comp-r-k">영업이익률</div><div class="comp-r-v ' + (opMargin>=0?'up':'down') + '">' + (opMargin!=null?opMargin.toFixed(1)+'%':'—') + '</div></div>'
-    + '<div class="comp-r"><div class="comp-r-k">주당배당금</div><div class="comp-r-v">' + dpsFmt() + '</div></div>'
-    + '<div class="comp-r"><div class="comp-r-k">배당수익률</div><div class="comp-r-v">' + dyFmt() + '</div></div>'
-    + '</div>';
+  html += '<div class="comp-sec">재무 건전성 풀이 <span class="comp-sec-sub">숫자 뒤에 숨은 뜻을 풀어드려요 · DART 기준</span></div>';
+  html += '<div class="rx-wrap">';
+
+  // 부채비율
+  html += ratioCard({
+    name:'부채비율', en:'부채÷자본', value:debtRatio,
+    grade:function(v){ return v<100?{label:'매우 안정적',cls:'good'}:v<200?{label:'양호한 편',cls:'mid'}:{label:'빚 부담 큼',cls:'bad'}; },
+    bar:function(v){ return v/300*100; },
+    liken: debtRatio!=null ? (name+'은 자기 돈 100원당 빚이 <b>'+Math.round(debtRatio)+'원</b>이에요.'+(debtRatio<100?' 빚보다 자기 돈이 더 많아 튼튼한 편이에요.':debtRatio<200?' 빚과 자기 돈이 비슷한 수준이에요.':' 자기 돈보다 빚이 많아 주의가 필요해요.')) : '',
+    scale:'<span>0% 무차입</span><span>100% 보통</span><span>200%+ 위험</span>',
+    guide:'보통 100% 아래면 안정적, 200%를 넘으면 빚 부담이 큰 편으로 봐요. 빚이 적으면 경기가 나빠져도 버티기 쉽고 이자 부담이 적어요.',
+    trend: (function(){ var t=trendTxt(debtRatio,debtRatioPrev,'%'); if(hadRights && debtRatio!=null && debtRatioPrev!=null && debtRatio<debtRatioPrev) t+=' 최근 유상증자·전환사채 공시가 있었는데, 자본이 늘어 부채비율이 낮아졌을 수 있어요.'; return t; })()
+  });
+
+  // ROE
+  html += ratioCard({
+    name:'ROE', en:'자기자본이익률', value:roe,
+    grade:function(v){ return v>=15?{label:'우량해요',cls:'good'}:v>=10?{label:'좋은 편',cls:'good'}:v>=5?{label:'평범한 편',cls:'mid'}:v>=0?{label:'낮은 편',cls:'bad'}:{label:'적자예요',cls:'bad'}; },
+    bar:function(v){ return (v+5)/30*100; },
+    liken: roe!=null ? ('주주 돈 <b>100원</b>으로 1년에 <b>'+roe.toFixed(1)+'원</b>을 벌었다는 뜻이에요. 회사가 내 돈을 얼마나 잘 굴리는지 보여줘요.') : '',
+    scale:'<span>0%</span><span>10% 양호</span><span>15%+ 우량</span>',
+    guide:'보통 10% 이상이면 좋은 회사, 15%를 넘으면 우량하다고 봐요. 너무 높으면 빚을 많이 써서 그런 경우도 있으니 부채비율과 같이 봐야 해요.',
+    trend: trendTxt(roe,roePrev,'%')
+  });
+
+  // 영업이익률
+  html += ratioCard({
+    name:'영업이익률', en:'영업이익÷매출', value:opMargin,
+    grade:function(v){ return v>=15?{label:'아주 좋아요',cls:'good'}:v>=8?{label:'좋은 편',cls:'good'}:v>=3?{label:'평범한 편',cls:'mid'}:v>=0?{label:'낮은 편',cls:'bad'}:{label:'적자예요',cls:'bad'}; },
+    bar:function(v){ return (v)/30*100; },
+    liken: opMargin!=null ? ('<b>1만 원</b>어치 팔면 <b>'+Math.round(opMargin*100)+'원</b>이 영업이익으로 남는다는 뜻이에요. 장사를 얼마나 남기며 하는지 보여줘요.') : '',
+    scale:'<span>0%</span><span>8% 양호</span><span>15%+ 우수</span>',
+    guide:'업종마다 다르지만 보통 10% 안팎이면 무난, 15%를 넘으면 수익성이 좋은 편이에요. 같은 업종끼리 비교하는 게 정확해요.',
+    trend: trendTxt(opMargin,opMarginPrev,'%')
+  });
+
+  // 자기자본비율
+  html += ratioCard({
+    name:'자기자본비율', en:'자본÷자산', value:equityRatio,
+    grade:function(v){ return v>=50?{label:'튼튼해요',cls:'good'}:v>=30?{label:'양호한 편',cls:'mid'}:{label:'낮은 편',cls:'bad'}; },
+    bar:function(v){ return v; },
+    liken: equityRatio!=null ? ('전체 재산 중 <b>'+Math.round(equityRatio)+'%</b>가 빚이 아닌 진짜 내 돈이에요. 높을수록 빚 의존이 적어요.') : '',
+    scale:'<span>0%</span><span>30% 보통</span><span>50%+ 튼튼</span>',
+    guide:'보통 50% 이상이면 빚 의존이 적어 안정적, 30% 아래면 빚 비중이 큰 편이에요. 부채비율과 동전의 양면이에요.',
+    trend:''
+  });
+
+  html += '</div>';
+
+  // 배당 (별도 줄)
+  var dps = info.div_per_share ? Number(info.div_per_share) : null;
+  var dyield = info.div_yield ? Number(info.div_yield) : null;
+  if(dps || dyield){
+    html += '<div class="rx-div">💰 <b>'+name+'</b>은 1주당 <b>'+(dps?Math.round(dps).toLocaleString()+'원':'—')+'</b>'
+      + (dyield?', 현재가 기준 배당수익률 <b>'+dyield.toFixed(1)+'%</b>':'') + '를 나눠줬어요. '
+      + '주식을 가지고만 있어도 받는 현금이라, 배당을 주는 회사는 주주 환원에 신경 쓴다고 볼 수 있어요.</div>';
+  } else {
+    html += '<div class="rx-div">💰 '+name+'은 최근 현금배당이 없었어요. 성장에 투자 중이거나 아직 이익을 나눌 단계가 아닐 수 있어요.</div>';
+  }
 
   // 컨센서스 준비중
   html += '<div class="comp-sec">예상 실적 · 투자의견</div>';
