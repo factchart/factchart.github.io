@@ -3078,22 +3078,31 @@ async function selectStock(name) {
   chartDisclosures = disclosures;
   todayCandleAdded = false;    // 새 종목이므로 오늘 캔들 초기화
 
+  // 장중이면 현재가 요청을 '먼저' 출발시킨다(렌더링과 병렬). 응답이 오면
+  // applyRealtimePrice가 가격 텍스트 + 차트 마지막 캔들을 갱신.
   const marketOpenNow = (typeof isMarketOpen === 'function' && isMarketOpen());
+  if (marketOpenNow) fetchRealtime();
   if (prices.length > 0) {
     const latest = prices[prices.length-1];
     const prev = prices[prices.length-2];
     const latestEl = document.getElementById('latestPrice');
+    const pcEl = document.getElementById('priceChange');
     if (marketOpenNow) {
-      // 장중: 현재가 받아올 때까지 '불러오는 중' (과거 종가 노출 방지)
-      if (latestEl) latestEl.textContent = '불러오는 중…';
+      // 장중: 빈 로딩 대신 직전 종가를 흐리게 먼저 보여주고,
+      // 현재가 응답이 오면 applyRealtimePrice가 또렷하게 교체한다.
+      if (latestEl) {
+        latestEl.textContent = Number(latest.price).toLocaleString('ko-KR')+'원';
+        latestEl.style.opacity = '0.45';   // 잠정값 표시
+      }
+      if (pcEl) pcEl.style.opacity = '0.45';
     } else {
-      if (latestEl) latestEl.textContent = Number(latest.price).toLocaleString('ko-KR')+'원';
+      if (latestEl) { latestEl.textContent = Number(latest.price).toLocaleString('ko-KR')+'원'; latestEl.style.opacity = '1'; }
       if (prev) {
         const chg = ((latest.price-prev.price)/prev.price*100).toFixed(2);
-        const el = document.getElementById('priceChange');
-        if (el) {
-          el.textContent = (chg>0?'▲ +':'▼ ')+Math.abs(chg)+'%';
-          el.className = 'price-change '+(chg>=0?'up':'down');
+        if (pcEl) {
+          pcEl.textContent = (chg>0?'▲ +':'▼ ')+Math.abs(chg)+'%';
+          pcEl.className = 'price-change '+(chg>=0?'up':'down');
+          pcEl.style.opacity = '1';
         }
       }
     }
@@ -3132,9 +3141,6 @@ async function selectStock(name) {
 
   // 뉴스 브리핑 비동기 호출
   fetchNewsBriefing(name);
-
-  // 장중이면 이 종목 실시간 현재가 즉시 조회 (on-demand)
-  if (typeof isMarketOpen === 'function' && isMarketOpen()) fetchRealtime();
 }
 
 function togglePattern() {
@@ -4942,13 +4948,14 @@ function applyRealtimePrice() {
   const changeEl = document.getElementById('currentChange');
   const latestEl = document.getElementById('latestPrice');
   if (priceEl)  priceEl.textContent  = p.price.toLocaleString('ko-KR') + '원';
-  if (latestEl) latestEl.textContent = p.price.toLocaleString('ko-KR') + '원';
+  if (latestEl) { latestEl.textContent = p.price.toLocaleString('ko-KR') + '원'; latestEl.style.opacity = '1'; }
   // priceChange(과거 종가 기준)도 실시간 등락률로 갱신
   const pcEl = document.getElementById('priceChange');
   if (pcEl && typeof p.change === 'number') {
     const sign = p.change >= 0 ? '▲ +' : '▼ ';
     pcEl.textContent = sign + Math.abs(p.change).toFixed(2) + '%';
     pcEl.className = 'price-change ' + (p.change >= 0 ? 'up' : 'down');
+    pcEl.style.opacity = '1';
   }
   if (changeEl) {
     const sign = p.change >= 0 ? '▲' : '▼';
@@ -4969,6 +4976,8 @@ function applyRealtimePrice() {
 }
 
 // 장중 실시간가로 차트 끝에 '오늘 캔들'을 추가하거나 갱신
+// 차트를 통째로 다시 그리지 않고, 마지막 포인트만 in-place 갱신하여
+// 사용자의 줌/스크롤 위치를 유지하고 깜빡임을 없앤다.
 function updateTodayCandle(p) {
   if (!chartPrices || !chartPrices.length || !p || !p.price) return;
   // 오늘 날짜(KST) YYYY-MM-DD
@@ -4977,7 +4986,6 @@ function updateTodayCandle(p) {
     + String(kst.getMonth()+1).padStart(2,'0') + '-'
     + String(kst.getDate()).padStart(2,'0');
   const last = chartPrices[chartPrices.length-1];
-  // KIS open/high/low가 있으면 OHLC, 없으면 현재가로 단순 캔들
   const candle = {
     date: today,
     open:  p.open || p.price,
@@ -4986,21 +4994,46 @@ function updateTodayCandle(p) {
     close: p.price,
     price: p.price
   };
-  let changed = false;
-  if (last && last.date === today) {
-    // 이미 오늘 캔들이 있으면 값만 갱신
-    chartPrices[chartPrices.length-1] = candle;
-    changed = true;
+
+  const hadToday = last && last.date === today;
+  if (hadToday) {
+    chartPrices[chartPrices.length-1] = candle;       // 값만 갱신
   } else if (!last || last.date < today) {
-    // 오늘 캔들이 없으면 추가
-    chartPrices.push(candle);
+    chartPrices.push(candle);                          // 오늘 캔들 신규 추가
     todayCandleAdded = true;
-    changed = true;
+  } else {
+    return; // 오늘보다 미래 데이터가 있는 비정상 상황 — 무시
   }
-  if (changed) {
-    // 공시/패턴 상태 유지한 채 차트만 다시 그림
-    renderChart(chartPrices, chartDisclosures || [], null);
+
+  // 차트 인스턴스가 없으면(아직 렌더 전) 다음 정식 렌더에 반영되므로 종료
+  if (!chartInstance || !chartInstance.data) return;
+
+  const ds = chartInstance.data.datasets;
+  const labels = chartInstance.data.labels;
+  if (!labels || !ds || !ds.length) return;
+
+  if (hadToday) {
+    // 마지막 포인트 in-place 갱신
+    const i = labels.length - 1;
+    if (ds[0] && ds[0].data) ds[0].data[i] = candle.price;            // 종가 라인
+    if (chartInstance._candleData) {
+      chartInstance._candleData[i] = { o:candle.open, h:candle.high, l:candle.low, c:candle.close };
+    }
+  } else {
+    // 새 라벨/포인트 추가
+    labels.push(today);
+    if (ds[0] && ds[0].data) ds[0].data.push(candle.price);
+    if (ds[1] && ds[1].data) ds[1].data.push(null);                  // 공시 마커 없음
+    // 패턴평균 등 추가 데이터셋이 있으면 null로 자리 맞춤
+    for (let k = 2; k < ds.length; k++) {
+      if (ds[k] && Array.isArray(ds[k].data)) ds[k].data.push(null);
+    }
+    if (chartInstance._candleData) {
+      chartInstance._candleData.push({ o:candle.open, h:candle.high, l:candle.low, c:candle.close });
+    }
   }
+  // 애니메이션 없이 즉시 갱신 → 깜빡임·위치 리셋 없음
+  chartInstance.update('none');
 }
 
 function isMarketOpen() {
