@@ -2338,16 +2338,20 @@ tr.disc-highlight {
 
 .modal-box {
   background: linear-gradient(145deg, #161d2e, #111827);
-  border: 1px solid rgba(255,255,255,0.09);
+  border: 1px solid rgba(0,208,132,0.32);
   border-radius: 16px;
   width: 100%;
   max-width: 560px;
   max-height: 82vh;
   overflow-y: auto;
   padding: 32px 36px;
-  box-shadow: 0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
   position: relative;
-  animation: modalSlideUp 0.22s cubic-bezier(0.34,1.4,0.64,1);
+  animation: modalSlideUp 0.22s cubic-bezier(0.34,1.4,0.64,1), modalPulse 2.6s ease-in-out infinite;
+}
+
+@keyframes modalPulse {
+  0%,100% { box-shadow: 0 0 0 1px rgba(0,208,132,0.30), 0 0 16px rgba(0,208,132,0.10), 0 24px 64px rgba(0,0,0,0.6); }
+  50%     { box-shadow: 0 0 0 1px rgba(0,208,132,0.62), 0 0 24px rgba(0,208,132,0.26), 0 24px 64px rgba(0,0,0,0.6); }
 }
 
 @keyframes shake {
@@ -4254,8 +4258,6 @@ function renderHook(disclosures) {
   document.getElementById('hookQ').innerHTML = '<b>' + best.type + '</b> 공시 후, 주가는?';
   document.getElementById('hookA').innerHTML =
     '과거 <b>' + best.count + '번</b> 중 20일 뒤 평균 <b style="color:' + colorVal + '">' + sign + best.avg.toFixed(1) + '%</b>';
-  // 공유용 텍스트 저장
-  window._shareText = currentStock + ', ' + best.type + ' 공시 후 20일 평균 ' + sign + best.avg.toFixed(1) + '% - FACT CHART';
   window._hookType = best.type;
   const linkEl = document.getElementById('hookLink');
   if (linkEl) {
@@ -4265,8 +4267,22 @@ function renderHook(disclosures) {
 }
 
 function shareHook() {
-  var text = window._shareText || (currentStock + ' — FACT CHART');
-  var url = 'https://factchart.co.kr/?stock=' + encodeURIComponent(currentStock);
+  // 현재 종목의 6자리 코드 찾기 (CODE_TO_NAME 역참조). 없으면 종목명 쿼리로 폴백.
+  var code = null;
+  if (typeof CODE_TO_NAME === 'object') {
+    for (var c in CODE_TO_NAME) { if (CODE_TO_NAME[c] === currentStock) { code = c; break; } }
+  }
+  var url = code
+    ? 'https://factchart.co.kr/stock/' + code + '.html'
+    : 'https://factchart.co.kr/?stock=' + encodeURIComponent(currentStock);
+
+  // 공유 카피: 종목명 + 공시유형(있으면) + 담백한 안내 문구
+  var hookType = window._hookType || '';
+  var headline = hookType
+    ? '📊 ' + currentStock + " '" + hookType + "' 떴네요."
+    : '📊 ' + currentStock + ' 공시 분석';
+  var text = headline + ' DART 공식 데이터 기반 주가 변동을 확인해보세요 👇';
+
   if (navigator.share) {
     navigator.share({ text: text, url: url }).catch(function(){});
   } else {
@@ -4813,6 +4829,7 @@ fetch(DATA_URL)
   .then(() => {
     initMarketStatus();
     initTicker();
+    buildTodayDisc();
   })
   .catch(e=>{
     document.getElementById('chartContainer').innerHTML=`<div class="error">⚠ ${e.message}</div>`;
@@ -5225,6 +5242,78 @@ function isMarketOpen() {
 function scrollToTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+// ── 오늘의 공시 모달 (당일 최초 방문 1회) ──
+function closeTodayDisc() {
+  var o = document.getElementById('todayDiscOverlay');
+  if (o) o.style.display = 'none';
+}
+function buildTodayDisc() {
+  if (!allData || !allData.disclosures) return;
+  // 오늘(KST) YYYY-MM-DD
+  var kst = new Date(new Date().toLocaleString('en-US', {timeZone:'Asia/Seoul'}));
+  var today = kst.getFullYear() + '-' + String(kst.getMonth()+1).padStart(2,'0') + '-' + String(kst.getDate()).padStart(2,'0');
+
+  // 하루 1회: 오늘 이미 봤으면 표시 안 함
+  try {
+    if (localStorage.getItem('fc_today_disc_seen') === today) return;
+  } catch(e) {}
+
+  // 코드 역매핑
+  var nameToCode = {};
+  for (var c in CODE_TO_NAME) nameToCode[CODE_TO_NAME[c]] = c;
+
+  // 오늘 공시 추출 → 없으면 최근 공시 폴백
+  var all = allData.disclosures.slice();
+  var todays = all.filter(function(d){ return d.date === today; });
+  var isFallback = false;
+  var list;
+  if (todays.length) {
+    list = todays;
+  } else {
+    isFallback = true;
+    // 최근 날짜순 정렬 후 상위
+    list = all.slice().sort(function(a,b){ return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
+  }
+
+  // 영향도(가중치 절댓값) 순 정렬 후 상위 3 (폴백이면 최근순 유지하며 상위 3)
+  var scored = list.map(function(d){ return { d:d, w: signalWeightOf(d) }; });
+  if (!isFallback) scored.sort(function(a,b){ return Math.abs(b.w) - Math.abs(a.w); });
+  var top = scored.slice(0, 3);
+  if (!top.length) return;
+
+  // 제목/날짜
+  document.getElementById('todayDiscTitle').innerHTML = isFallback ? '🔥 최근 공시' : '🔥 오늘의 공시';
+  document.getElementById('todayDiscDate').textContent = isFallback ? '최근' : today.replace(/-/g,'.');
+
+  // 목록 렌더
+  var html = '';
+  top.forEach(function(it, i){
+    var d = it.d;
+    var code = nameToCode[d.name] || '';
+    var href = code ? ('/stock/' + code + '.html') : ('/?stock=' + encodeURIComponent(d.name));
+    var isWarn = it.w < 0;
+    var badgeColor = isWarn ? '#ff5b6e' : '#00d084';
+    var badgeBg = isWarn ? 'rgba(255,91,110,0.12)' : 'rgba(0,208,132,0.12)';
+    var badgeText = isWarn ? '주의 공시' : d.type;
+    html += '<div onclick="goTodayDisc(\'' + encodeURIComponent(d.name) + '\')" style="display:flex;align-items:center;gap:11px;padding:12px 13px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;cursor:pointer;">'
+      + '<div style="font-size:12px;font-weight:700;color:var(--text3);">' + (i+1) + '</div>'
+      + '<div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:600;color:var(--text);">' + d.name + '</div>'
+      + '<div style="font-size:12px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (d.title || d.type) + '</div></div>'
+      + '<div style="font-size:10.5px;color:' + badgeColor + ';background:' + badgeBg + ';padding:2px 7px;border-radius:6px;font-weight:600;white-space:nowrap;">' + badgeText + '</div>'
+      + '</div>';
+  });
+  document.getElementById('todayDiscList').innerHTML = html;
+
+  // 표시 + 오늘 본 것으로 기록
+  document.getElementById('todayDiscOverlay').style.display = 'flex';
+  try { localStorage.setItem('fc_today_disc_seen', today); } catch(e) {}
+}
+function goTodayDisc(encName) {
+  var name = decodeURIComponent(encName);
+  closeTodayDisc();
+  if (typeof selectStock === 'function') selectStock(name);
+}
 // 페이지 1/3 이상 스크롤 시 '맨 위로' 버튼 표시
 window.addEventListener('scroll', function() {
   const btn = document.getElementById('toTopBtn');
@@ -5367,6 +5456,17 @@ document.addEventListener('DOMContentLoaded', startRealtimePolling);
   </div>
 </div>
 
+<div class="modal-overlay" id="todayDiscOverlay" style="display:none" onclick="if(event.target===this)closeTodayDisc()">
+  <div class="modal-box" id="todayDiscBox" style="max-width:420px;padding:22px 24px;">
+    <button class="modal-x" onclick="closeTodayDisc()" aria-label="닫기">×</button>
+    <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:3px;" id="todayDiscTitle">🔥 오늘의 공시</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:16px;">
+      <span id="todayDiscDate">—</span> · 영향도 순
+      <span style="float:right;color:var(--text3);">DART 기준</span>
+    </div>
+    <div id="todayDiscList" style="display:flex;flex-direction:column;gap:8px;"></div>
+  </div>
+</div>
 <button id="toTopBtn" onclick="scrollToTop()" aria-label="맨 위로">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
 </button>
