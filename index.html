@@ -5284,7 +5284,6 @@ function buildTodayDisc() {
 
   // 제목/날짜
   document.getElementById('todayDiscTitle').innerHTML = isFallback ? '🔥 최근 공시' : '🔥 오늘의 공시';
-  document.getElementById('todayDiscDate').textContent = isFallback ? '최근' : today.replace(/-/g,'.');
 
   // 목록 렌더
   var html = '';
@@ -5458,12 +5457,8 @@ document.addEventListener('DOMContentLoaded', startRealtimePolling);
 
 <div class="modal-overlay" id="todayDiscOverlay" style="display:none" onclick="if(event.target===this)closeTodayDisc()">
   <div class="modal-box" id="todayDiscBox" style="max-width:420px;padding:22px 24px;">
-    <button class="modal-x" onclick="closeTodayDisc()" aria-label="닫기">×</button>
-    <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:3px;" id="todayDiscTitle">🔥 오늘의 공시</div>
-    <div style="font-size:12px;color:var(--text3);margin-bottom:16px;">
-      <span id="todayDiscDate">—</span> · 영향도 순
-      <span style="float:right;color:var(--text3);">DART 기준</span>
-    </div>
+    <button onclick="closeTodayDisc()" aria-label="닫기" style="position:absolute;top:18px;right:20px;background:transparent;border:none;color:var(--text3);font-size:22px;line-height:1;cursor:pointer;padding:0;">×</button>
+    <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:16px;" id="todayDiscTitle">🔥 오늘의 공시</div>
     <div id="todayDiscList" style="display:flex;flex-direction:column;gap:8px;"></div>
   </div>
 </div>
