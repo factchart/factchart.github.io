@@ -718,8 +718,9 @@ body {
 .hook-a { font-size: 27px; font-weight: 700; color: var(--text); margin-top: 12px; line-height: 1.35; letter-spacing: -0.5px; }
 .hook-a b { font-weight: 700; }
 .hook-link {
-  font-size: 12.5px; color: var(--accent);
+  font-size: 12.5px; color: var(--accent); cursor: pointer; transition: opacity .15s;
 }
+.hook-link:hover { opacity: 0.7; text-decoration: underline; }
 .hook-foot {
   display: flex;
   align-items: center;
@@ -2552,7 +2553,7 @@ tr.disc-highlight {
             <div class="hook-q" id="hookQ">—</div>
             <div class="hook-a" id="hookA">—</div>
             <div class="hook-foot">
-              <span class="hook-link" id="hookLink">↓ 아래 차트의 초록 점이 그 공시들이에요</span>
+              <span class="hook-link" id="hookLink" onclick="goToHookDisclosures()" role="button" tabindex="0">↓ 아래 차트의 초록 점이 그 공시들이에요</span>
               <button class="hook-share" id="hookShare" onclick="shareHook()" aria-label="공유하기">
                 공유
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><polyline points="15 6 20 6 20 11"/><path d="M20 6l-9 9"/></svg>
@@ -3098,7 +3099,7 @@ async function selectStock(name) {
     const numEl = document.getElementById('latestPriceNum');
     const wonEl = document.getElementById('latestPriceWon');
     const pcEl = document.getElementById('priceChange');
-    const priceStr = Number(latest.price).toLocaleString('ko-KR');
+    const priceStr = fmtPriceComma(latest.price);
     if (numEl) flipNumber(numEl, priceStr, 0);   // 애니메이션 없이 초기 표시
     if (wonEl) wonEl.textContent = '원';
     if (marketOpenNow) {
@@ -3871,7 +3872,7 @@ function externalTooltip(context, discMap, patternData, prices) {
   const priceNum = parseFloat(price);
 
   document.getElementById('ttDate').textContent = date;
-  document.getElementById('ttPrice').textContent = Math.round(priceNum).toLocaleString('ko-KR')+'원';
+  document.getElementById('ttPrice').textContent = fmtPriceComma(priceNum)+'원';
 
   // 전날 대비 등락률
   const dayChangeEl = document.getElementById('ttDayChange');
@@ -4201,7 +4202,23 @@ function renderHook(disclosures) {
     '과거 <b>' + best.count + '번</b> 중 20일 뒤 평균 <b style="color:' + colorVal + '">' + sign + best.avg.toFixed(1) + '%</b>';
   // 공유용 텍스트 저장
   window._shareText = currentStock + ', ' + best.type + ' 공시 후 20일 평균 ' + sign + best.avg.toFixed(1) + '% - FACT CHART';
+  window._hookType = best.type;   // 클릭 이동 시 강조할 공시 유형
+  // 안내 문구를 '클릭 가능'으로
+  const linkEl = document.getElementById('hookLink');
+  if (linkEl) {
+    linkEl.textContent = '↓ 아래 차트의 초록 점이 그 공시들이에요 (탭하면 이동)';
+    linkEl.style.cursor = 'pointer';
+  }
   box.style.display = 'block';
+}
+
+// Hook 안내 클릭 → 차트로 스크롤 + Hook이 다루는 공시 유형 선택해 강조
+function goToHookDisclosures() {
+  if (window._hookType && typeof selectPatternType === 'function') {
+    selectPatternType(window._hookType);   // 해당 유형 패턴/마커 강조
+  }
+  const chart = document.getElementById('chartContainer');
+  if (chart) chart.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function shareHook() {
@@ -4827,6 +4844,21 @@ function initMarketStatus() {
 
 const TICKER_NAMES = ['삼성전자','SK하이닉스','현대차','카카오','NAVER','LG에너지솔루션','한화에어로스페이스','KB금융','HD현대','두산에너빌리티'];
 
+// 어떤 입력(숫자/'1,234'/'1.234'/'1234.0')이 와도 천단위 쉼표 정수 문자열로 정규화
+function fmtPriceComma(v) {
+  if (v == null) return '—';
+  let n;
+  if (typeof v === 'number') {
+    n = v;
+  } else {
+    // 문자열이면 숫자 외 문자 제거 후 정수화 (마침표/쉼표 모두 천단위 구분자로 간주)
+    const digits = String(v).replace(/[^\d]/g, '');
+    n = digits ? parseInt(digits, 10) : NaN;
+  }
+  if (!isFinite(n)) return '—';
+  return Math.round(n).toLocaleString('en-US'); // en-US: 천단위 쉼표 보장
+}
+
 function initTicker() {
   if (!allData) return;
   const names = TICKER_NAMES;
@@ -4835,9 +4867,10 @@ function initTicker() {
     if (prices.length < 2) return;
     const last = prices[prices.length-1];
     const prev = prices[prices.length-2];
-    const price = last[1];
-    const chg = ((price - prev[1]) / prev[1] * 100);
-    const priceStr = Number(typeof price === 'object' ? price[price.length-1] : price).toLocaleString('ko-KR');
+    const price = (Array.isArray(last) && last.length===5) ? last[4] : last[1]; // OHLC면 종가(4)
+    const prevPrice = (Array.isArray(prev) && prev.length===5) ? prev[4] : prev[1];
+    const chg = ((Number(price) - Number(prevPrice)) / Number(prevPrice) * 100);
+    const priceStr = fmtPriceComma(price);
     const chgStr = (chg>=0?'▲ +':'▼ ') + Math.abs(chg).toFixed(2)+'%';
     const cls = Math.abs(chg)<0.01?'flat':chg>0?'up':'down';
     ['', 'b'].forEach(suffix => {
@@ -5012,7 +5045,7 @@ function applyRealtimePrice() {
   const numEl  = document.getElementById('latestPriceNum');
   const wonEl  = document.getElementById('latestPriceWon');
   const latestEl = document.getElementById('latestPrice');
-  const priceStr = p.price.toLocaleString('ko-KR');
+  const priceStr = fmtPriceComma(p.price);
   // 방향: 직전 표시가 대비 상승/하락
   const dir = (window._lastShownPrice == null) ? 0 : (p.price - window._lastShownPrice);
   if (priceEl)  priceEl.textContent  = priceStr + '원';
