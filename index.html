@@ -836,6 +836,14 @@ body {
 .price-change.up { color: var(--up); }
 .price-change.down { color: var(--down); }
 
+/* 숫자 굴림(플립) 애니메이션 */
+.flip-num { display: inline-flex; vertical-align: baseline; }
+.price-won { display: inline; }
+.flip { display: inline-flex; }
+.flip-col { display: inline-block; overflow: hidden; vertical-align: top; }
+.flip-col > .flip-inner { display: block; transition: transform .42s cubic-bezier(.22,1,.36,1); }
+.flip-col > .flip-inner > span { display: block; }
+
 /* ── 패턴 바 ── */
 .pattern-bar {
   display: flex;
@@ -2531,7 +2539,7 @@ tr.disc-highlight {
             </div>
             <div class="price-block">
               <div class="price-main">
-                <div class="price-value" id="latestPrice">—</div>
+                <div class="price-value" id="latestPrice"><span class="flip-num" id="latestPriceNum">—</span><span class="price-won" id="latestPriceWon"></span></div>
                 <div class="price-change" id="priceChange">—</div>
               </div>
               <div class="market-status" id="marketStatus">
@@ -3077,6 +3085,7 @@ async function selectStock(name) {
   chartPrices = prices;        // 실시간 캔들 갱신이 참조할 배열
   chartDisclosures = disclosures;
   todayCandleAdded = false;    // 새 종목이므로 오늘 캔들 초기화
+  window._lastShownPrice = null; // 굴림 방향 비교용 직전가 리셋(다른 종목과 비교 방지)
 
   // 장중이면 현재가 요청을 '먼저' 출발시킨다(렌더링과 병렬). 응답이 오면
   // applyRealtimePrice가 가격 텍스트 + 차트 마지막 캔들을 갱신.
@@ -3086,17 +3095,18 @@ async function selectStock(name) {
     const latest = prices[prices.length-1];
     const prev = prices[prices.length-2];
     const latestEl = document.getElementById('latestPrice');
+    const numEl = document.getElementById('latestPriceNum');
+    const wonEl = document.getElementById('latestPriceWon');
     const pcEl = document.getElementById('priceChange');
+    const priceStr = Number(latest.price).toLocaleString('ko-KR');
+    if (numEl) flipNumber(numEl, priceStr, 0);   // 애니메이션 없이 초기 표시
+    if (wonEl) wonEl.textContent = '원';
     if (marketOpenNow) {
-      // 장중: 빈 로딩 대신 직전 종가를 흐리게 먼저 보여주고,
-      // 현재가 응답이 오면 applyRealtimePrice가 또렷하게 교체한다.
-      if (latestEl) {
-        latestEl.textContent = Number(latest.price).toLocaleString('ko-KR')+'원';
-        latestEl.style.opacity = '0.45';   // 잠정값 표시
-      }
+      // 장중: 직전 종가를 흐리게 먼저 보여주고, 현재가 오면 또렷하게 교체.
+      if (latestEl) latestEl.style.opacity = '0.45';
       if (pcEl) pcEl.style.opacity = '0.45';
     } else {
-      if (latestEl) { latestEl.textContent = Number(latest.price).toLocaleString('ko-KR')+'원'; latestEl.style.opacity = '1'; }
+      if (latestEl) latestEl.style.opacity = '1';
       if (prev) {
         const chg = ((latest.price-prev.price)/prev.price*100).toFixed(2);
         if (pcEl) {
@@ -4815,9 +4825,11 @@ function initMarketStatus() {
   setInterval(checkMarket, 30000);
 }
 
+const TICKER_NAMES = ['삼성전자','SK하이닉스','현대차','카카오','NAVER','LG에너지솔루션','한화에어로스페이스','KB금융','HD현대','두산에너빌리티'];
+
 function initTicker() {
   if (!allData) return;
-  const names = ['삼성전자','SK하이닉스','현대차','카카오','NAVER','LG에너지솔루션','한화에어로스페이스','KB금융','HD현대','두산에너빌리티'];
+  const names = TICKER_NAMES;
   names.forEach((name, i) => {
     const prices = allData.prices[name] || [];
     if (prices.length < 2) return;
@@ -4941,14 +4953,73 @@ async function fetchRealtime() {
   } catch(e) {}
 }
 
+// 숫자 굴림 애니메이션: el 안에 자릿수별 컬럼을 만들고, 바뀐 자리만 방향에 맞춰 굴린다.
+// dir > 0(상승): 아래에서 위로, dir < 0(하락): 위에서 아래로. 색 변화는 없음.
+function flipNumber(el, text, dir) {
+  if (!el) return;
+  const h = el.dataset.flipH || (el.dataset.flipH = String(parseFloat(getComputedStyle(el).fontSize) * 1.0 || 34) + 'px');
+  // 자릿수 개수가 바뀌면(예: 99,000→100,000) 컬럼 재생성
+  if (!el.classList.contains('flip') || el._len !== text.length) {
+    el.classList.add('flip');
+    el.innerHTML = '';
+    el._cols = [];
+    for (let i = 0; i < text.length; i++) {
+      const col = document.createElement('span');
+      col.className = 'flip-col';
+      col.style.height = h;
+      const inner = document.createElement('span');
+      inner.className = 'flip-inner';
+      const a = document.createElement('span'); a.style.height = h; a.textContent = text[i];
+      const b = document.createElement('span'); b.style.height = h; b.textContent = text[i];
+      inner.appendChild(a); inner.appendChild(b);
+      col.appendChild(inner);
+      col._inner = inner; col._a = a; col._b = b; col._val = text[i];
+      el.appendChild(col);
+      el._cols.push(col);
+    }
+    el._len = text.length;
+    return;
+  }
+  // 바뀐 자리만 굴림
+  for (let i = 0; i < text.length; i++) {
+    const col = el._cols[i];
+    const c = text[i];
+    if (!col || col._val === c) continue;
+    if (dir >= 0) {
+      col._a.textContent = c; col._b.textContent = col._val;
+      col._inner.style.transition = 'none';
+      col._inner.style.transform = 'translateY(-' + col.offsetHeight + 'px)';
+      col.offsetHeight; // reflow
+      col._inner.style.transition = '';
+      col._inner.style.transform = 'translateY(0)';
+    } else {
+      col._a.textContent = col._val; col._b.textContent = c;
+      col._inner.style.transition = 'none';
+      col._inner.style.transform = 'translateY(0)';
+      col.offsetHeight;
+      col._inner.style.transition = '';
+      col._inner.style.transform = 'translateY(-' + col.offsetHeight + 'px)';
+    }
+    col._val = c;
+  }
+}
+
 function applyRealtimePrice() {
   if (!realtimePrice || !currentStock) return;
   const p = realtimePrice;
   const priceEl  = document.getElementById('currentPrice');
   const changeEl = document.getElementById('currentChange');
+  const numEl  = document.getElementById('latestPriceNum');
+  const wonEl  = document.getElementById('latestPriceWon');
   const latestEl = document.getElementById('latestPrice');
-  if (priceEl)  priceEl.textContent  = p.price.toLocaleString('ko-KR') + '원';
-  if (latestEl) { latestEl.textContent = p.price.toLocaleString('ko-KR') + '원'; latestEl.style.opacity = '1'; }
+  const priceStr = p.price.toLocaleString('ko-KR');
+  // 방향: 직전 표시가 대비 상승/하락
+  const dir = (window._lastShownPrice == null) ? 0 : (p.price - window._lastShownPrice);
+  if (priceEl)  priceEl.textContent  = priceStr + '원';
+  if (numEl) flipNumber(numEl, priceStr, dir);
+  if (wonEl) wonEl.textContent = '원';
+  if (latestEl) latestEl.style.opacity = '1';
+  window._lastShownPrice = p.price;
   // priceChange(과거 종가 기준)도 실시간 등락률로 갱신
   const pcEl = document.getElementById('priceChange');
   if (pcEl && typeof p.change === 'number') {
@@ -4962,14 +5033,17 @@ function applyRealtimePrice() {
     changeEl.textContent = sign + ' ' + Math.abs(p.change).toFixed(2) + '%';
     changeEl.className = 'price-change ' + (p.change >= 0 ? 'up' : 'down');
   }
-  // 티커바에서 현재 종목 항목도 갱신
-  const tkp = document.querySelector('[data-tkp="' + currentStock + '"]');
-  const tkc = document.querySelector('[data-tkc="' + currentStock + '"]');
-  if (tkp) tkp.textContent = p.price.toLocaleString('ko-KR');
-  if (tkc) {
-    const sign = p.change >= 0 ? '▲' : '▼';
-    tkc.textContent = sign + ' ' + Math.abs(p.change).toFixed(2) + '%';
-    tkc.className = p.change >= 0 ? 'ticker-chg up' : 'ticker-chg down';
+  // 티커바: 현재 종목이 고정 10종목에 있으면 그 항목(원본+복제 'b')도 갱신
+  const tIdx = TICKER_NAMES.indexOf(currentStock);
+  if (tIdx !== -1) {
+    const chgStr = (p.change>=0?'▲ +':'▼ ') + Math.abs(p.change).toFixed(2)+'%';
+    const cls = 'ticker-chg ' + (Math.abs(p.change)<0.01?'flat':p.change>0?'up':'down');
+    ['', 'b'].forEach(function(sfx){
+      const pe = document.getElementById('tk-'+tIdx+sfx);
+      const ce = document.getElementById('tkc-'+tIdx+sfx);
+      if (pe) flipNumber(pe, priceStr, dir);
+      if (ce) { ce.textContent = chgStr; ce.className = cls; }
+    });
   }
   // ── 차트에 오늘 캔들 추가/갱신 ──
   updateTodayCandle(p);
@@ -5048,7 +5122,7 @@ function startRealtimePolling() {
   fetchRealtime();
   setInterval(function() {
     if (isMarketOpen()) fetchRealtime();
-  }, 30000);
+  }, 10000);
 }
 
 document.addEventListener('DOMContentLoaded', startRealtimePolling);
