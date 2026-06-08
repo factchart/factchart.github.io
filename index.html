@@ -3312,11 +3312,19 @@ function renderChart(prices, disclosures, patternData) {
     },
     {
       label:'공시',
-      data:prices.map(p=>discMap[p.date]?p.price:null),
+      data:prices.map(p=>{
+        if(!discMap[p.date]) return null;
+        if(selectedType && !discMap[p.date].some(d=>d.type===selectedType)) return null;
+        return p.price;
+      }),
       borderColor:'transparent',
       backgroundColor:'rgba(0,229,160,0.3)',
       borderColor2:'#00e5a0',
-      pointRadius:prices.map(p=>discMap[p.date]?5:0),
+      pointRadius:prices.map(p=>{
+        if(!discMap[p.date]) return 0;
+        if(selectedType && !discMap[p.date].some(d=>d.type===selectedType)) return 0;
+        return 5;
+      }),
       pointStyle: 'circle',
       pointBackgroundColor: 'rgba(0,229,160,0.25)',
       pointBorderColor: '#00e5a0',
