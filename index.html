@@ -655,7 +655,8 @@ body {
 .comp-cell-label { font-size: 11px; color: var(--text3); }
 .comp-cell-val { font-size: 15px; font-weight: 600; color: var(--text); margin-top: 3px; }
 .comp-minis { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 12px; }
-.cmini { background: var(--surface,#131926); border-radius: 9px; padding: 12px; }
+.cbars-row { display: flex; gap: 10px; margin-top: 8px; }
+.cmini { flex: 1; min-width: 0; background: var(--surface,#131926); border-radius: 9px; padding: 12px; }
 .cmini-top { display: flex; justify-content: space-between; font-size: 11px; color: var(--text2); margin-bottom: 10px; }
 .cmini-tr.up { color: var(--up); } .cmini-tr.down { color: var(--down); }
 .cmini-na { font-size: 10px; color: var(--text3); text-align: center; padding: 18px 0; }
@@ -4056,7 +4057,7 @@ async function renderCompany(name) {
 
   // 실적 추이: 매출 · 영업이익 · 당기순이익 3개년 (조 단위)
   html += '<div class="comp-sec">실적 추이 <span class="comp-sec-sub">최근 3개년 · 조 단위 · DART 기준</span></div>';
-  html += '<div class="cbars-row" style="display:flex;gap:10px;margin-top:8px">'
+  html += '<div class="cbars-row">'
     + miniChart(info.revenue_y0, info.revenue_y1, info.revenue_y2, '매출')
     + miniChart(info.op_income_y0, info.op_income_y1, info.op_income_y2, '영업이익')
     + miniChart(info.net_income_y0, info.net_income_y1, info.net_income_y2, '순이익')
