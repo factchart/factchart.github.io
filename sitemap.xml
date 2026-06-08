@@ -1,8 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-<url>
-<loc>https://factchart.co.kr/</loc>
-<lastmod>2026-06-02</lastmod>
-<changefreq>daily</changefreq>
-<priority>1.0</priority>
-</url>
+  <url><loc>https://factchart.co.kr/</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>
+  <url><loc>https://factchart.co.kr/stock/005930.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/000660.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/005380.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/373220.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/012450.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/105560.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/035420.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/035720.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/267250.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/034020.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/207940.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/068270.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/005490.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/000270.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/006400.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/012330.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/051910.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/096770.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/028260.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/034730.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/086280.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/033780.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/017670.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/055550.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/086790.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/316140.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/138040.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/066570.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/009150.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/402340.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/003550.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/015760.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/003670.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/010130.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/329180.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/009540.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/010140.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/004020.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/272210.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/323410.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/259960.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/036570.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/251270.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/377300.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/030200.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/010950.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/011200.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/097950.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/090430.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/051900.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/042700.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/352820.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/032830.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/000810.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/005830.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/024110.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/000720.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/006360.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/021240.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/139480.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/247540.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/086520.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/196170.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/141080.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/028300.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/263750.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/293490.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/403870.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/277810.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/214150.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/214450.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/357780.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/058470.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://factchart.co.kr/stock/328130.html</loc><lastmod>2026-06-08</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
 </urlset>
