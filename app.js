@@ -2635,13 +2635,16 @@ function goTodayDisc(encName) {
   if (typeof selectStock === 'function') selectStock(name);
 }
 // 페이지 1/3 이상 스크롤 시 '맨 위로' 버튼 표시
-window.addEventListener('scroll', function() {
+function updateToTopBtn() {
   const btn = document.getElementById('toTopBtn');
   if (!btn) return;
   const threshold = (document.documentElement.scrollHeight - window.innerHeight) / 3;
-  if (window.scrollY > threshold && threshold > 0) btn.classList.add('show');
+  if (window.scrollY > threshold && threshold > 40) btn.classList.add('show');
   else btn.classList.remove('show');
-}, { passive: true });
+}
+window.addEventListener('scroll', updateToTopBtn, { passive: true });
+window.addEventListener('resize', updateToTopBtn, { passive: true });
+document.addEventListener('DOMContentLoaded', updateToTopBtn);
 
 function startRealtimePolling() {
   fetchRealtime();
