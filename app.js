@@ -2020,6 +2020,7 @@ async function fetchNewsBriefing(stockName) {
 
   const body = document.getElementById('newsBriefingBody');
   const sub = document.getElementById('newsPanelSub');
+  if (!body || !sub) return;  // 뉴스 패널 마크업이 없는 페이지에선 동작 안 함
   sub.textContent = stockName + ' — AI 뉴스 분석 중...';
   body.innerHTML = '<div class="news-loading"><div class="news-spinner"></div>관련 뉴스를 수집하고 있습니다...</div>';
 

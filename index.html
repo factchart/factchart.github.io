@@ -70,10 +70,12 @@
 :root {
   --bg: #080b10;
   --surface: #0e1420;
-  --card: #131926;
-  --border: rgba(255,255,255,0.07);
-  --border2: rgba(255,255,255,0.12);
+  --card: #0e1420;
+  --border: rgba(255,255,255,0.05);
+  --border2: rgba(255,255,255,0.08);
   --accent: #00d084;
+  --accent-soft: #5dcaa5;
+  --accent-bg: rgba(0,208,132,0.10);
   --up: #e53e3e;
   --down: #3182ce;
   --gold: #f6ad55;
@@ -82,8 +84,14 @@
   --text3: #93a1b2;
   --sans: 'Pretendard', 'Noto Sans KR', sans-serif;
   --num: 'Inter', 'Pretendard', sans-serif;
-  --radius: 10px;
-  --radius-sm: 6px;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -588,7 +596,7 @@ body {
 /* 기업분석 탭 내용 (큰 카드 리디자인) */
 .tab-panel { padding: 0; }
 #tabCompany { padding: 18px; }
-.comp-card-big { background: var(--bg2,#0f1421); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 22px; }
+.comp-card-big { background: var(--bg2,#0f1421); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 22px; }
 .comp-head { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,0.07); }
 .comp-name { font-size: 20px; font-weight: 700; color: var(--text); }
 .comp-sub2 { font-size: 11px; color: var(--text3); margin-top: 3px; }
@@ -601,13 +609,13 @@ body {
 .comp-q-v { font-size: 15px; font-weight: 600; color: var(--text); margin-top: 3px; }
 .comp-sec { font-size: 13px; font-weight: 600; color: var(--text2); margin: 20px 0 4px; }
 .comp-sec-sub { font-size: 11px; font-weight: 400; color: var(--text3); margin-left: 6px; }
-.comp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; overflow: hidden; margin-top: 16px; }
-.comp-cell { background: var(--bg2,#0f1421); padding: 13px 15px; }
-.comp-cell-label { font-size: 11px; color: var(--text3); }
-.comp-cell-val { font-size: 15px; font-weight: 600; color: var(--text); margin-top: 3px; }
+.comp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 16px; }
+.comp-cell { background: rgba(255,255,255,0.02); border-radius: 8px; padding: 16px; }
+.comp-cell-label { font-size: 12px; color: var(--text3); }
+.comp-cell-val { font-size: 16px; font-weight: 600; color: var(--text); margin-top: 4px; }
 .comp-minis { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 12px; }
 .cbars-row { display: flex; gap: 10px; margin-top: 8px; }
-.cmini { flex: 1; min-width: 0; background: var(--surface,#131926); border-radius: 9px; padding: 12px; }
+.cmini { flex: 1; min-width: 0; background: var(--surface,#131926); border-radius: 8px; padding: 12px; }
 .cmini-top { display: flex; justify-content: space-between; font-size: 11px; color: var(--text2); margin-bottom: 10px; }
 .cmini-tr.up { color: var(--up); } .cmini-tr.down { color: var(--down); }
 .cmini-na { font-size: 10px; color: var(--text3); text-align: center; padding: 18px 0; }
@@ -631,21 +639,21 @@ body {
 .rx-bar-fill.mid { background: var(--gold); }
 .rx-val.bad, .rx-badge.bad, .rx-note b.bad { color: var(--down); }
 .rx-bar-fill.bad { background: var(--down); }
-.rx-badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 6px; margin: 8px 0 10px; background: rgba(255,255,255,0.05); }
+.rx-badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 8px; margin: 8px 0 10px; background: rgba(255,255,255,0.05); }
 .rx-desc { font-size: 13px; color: var(--text2); line-height: 1.6; }
 .rx-desc b, .rx-trend b, .rx-div b { color: var(--text); font-weight: 700; }
 .rx-bar { height: 7px; background: rgba(255,255,255,0.08); border-radius: 4px; margin: 12px 0 5px; overflow: hidden; }
 .rx-bar-fill { height: 100%; border-radius: 4px; }
 .rx-scale { display: flex; justify-content: space-between; font-size: 9.5px; color: var(--text3); }
 .rx-note { font-size: 11.5px; color: var(--text3); line-height: 1.55; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); }
-.rx-trend { font-size: 12px; color: var(--text2); line-height: 1.55; margin-top: 8px; background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 7px; }
-.rx-div { font-size: 13px; color: var(--text2); line-height: 1.6; background: var(--surface,#131926); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 14px 16px; margin: 12px 0; }
+.rx-trend { font-size: 12px; color: var(--text2); line-height: 1.55; margin-top: 8px; background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 8px; }
+.rx-div { font-size: 13px; color: var(--text2); line-height: 1.6; background: var(--surface,#131926); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 14px 16px; margin: 12px 0; }
 @media (max-width: 768px) { .rx-wrap { grid-template-columns: 1fr; } }
 .comp-r { background: var(--surface,#131926); border-radius: 8px; padding: 13px; text-align: center; }
 .comp-r-k { font-size: 10.5px; color: var(--text3); }
 .comp-r-v { font-size: 17px; font-weight: 700; margin-top: 3px; }
 .comp-r-v.up { color: var(--up); } .comp-r-v.down { color: var(--down); } .comp-r-v.dim { color: var(--text3); font-size: 13px; }
-.comp-soon { background: #0d1018; border: 1px dashed rgba(255,255,255,0.12); border-radius: 10px; padding: 16px; font-size: 12px; color: var(--text3); text-align: center; }
+.comp-soon { background: #0d1018; border: 1px dashed rgba(255,255,255,0.06); border-radius: 12px; padding: 16px; font-size: 12px; color: var(--text3); text-align: center; }
 .comp-foot { font-size: 10.5px; color: var(--text3); line-height: 1.5; margin-top: 16px; }
 .company-empty { padding: 40px; text-align: center; color: var(--text3); font-size: 13px; }
 @media (max-width: 768px) {
@@ -656,29 +664,29 @@ body {
 /* hook 박스 — 우측 대형 카드 (검색 유입자용 첫인상) */
 .hook-box {
   flex: 1;
-  background: var(--bg2, #0f1421);
-  border: 1px solid rgba(246,173,85,0.28);
+  background: rgba(246,173,85,0.04);
+  border: 1px solid rgba(246,173,85,0.14);
   border-radius: 12px;
-  padding: 24px 28px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
-.hook-q { font-size: 15px; color: var(--text2); font-weight: 500; }
-.hook-q b { font-weight: 700; color: var(--gold); }
-.hook-a { font-size: 27px; font-weight: 700; color: var(--text); margin-top: 12px; line-height: 1.35; letter-spacing: -0.5px; }
+.hook-q { font-size: 14px; color: var(--text3); font-weight: 500; }
+.hook-q b { font-weight: 600; color: var(--gold); }
+.hook-a { font-size: 26px; font-weight: 700; color: var(--text); margin-top: 8px; line-height: 1.35; letter-spacing: -0.5px; }
 .hook-a b { font-weight: 700; }
 .hook-link {
-  font-size: 12.5px; color: var(--accent);
+  font-size: 13px; color: var(--accent);
 }
 .hook-foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
   margin-top: 16px;
-  padding-top: 14px;
-  border-top: 1px solid rgba(255,255,255,0.06);
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
 }
 .hook-share {
   display: inline-flex;
@@ -692,11 +700,11 @@ body {
   background: rgba(255,255,255,0.05);
   border: 1px solid var(--border2);
   padding: 4px 10px;
-  border-radius: 7px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s;
 }
-.hook-share:hover { color: var(--text); background: rgba(255,255,255,0.1); border-color: var(--accent); }
+.hook-share:hover { color: var(--text); background: rgba(255,255,255,0.06); border-color: var(--accent); }
 .hook-share svg { stroke: currentColor; }
 @media (max-width: 768px) {
   .chart-panel-header { flex-direction: column; }
@@ -839,7 +847,7 @@ body {
 .toggle-slider {
   position: absolute;
   inset: 0;
-  background: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.06);
   border-radius: 22px;
   transition: 0.2s;
 }
@@ -944,11 +952,11 @@ body {
 .thermo-track {
   position: absolute; inset: 0;
   background: rgba(255,255,255,0.05);
-  border-radius: 14px; border: 0.5px solid var(--border2);
+  border-radius: 12px; border: 0.5px solid var(--border2);
 }
 .thermo-fill {
   position: absolute; left: 0; right: 0; bottom: 0;
-  background: var(--sig); border-radius: 14px;
+  background: var(--sig); border-radius: 12px;
   transition: height 0.6s, background 0.3s;
 }
 .thermo-ball {
@@ -1366,7 +1374,7 @@ tbody td {
   padding: 16px;
   background: rgba(255,255,255,0.02);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 12px;
 }
 .s1-title { font-size: 12px; color: var(--text2); margin-bottom: 14px; }
 .s1-bars {
@@ -1687,7 +1695,7 @@ tbody td {
 
 .news-spinner {
   width: 16px; height: 16px;
-  border: 2px solid rgba(255,255,255,0.1);
+  border: 2px solid rgba(255,255,255,0.06);
   border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
@@ -1768,7 +1776,7 @@ tr.disc-highlight {
   content: '';
   display: block;
   width: 28px; height: 28px;
-  border: 2px solid rgba(255,255,255,0.1);
+  border: 2px solid rgba(255,255,255,0.06);
   border-top-color: var(--accent);
   border-radius: 50%;
   margin: 16px auto 0;
@@ -1790,7 +1798,7 @@ tr.disc-highlight {
 .custom-tooltip {
   position: fixed;
   background: #1c2230;
-  border: 1px solid rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.08);
   border-left: 3px solid var(--accent);
   padding: 14px 16px;
   pointer-events: none;
@@ -2318,7 +2326,7 @@ tr.disc-highlight {
 
 .modal-box::-webkit-scrollbar { width: 4px; }
 .modal-box::-webkit-scrollbar-track { background: transparent; }
-.modal-box::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+.modal-box::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 4px; }
 
 /* 상단 X 버튼 */
 .modal-x {
@@ -2339,7 +2347,7 @@ tr.disc-highlight {
   transition: all 0.15s;
   line-height: 1;
 }
-.modal-x:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+.modal-x:hover { background: rgba(255,255,255,0.06); color: var(--text); }
 
 .modal-title {
   font-family: var(--sans);
@@ -2765,7 +2773,7 @@ tr.disc-highlight {
         <div>
           <label style="font-size:13px;font-weight:500;color:var(--text2);display:block;margin-bottom:8px">이메일 <span style="opacity:0.5;text-transform:none;letter-spacing:0">(답장이 필요하면)</span></label>
           <input id="contactEmail" type="email" placeholder="you@example.com"
-            style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:10px;padding:11px 14px;font-family:var(--sans);font-size:14px;color:var(--text);outline:none;box-sizing:border-box;transition:border-color 0.15s"
+            style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:12px;padding:11px 14px;font-family:var(--sans);font-size:14px;color:var(--text);outline:none;box-sizing:border-box;transition:border-color 0.15s"
             onfocus="this.style.borderColor='rgba(0,229,160,0.4)'" onblur="this.style.borderColor='rgba(255,255,255,0.09)'">
         </div>
         <div>
@@ -2773,11 +2781,11 @@ tr.disc-highlight {
           <textarea id="contactMsg" rows="5" placeholder="문의 내용을 자유롭게 적어주세요. (최소 10자)"
             oninput="document.getElementById('contactCount').textContent='('+this.value.length+'/2000)'"
             maxlength="2000"
-            style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:10px;padding:11px 14px;font-family:var(--sans);font-size:14px;color:var(--text);outline:none;resize:none;box-sizing:border-box;transition:border-color 0.15s;line-height:1.6"
+            style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:12px;padding:11px 14px;font-family:var(--sans);font-size:14px;color:var(--text);outline:none;resize:none;box-sizing:border-box;transition:border-color 0.15s;line-height:1.6"
             onfocus="this.style.borderColor='rgba(0,229,160,0.4)'" onblur="this.style.borderColor='rgba(255,255,255,0.09)'"></textarea>
         </div>
         <button id="contactSendBtn" onclick="sendContactForm()"
-          style="background:var(--accent);color:#060a0e;font-family:var(--sans);font-size:14px;font-weight:700;padding:13px 20px;border-radius:10px;cursor:pointer;border:none;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity 0.15s"
+          style="background:var(--accent);color:#060a0e;font-family:var(--sans);font-size:14px;font-weight:700;padding:13px 20px;border-radius:12px;cursor:pointer;border:none;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity 0.15s"
           onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           보내기
@@ -2793,8 +2801,8 @@ tr.disc-highlight {
       <div style="font-family:var(--sans);font-size:17px;font-weight:700;color:var(--text);margin-bottom:10px">전송 완료</div>
       <div style="font-family:var(--sans);font-size:13px;color:var(--text3);line-height:1.7;margin-bottom:28px">소중한 의견 감사합니다.<br>검토 후 빠르게 답변 드리겠습니다.</div>
       <button onclick="closeModal('contact')"
-        style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:11px 32px;font-family:var(--sans);font-size:14px;font-weight:600;color:var(--text2);cursor:pointer;transition:all 0.15s"
-        onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.07)'">
+        style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:11px 32px;font-family:var(--sans);font-size:14px;font-weight:600;color:var(--text2);cursor:pointer;transition:all 0.15s"
+        onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='rgba(255,255,255,0.07)'">
         닫기
       </button>
     </div>
