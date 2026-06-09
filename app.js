@@ -487,6 +487,7 @@ async function selectStock(name) {
       chosen = bestType;
     }
     selectedType = chosen;
+    document.getElementById('patternSelectWrap').classList.add('visible');
     document.querySelectorAll('.type-btn').forEach(b => {
       b.classList.toggle('active', b.textContent === selectedType);
     });
@@ -521,13 +522,12 @@ function togglePattern() {
   } else {
     label.textContent = '패턴 복기';
     label.classList.remove('active');
-    document.getElementById('patternSelectWrap').classList.remove('visible');
     document.getElementById('legendPattern').style.display = 'none';
     window._lastSelectedType = selectedType;  // 다시 켤 때 복원용으로 기억
-    // patternStats(공시유형·상승/하락 폭)와 mentorCard는 끄지 않고 그대로 유지
+    // 유형 버튼(patternSelectWrap)·통계(patternStats)·mentorCard는 끄지 않고 유지.
+    // 선택 유형 점은 그대로 보이되, 패턴 평균선만 제거.
     const prices = (allData.prices[currentStock]||[]).map(p=>p.length===5?{date:p[0],open:p[1],high:p[2],low:p[3],close:p[4],price:p[4]}:{date:p[0],price:p[1],close:p[1]});
     const disclosures = allData.disclosures.filter(d=>d.name===currentStock);
-    // 패턴평균은 숨기되, 점은 선택 유형 기준 유지 (selectedType 보존)
     renderChart(prices, disclosures, null);
   }
 }
@@ -613,7 +613,7 @@ function applyPattern() {
     }
   });
 
-  renderChart(prices, disclosures, patternData);
+  renderChart(prices, disclosures, patternOn ? patternData : null);
 }
 
 function renderChart(prices, disclosures, patternData) {
