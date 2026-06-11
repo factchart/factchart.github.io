@@ -1667,37 +1667,56 @@ async function renderCompany(name) {
     + '<div class="comp-cap-v">'+(mktCap!=null?won(mktCap):'—')+'</div></div>'
     + '</div>';
 
-  // 4분할: 발행주식수 · 대표이사 · 상장(설립) · 결산월
-  // 좌우 5:5: 왼쪽=기본정보 4셀, 오른쪽=지분비율
+  // 주요주주 파싱 (info.major_holders: "이름:비율|...")
+  var holdersHtml = '';
+  if (info.major_holders) {
+    var hlist = String(info.major_holders).split('|').map(function(s){ var p=s.split(':'); return {nm:(p[0]||'').trim(), rt:parseFloat(p[1])||0}; }).filter(function(x){ return x.nm; });
+    var hmax = 0; hlist.forEach(function(x){ if(x.rt>hmax) hmax=x.rt; });
+    holdersHtml = hlist.slice(0,4).map(function(x){
+      var w = hmax>0 ? Math.min(x.rt/hmax*100,100) : 0;
+      return '<div class="own-h-row"><div class="own-h-top"><span class="own-h-nm">'+x.nm+'</span><span class="own-h-rt">'+x.rt.toFixed(1)+'%</span></div>'
+        + '<div class="own-h-bar"><div class="own-h-fill" style="width:'+w.toFixed(0)+'%"></div></div></div>';
+    }).join('');
+  }
+  if (!holdersHtml) holdersHtml = '<div class="own-na">준비 중이에요</div>';
+
+  // 좌 7 : 우 3 — 좌(기본정보 + 주주구성) / 우(실적 추이)
   html += '<div class="comp-info-row">'
-
-  // 왼쪽: 발행주식수/대표이사/설립/결산월
-  + '<div class="comp-info-left">'
-  + '<div class="comp-grid4">'
-  + '<div class="comp-cell"><div class="comp-cell-label">발행주식수</div><div class="comp-cell-val">'+shareFmt(shares)+'</div></div>'
-  + '<div class="comp-cell"><div class="comp-cell-label">대표이사</div><div class="comp-cell-val">'+(info.ceo||'—')+'</div></div>'
-  + '<div class="comp-cell"><div class="comp-cell-label">설립</div><div class="comp-cell-val">'+estFmt(info.est_date)+'</div></div>'
-  + '<div class="comp-cell"><div class="comp-cell-label">결산월</div><div class="comp-cell-val">'+(info.acc_month?info.acc_month+'월':'—')+'</div></div>'
-  + '</div>'
-  + '</div>'
-
-  // 오른쪽: 지분비율 카드
-  + '<div class="comp-info-right">'
-  + '<div class="comp-own-card" id="ownCard_' + name.replace(/\s/g,'_') + '">'
-  + '<div class="comp-own-title">주주 구성 <span class="comp-own-sub">최근 거래일 기준</span></div>'
-  + '<div class="comp-own-loading">불러오는 중…</div>'
-  + '</div>'
-  + '</div>'
-
+    + '<div class="comp-info-left">'
+      + '<div class="comp-grid4">'
+      + '<div class="comp-cell"><div class="comp-cell-label">발행주식수</div><div class="comp-cell-val">'+shareFmt(shares)+'</div></div>'
+      + '<div class="comp-cell"><div class="comp-cell-label">대표이사</div><div class="comp-cell-val">'+(info.ceo||'—')+'</div></div>'
+      + '<div class="comp-cell"><div class="comp-cell-label">설립</div><div class="comp-cell-val">'+estFmt(info.est_date)+'</div></div>'
+      + '<div class="comp-cell"><div class="comp-cell-label">결산월</div><div class="comp-cell-val">'+(info.acc_month?info.acc_month+'월':'—')+'</div></div>'
+      + '</div>'
+      + '<div class="comp-own-card">'
+        + '<div class="own-grid">'
+          + '<div class="own-flow" id="ownFlow_' + name.replace(/\s/g,'_') + '">'
+            + '<div class="comp-own-title">투자자 수급 <span class="comp-own-sub">최근 거래일 기준</span></div>'
+            + '<div class="comp-own-loading">불러오는 중…</div>'
+          + '</div>'
+          + '<div class="own-holders">'
+            + '<div class="comp-own-title">주요 주주 <span class="comp-own-sub">· DART</span></div>'
+            + holdersHtml
+          + '</div>'
+        + '</div>'
+      + '</div>'
+    + '</div>'
+    + '<div class="comp-perf">'
+      + '<div class="comp-perf-title">실적 추이 <span class="comp-sec-sub">3개년 · 조 · DART</span></div>'
+      + miniChart(info.revenue_y0, info.revenue_y1, info.revenue_y2, '매출')
+      + miniChart(info.op_income_y0, info.op_income_y1, info.op_income_y2, '영업이익')
+      + miniChart(info.net_income_y0, info.net_income_y1, info.net_income_y2, '순이익')
+    + '</div>'
   + '</div>';
 
-  // 지분비율 비동기 로드 (웹앱 재배포 후 활성화됨)
+  // 투자자 수급 비동기 로드 (외국인 보유율 + 누적 순매수)
   (async function(){
-    var ownCard = document.getElementById('ownCard_' + name.replace(/\s/g,'_'));
-    if (!ownCard) return;
-    var TITLE = '<div class="comp-own-title">주주 구성 <span class="comp-own-sub">최근 거래일 기준</span></div>';
-    if (!KIS_PROXY_URL || KIS_PROXY_URL.indexOf('배포후') !== -1 || KIS_PROXY_URL.indexOf('AKfycb') === -1) {
-      ownCard.innerHTML = TITLE + '<div class="own-na">준비 중이에요</div>';
+    var flow = document.getElementById('ownFlow_' + name.replace(/\s/g,'_'));
+    if (!flow) return;
+    var TITLE = '<div class="comp-own-title">투자자 수급 <span class="comp-own-sub">최근 거래일 기준</span></div>';
+    if (!KIS_PROXY_URL || KIS_PROXY_URL.indexOf('AKfycb') === -1) {
+      flow.innerHTML = TITLE + '<div class="own-na">준비 중이에요</div>';
       return;
     }
     try {
@@ -1705,39 +1724,51 @@ async function renderCompany(name) {
       var code = meta2.ticker || '';
       if (!code) throw new Error('no code');
       var controller = new AbortController();
-      var timeout = setTimeout(function(){ controller.abort(); }, 5000);
+      var timeout = setTimeout(function(){ controller.abort(); }, 6000);
       var url = KIS_PROXY_URL + '?action=investor&code=' + code + '&t=' + Date.now();
       var res = await fetch(url, { signal: controller.signal });
       clearTimeout(timeout);
       var json = await res.json();
       var d = json.data;
       if (!d) throw new Error('no data');
-      function pctBar(item) {
-        return '<div class="own-row">'
-          + '<span class="own-label">' + item.label + '</span>'
-          + '<div class="own-bar-wrap"><div class="own-bar" style="width:' + Math.min(Math.abs(item.val),100).toFixed(1) + '%;background:' + item.color + '"></div></div>'
-          + '<span class="own-val">' + item.val.toFixed(2) + '%</span>'
-          + '</div>';
+
+      function qty(v){ // 주식 수 → 보기 좋은 단위
+        var n = Number(v)||0, s = n>0?'+':(n<0?'−':''), a = Math.abs(n);
+        if (a >= 1e8) return s + (a/1e8).toFixed(1) + '억';
+        if (a >= 1e4) return s + Math.round(a/1e4).toLocaleString() + '만';
+        return s + Math.round(a).toLocaleString();
       }
       var rows2 = [
-        { label:'외국인', val: d.foreign || 0, color:'#378ADD' },
-        { label:'기관',   val: d.institute || 0, color:'#1D9E75' },
-        { label:'개인',   val: d.individual || 0, color:'#888780' },
+        { label:'외국인', val: Number(d.cum_foreign)||0 },
+        { label:'기관',   val: Number(d.cum_institute)||0 },
+        { label:'개인',   val: Number(d.cum_individual)||0 },
       ];
-      var inner = rows2.map(pctBar).join('');
-      ownCard.innerHTML = TITLE + '<div class="own-bars">' + inner + '</div>';
+      var maxAbs = Math.max.apply(null, rows2.map(function(r){ return Math.abs(r.val); }).concat([1]));
+      var flowRows = rows2.map(function(r){
+        var w = (Math.abs(r.val)/maxAbs*50).toFixed(0); // 중앙 기준 좌우 최대 50%
+        var pos = r.val >= 0;
+        var bar = pos
+          ? '<div class="flow-fill" style="left:50%;width:'+w+'%;background:#e53e3e;border-radius:0 3px 3px 0"></div>'
+          : '<div class="flow-fill" style="right:50%;width:'+w+'%;background:#3182ce;border-radius:3px 0 0 3px"></div>';
+        return '<div class="flow-row"><div class="flow-top"><span class="flow-lbl">'+r.label+'</span>'
+          + '<span class="flow-val" style="color:'+(pos?'#e53e3e':'#3182ce')+'">'+qty(r.val)+'</span></div>'
+          + '<div class="flow-track"><div class="flow-mid"></div>'+bar+'</div></div>';
+      }).join('');
+
+      var ratio = (d.foreign_ratio != null && !isNaN(d.foreign_ratio))
+        ? '<div class="flow-ratio"><span class="flow-ratio-k">외국인 보유율</span><span class="flow-ratio-v">'+Number(d.foreign_ratio).toFixed(1)+'%</span></div>'
+        : '';
+      var span = d.days ? ('최근 '+d.days+'일 순매수') : '누적 순매수';
+      flow.innerHTML = TITLE + ratio
+        + '<div class="flow-sub">'+span+'</div>'
+        + '<div class="flow-bars">'+flowRows+'</div>';
     } catch(e) {
-      ownCard.innerHTML = TITLE + '<div class="own-na">잠시 후 다시 볼게요</div>';
+      flow.innerHTML = TITLE + '<div class="own-na">잠시 후 다시 볼게요</div>';
     }
   })();
 
-  // 실적 추이: 매출 · 영업이익 · 당기순이익 3개년 (조 단위)
-  html += '<div class="comp-sec">실적 추이 <span class="comp-sec-sub">최근 3개년 · 조 단위 · DART 기준</span></div>';
-  html += '<div class="cbars-row">'
-    + miniChart(info.revenue_y0, info.revenue_y1, info.revenue_y2, '매출')
-    + miniChart(info.op_income_y0, info.op_income_y1, info.op_income_y2, '영업이익')
-    + miniChart(info.net_income_y0, info.net_income_y1, info.net_income_y2, '순이익')
-    + '</div>';
+  // (실적 추이는 위 7:3 우측 컬럼으로 이동됨)
+
 
   html += '<div class="comp-sec">재무 건전성 풀이 <span class="comp-sec-sub">숫자 뒤에 숨은 뜻을 풀어드려요 · DART 기준</span></div>';
   html += '<div class="rx-wrap">';
