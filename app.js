@@ -1584,6 +1584,13 @@ async function renderCompany(name) {
   function jo(v){ return (v==null||isNaN(v)) ? null : v/1e12; }  // 조 단위 숫자
   function shareFmt(v){ if(!v) return '—'; return (v/1e8).toFixed(2) + '억주'; }
   function estFmt(s){ if(!s||s.length<8) return '—'; return s.slice(0,4)+'.'+s.slice(4,6); }
+  function ceoFmt(s){
+    if(!s) return '—';
+    var parts = String(s).split(/[,·]/).map(function(x){ return x.trim(); }).filter(Boolean);
+    if(parts.length <= 1) return s;
+    var first = parts[0].replace(/\s*\(.*?\)\s*$/,'').trim();
+    return first + ' 외 ' + (parts.length-1) + '명';
+  }
   const meta = info.industry_code ? '' : '';
 
   // 3개년 미니차트 (조 단위)
@@ -1597,7 +1604,7 @@ async function renderCompany(name) {
     const trendCls = (vals[2]!=null && vals[1]!=null) ? (vals[2] >= vals[1] ? 'up' : 'down') : '';
     let bars = '';
     vals.forEach(function(v){
-      const ht = (v==null||isNaN(v)) ? 2 : Math.max(Math.round(Math.abs(v)/maxAbs*52), 3);
+      const ht = (v==null||isNaN(v)) ? 2 : Math.max(Math.round(Math.abs(v)/maxAbs*60), 3);
       const isLast = (v === vals[2]);
       const cls = (v==null) ? 'flat' : (v>=0 ? (isLast?'up':'dim') : 'down');
       const lbl = (v==null||isNaN(v)) ? '-' : (v>=0?'':'') + v.toFixed(1);
@@ -1685,7 +1692,7 @@ async function renderCompany(name) {
     + '<div class="comp-info-left">'
       + '<div class="comp-grid4">'
       + '<div class="comp-cell"><div class="comp-cell-label">발행주식수</div><div class="comp-cell-val">'+shareFmt(shares)+'</div></div>'
-      + '<div class="comp-cell"><div class="comp-cell-label">대표이사</div><div class="comp-cell-val">'+(info.ceo||'—')+'</div></div>'
+      + '<div class="comp-cell"><div class="comp-cell-label">대표이사</div><div class="comp-cell-val">'+ceoFmt(info.ceo)+'</div></div>'
       + '<div class="comp-cell"><div class="comp-cell-label">설립</div><div class="comp-cell-val">'+estFmt(info.est_date)+'</div></div>'
       + '<div class="comp-cell"><div class="comp-cell-label">결산월</div><div class="comp-cell-val">'+(info.acc_month?info.acc_month+'월':'—')+'</div></div>'
       + '</div>'
@@ -1834,7 +1841,7 @@ async function renderCompany(name) {
   html += '<div class="comp-sec">예상 실적 · 투자의견</div>';
   html += '<div class="comp-soon">증권사 컨센서스(예상 매출·목표주가)는 준비 중이에요.</div>';
 
-  html += '<div class="comp-foot">데이터 출처: 금융감독원 전자공시(DART) · 시가총액은 최근 종가×발행주식수로 계산한 참고치예요.</div>';
+  html += '<div class="comp-foot">데이터 출처: 금융감독원 전자공시(DART) · 시가총액은 최근 종가×발행주식수로 계산한 참고치예요. · 동희 사랑해 🩵</div>';
   html += '</div>';
 
   body.innerHTML = html;
