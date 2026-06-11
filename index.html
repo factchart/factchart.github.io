@@ -625,10 +625,24 @@ body {
 .comp-q-v { font-size: 15px; font-weight: 600; color: var(--text); margin-top: 3px; }
 .comp-sec { font-size: 13px; font-weight: 600; color: var(--text2); margin: 20px 0 4px; }
 .comp-sec-sub { font-size: 11px; font-weight: 400; color: var(--text3); margin-left: 6px; }
-.comp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 16px; }
+.comp-grid4 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 16px; }
 .comp-cell { background: rgba(255,255,255,0.02); border-radius: 8px; padding: 16px; }
 .comp-cell-label { font-size: 12px; color: var(--text3); }
 .comp-cell-val { font-size: 16px; font-weight: 600; color: var(--text); margin-top: 4px; }
+.comp-info-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+.comp-info-left {}
+.comp-info-right {}
+.comp-own-card { background: rgba(255,255,255,0.02); border-radius: 8px; padding: 16px; height: 100%; box-sizing: border-box; }
+.comp-own-title { font-size: 12px; color: var(--text3); margin-bottom: 10px; }
+.comp-own-sub { font-size: 10px; color: var(--text3); opacity: 0.6; margin-left: 4px; }
+.comp-own-loading { font-size: 12px; color: var(--text3); opacity: 0.5; }
+.own-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.own-label { font-size: 12px; color: var(--text3); width: 36px; flex-shrink: 0; }
+.own-bar-wrap { flex: 1; height: 5px; background: rgba(255,255,255,0.07); border-radius: 3px; overflow: hidden; }
+.own-bar { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+.own-val { font-size: 12px; font-weight: 600; color: var(--text); width: 46px; text-align: right; flex-shrink: 0; }
+.own-na { font-size: 12px; color: var(--text3); opacity: 0.5; }
+@media (max-width: 600px) { .comp-info-row { grid-template-columns: 1fr; } }
 .comp-minis { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 12px; }
 .cbars-row { display: flex; gap: 10px; margin-top: 8px; }
 .cmini { flex: 1; min-width: 0; background: var(--surface,#131926); border-radius: 8px; padding: 12px; }
