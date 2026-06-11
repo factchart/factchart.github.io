@@ -1714,12 +1714,59 @@ async function renderCompany(name) {
     + '</div>';
 
   // 4분할: 발행주식수 · 대표이사 · 상장(설립) · 결산월
-  html += '<div class="comp-grid">'
-    + '<div class="comp-cell"><div class="comp-cell-label">발행주식수</div><div class="comp-cell-val">'+shareFmt(shares)+'</div></div>'
-    + '<div class="comp-cell"><div class="comp-cell-label">대표이사</div><div class="comp-cell-val">'+(info.ceo||'—')+'</div></div>'
-    + '<div class="comp-cell"><div class="comp-cell-label">설립</div><div class="comp-cell-val">'+estFmt(info.est_date)+'</div></div>'
-    + '<div class="comp-cell"><div class="comp-cell-label">결산월</div><div class="comp-cell-val">'+(info.acc_month?info.acc_month+'월':'—')+'</div></div>'
-    + '</div>';
+  // 좌우 5:5: 왼쪽=기본정보 4셀, 오른쪽=지분비율
+  html += '<div class="comp-info-row">'
+
+  // 왼쪽: 발행주식수/대표이사/설립/결산월
+  + '<div class="comp-info-left">'
+  + '<div class="comp-grid4">'
+  + '<div class="comp-cell"><div class="comp-cell-label">발행주식수</div><div class="comp-cell-val">'+shareFmt(shares)+'</div></div>'
+  + '<div class="comp-cell"><div class="comp-cell-label">대표이사</div><div class="comp-cell-val">'+(info.ceo||'—')+'</div></div>'
+  + '<div class="comp-cell"><div class="comp-cell-label">설립</div><div class="comp-cell-val">'+estFmt(info.est_date)+'</div></div>'
+  + '<div class="comp-cell"><div class="comp-cell-label">결산월</div><div class="comp-cell-val">'+(info.acc_month?info.acc_month+'월':'—')+'</div></div>'
+  + '</div>'
+  + '</div>'
+
+  // 오른쪽: 지분비율 카드
+  + '<div class="comp-info-right">'
+  + '<div class="comp-own-card" id="ownCard_' + name.replace(/\s/g,'_') + '">'
+  + '<div class="comp-own-title">주주 구성 <span class="comp-own-sub">최근 거래일 기준</span></div>'
+  + '<div class="comp-own-loading">불러오는 중…</div>'
+  + '</div>'
+  + '</div>'
+
+  + '</div>';
+
+  // 지분비율 비동기 로드
+  (async function(){
+    var ownCard = document.getElementById('ownCard_' + name.replace(/\s/g,'_'));
+    if (!ownCard) return;
+    try {
+      var meta2 = STOCK_META[name] || {};
+      var code = meta2.ticker || '';
+      var url = KIS_PROXY_URL + '?action=investor&code=' + code + '&t=' + Date.now();
+      var res = await fetch(url);
+      var json = await res.json();
+      var d = json.data;
+      if (!d) throw new Error('no data');
+      function pctBar(pct, color) {
+        return '<div class="own-row">'
+          + '<span class="own-label">' + pct.label + '</span>'
+          + '<div class="own-bar-wrap"><div class="own-bar" style="width:' + Math.min(pct.val,100).toFixed(1) + '%;background:' + color + '"></div></div>'
+          + '<span class="own-val">' + pct.val.toFixed(2) + '%</span>'
+          + '</div>';
+      }
+      var rows2 = [
+        { label:'외국인', val: d.foreign || 0, color:'#378ADD' },
+        { label:'기관',   val: d.institute || 0, color:'#1D9E75' },
+        { label:'개인',   val: d.individual || 0, color:'#888780' },
+      ];
+      var inner = rows2.map(function(r){ return pctBar(r, r.color); }).join('');
+      ownCard.innerHTML = '<div class="comp-own-title">주주 구성 <span class="comp-own-sub">최근 거래일 기준</span></div>' + inner;
+    } catch(e) {
+      if (ownCard) ownCard.innerHTML = '<div class="comp-own-title">주주 구성</div><div class="own-na">데이터를 불러오지 못했어요</div>';
+    }
+  })();
 
   // 실적 추이: 매출 · 영업이익 · 당기순이익 3개년 (조 단위)
   html += '<div class="comp-sec">실적 추이 <span class="comp-sec-sub">최근 3개년 · 조 단위 · DART 기준</span></div>';
@@ -2977,21 +3024,3 @@ function startRealtimePolling() {
 }
 
 document.addEventListener('DOMContentLoaded', startRealtimePolling);
-
-{
-  "timeZone": "Asia/Seoul",
-  "dependencies": {},
-  "exceptionLogging": "STACKDRIVER",
-  "runtimeVersion": "V8",
-  "oauthScopes": [
-    "https://www.googleapis.com/auth/script.scriptapp",
-    "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive",
-    "https://www.googleapis.com/auth/gmail.send",
-    "https://www.googleapis.com/auth/script.external_request"
-  ]
-}
-
-
-
-
