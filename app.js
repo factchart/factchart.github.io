@@ -2631,10 +2631,11 @@ const KIS_PROXY_URL = 'https://script.google.com/macros/s/AKfycbzz6fr6yCeli_Tzri
 
 let realtimePrice = null;
 
-// 현재 보고 있는 종목 1개만 실시간 조회 (on-demand)
+// 현재 보고 있는 종목 1개만 실시간 조회 (on-demand, 10초 폴링)
+// 서버(getRealtimePriceResponse)가 CacheService로 9초 캐시 → 동시 시청자 중복호출 제거
 async function fetchRealtime() {
   if (!currentStock) return;
-  if (!KIS_PROXY_URL || KIS_PROXY_URL.indexOf('배포후') !== -1) return; // 미설정 시 건너뜀
+  if (!KIS_PROXY_URL || KIS_PROXY_URL.indexOf('AKfycb') === -1) return; // 웹앱 URL 미설정 시 건너뜀
   try {
     const url = KIS_PROXY_URL + '?action=price&stock=' + encodeURIComponent(currentStock) + '&t=' + Date.now();
     const res = await fetch(url);
@@ -2644,7 +2645,7 @@ async function fetchRealtime() {
       realtimePrice = data.prices[currentStock];
       applyRealtimePrice();
     }
-  } catch(e) {}
+  } catch (e) {}
 }
 
 // 숫자 굴림 애니메이션: el 안에 자릿수별 컬럼을 만들고, 바뀐 자리만 방향에 맞춰 굴린다.
