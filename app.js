@@ -735,9 +735,6 @@ async function selectStock(name) {
 
   renderChart(prices, disclosures, null);
   renderTable(disclosures);
-  // 상단 공시 수: 현재 종목 기준
-  var hstatEl = document.querySelector('#hstatDisc .hstat-val');
-  if (hstatEl) hstatEl.textContent = disclosures.length;
   renderTypeFilter(disclosures);
   renderStatsPanel(disclosures);
   renderThermometer(disclosures);
@@ -2334,7 +2331,6 @@ fetch(DATA_URL)
   .then(data=>{
     allData = data;
     document.querySelector('#hstatDisc .hstat-val').textContent = data.disclosures.length;
-    window._allDiscCount = data.disclosures.length;
     // 종목 결정 우선순위: ?stock= 파라미터 → /stock/<코드>.html 경로 → 기본 삼성전자
     var params = new URLSearchParams(window.location.search);
     var reqStock = params.get('stock');
