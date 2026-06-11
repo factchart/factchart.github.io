@@ -1691,21 +1691,19 @@ async function renderCompany(name) {
 
   + '</div>';
 
-  // 지분비율 비동기 로드
+  // 지분비율 비동기 로드 (웹앱 재배포 후 활성화됨)
   (async function(){
     var ownCard = document.getElementById('ownCard_' + name.replace(/\s/g,'_'));
     if (!ownCard) return;
-    // 웹앱 재배포 전까지 준비중 표시
-    // TODO: Code.gs 웹앱 재배포 후 아래 return 제거
-    ownCard.innerHTML = '<div class="comp-own-title">주주 구성 <span class="comp-own-sub">최근 거래일 기준</span></div><div class="own-na">웹앱 재배포 후 활성화돼요</div>';
-    return;
-    if (!KIS_PROXY_URL || KIS_PROXY_URL.indexOf('배포후') !== -1) {
-      ownCard.innerHTML = '<div class="comp-own-title">주주 구성</div><div class="own-na">준비 중이에요</div>';
+    var TITLE = '<div class="comp-own-title">주주 구성 <span class="comp-own-sub">최근 거래일 기준</span></div>';
+    if (!KIS_PROXY_URL || KIS_PROXY_URL.indexOf('배포후') !== -1 || KIS_PROXY_URL.indexOf('AKfycb') === -1) {
+      ownCard.innerHTML = TITLE + '<div class="own-na">준비 중이에요</div>';
       return;
     }
     try {
       var meta2 = STOCK_META[name] || {};
       var code = meta2.ticker || '';
+      if (!code) throw new Error('no code');
       var controller = new AbortController();
       var timeout = setTimeout(function(){ controller.abort(); }, 5000);
       var url = KIS_PROXY_URL + '?action=investor&code=' + code + '&t=' + Date.now();
@@ -1727,9 +1725,9 @@ async function renderCompany(name) {
         { label:'개인',   val: d.individual || 0, color:'#888780' },
       ];
       var inner = rows2.map(pctBar).join('');
-      ownCard.innerHTML = '<div class="comp-own-title">주주 구성 <span class="comp-own-sub">최근 거래일 기준</span></div>' + inner;
+      ownCard.innerHTML = TITLE + '<div class="own-bars">' + inner + '</div>';
     } catch(e) {
-      if (ownCard) ownCard.innerHTML = '<div class="comp-own-title">주주 구성</div><div class="own-na">웹앱 재배포 후 이용 가능해요</div>';
+      ownCard.innerHTML = TITLE + '<div class="own-na">잠시 후 다시 볼게요</div>';
     }
   })();
 
