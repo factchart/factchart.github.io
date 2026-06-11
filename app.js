@@ -1383,88 +1383,7 @@ document.addEventListener('mousemove', e => {
       e.preventDefault();
     }, {passive:false});
     document.addEventListener('touchend', () => { if(mmDrag) mmDrag=null; });
-    // ── 뉴스 브리핑 (Claude API + 웹서치) ──
-let newsAbortController = null;
-let lastNewsStock = null;
-
-async function fetchNewsBriefing(stockName) {
-  if (lastNewsStock === stockName) return;
-  lastNewsStock = stockName;
-
-  const body = document.getElementById('newsBriefingBody');
-  const sub = document.getElementById('newsPanelSub');
-  if (!body || !sub) return;
-  sub.textContent = stockName + ' — AI 뉴스 분석 중...';
-  body.innerHTML = '<div class="news-loading"><div class="news-spinner"></div>관련 뉴스를 수집하고 있습니다...</div>';
-
-  if (newsAbortController) newsAbortController.abort();
-  newsAbortController = new AbortController();
-
-  try {
-    const today = new Date().toLocaleDateString('ko-KR', {year:'numeric',month:'long',day:'numeric'});
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      signal: newsAbortController.signal,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-        system: `당신은 한국 주식 뉴스 전문 애널리스트입니다. 오늘(${today}) 기준으로 해당 종목의 최신 뉴스를 검색하여 투자자에게 유용한 핵심 내용만 한국어로 요약해 주세요.
-응답은 반드시 아래 JSON 형식만 출력하세요. 마크다운이나 다른 텍스트 없이 JSON만:
-{"summary":"2-3문장 핵심 요약 (투자 관점에서 가장 중요한 내용)","items":[{"title":"뉴스 제목","source":"언론사명","sentiment":"up|down|neutral"},{"title":"뉴스 제목2","source":"언론사명","sentiment":"up|down|neutral"},{"title":"뉴스 제목3","source":"언론사명","sentiment":"up|down|neutral"}]}`,
-        messages: [{ role: 'user', content: `${stockName} 오늘 최신 뉴스 3건과 핵심 요약을 알려주세요.` }]
-      })
-    });
-
-    if (!resp.ok) throw new Error('API 오류');
-    const data = await resp.json();
-
-    // content 블록에서 text 타입 찾기
-    const textBlock = data.content?.find(c => c.type === 'text');
-    if (!textBlock) throw new Error('응답 없음');
-
-    let parsed;
-    try {
-      const clean = textBlock.text.replace(/```json|```/g,'').trim();
-      parsed = JSON.parse(clean);
-    } catch(e) {
-      throw new Error('파싱 실패');
-    }
-
-    sub.textContent = stockName + ' — ' + today + ' 기준';
-
-    const sentColor = { up: 'var(--up)', down: 'var(--down)', neutral: 'var(--text3)' };
-    const sentLabel = { up: '▲', down: '▼', neutral: '—' };
-
-    let html = '';
-    if (parsed.summary) {
-      html += `<div class="news-summary">${parsed.summary}</div>`;
-    }
-    if (parsed.items?.length) {
-      html += '<div class="news-items">';
-      parsed.items.forEach(item => {
-        const sc = sentColor[item.sentiment] || 'var(--text3)';
-        const sl = sentLabel[item.sentiment] || '—';
-        html += `<div class="news-item">
-          <div class="news-item-title">${item.title}</div>
-          <div class="news-item-meta">
-            <span class="news-item-source">${item.source||'—'}</span>
-            <span style="color:${sc};font-weight:600">${sl}</span>
-          </div>
-        </div>`;
-      });
-      html += '</div>';
-    }
-    body.innerHTML = html || '<div class="news-error">뉴스를 불러올 수 없습니다.</div>';
-
-  } catch(e) {
-    if (e.name === 'AbortError') return;
-    sub.textContent = stockName + ' — 브리핑 불가';
-    body.innerHTML = '<div class="news-error">뉴스 로딩 실패. 잠시 후 종목을 다시 선택해주세요.</div>';
-  }
-}
-
+    
 document.addEventListener('mousemove', e => {
       if (!mmDrag) return;
       const rect = minimapWrap.getBoundingClientRect();
@@ -1741,19 +1660,27 @@ async function renderCompany(name) {
   (async function(){
     var ownCard = document.getElementById('ownCard_' + name.replace(/\s/g,'_'));
     if (!ownCard) return;
+    // 웹앱 미배포 또는 investor 엔드포인트 없으면 준비중 표시
+    if (!KIS_PROXY_URL || KIS_PROXY_URL.indexOf('배포후') !== -1) {
+      ownCard.innerHTML = '<div class="comp-own-title">주주 구성</div><div class="own-na">준비 중이에요</div>';
+      return;
+    }
     try {
       var meta2 = STOCK_META[name] || {};
       var code = meta2.ticker || '';
+      var controller = new AbortController();
+      var timeout = setTimeout(function(){ controller.abort(); }, 5000);
       var url = KIS_PROXY_URL + '?action=investor&code=' + code + '&t=' + Date.now();
-      var res = await fetch(url);
+      var res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeout);
       var json = await res.json();
       var d = json.data;
       if (!d) throw new Error('no data');
-      function pctBar(pct, color) {
+      function pctBar(item) {
         return '<div class="own-row">'
-          + '<span class="own-label">' + pct.label + '</span>'
-          + '<div class="own-bar-wrap"><div class="own-bar" style="width:' + Math.min(pct.val,100).toFixed(1) + '%;background:' + color + '"></div></div>'
-          + '<span class="own-val">' + pct.val.toFixed(2) + '%</span>'
+          + '<span class="own-label">' + item.label + '</span>'
+          + '<div class="own-bar-wrap"><div class="own-bar" style="width:' + Math.min(Math.abs(item.val),100).toFixed(1) + '%;background:' + item.color + '"></div></div>'
+          + '<span class="own-val">' + item.val.toFixed(2) + '%</span>'
           + '</div>';
       }
       var rows2 = [
@@ -1761,10 +1688,10 @@ async function renderCompany(name) {
         { label:'기관',   val: d.institute || 0, color:'#1D9E75' },
         { label:'개인',   val: d.individual || 0, color:'#888780' },
       ];
-      var inner = rows2.map(function(r){ return pctBar(r, r.color); }).join('');
+      var inner = rows2.map(pctBar).join('');
       ownCard.innerHTML = '<div class="comp-own-title">주주 구성 <span class="comp-own-sub">최근 거래일 기준</span></div>' + inner;
     } catch(e) {
-      if (ownCard) ownCard.innerHTML = '<div class="comp-own-title">주주 구성</div><div class="own-na">데이터를 불러오지 못했어요</div>';
+      if (ownCard) ownCard.innerHTML = '<div class="comp-own-title">주주 구성</div><div class="own-na">웹앱 재배포 후 이용 가능해요</div>';
     }
   })();
 
@@ -2324,87 +2251,6 @@ function renderTableRows(disclosures) {
   </table>`;
 }
 
-// ── 뉴스 브리핑 (Claude API + 웹서치) ──
-let newsAbortController = null;
-let lastNewsStock = null;
-
-async function fetchNewsBriefing(stockName) {
-  if (lastNewsStock === stockName) return;
-  lastNewsStock = stockName;
-
-  const body = document.getElementById('newsBriefingBody');
-  const sub = document.getElementById('newsPanelSub');
-  if (!body || !sub) return;  // 뉴스 패널 마크업이 없는 페이지에선 동작 안 함
-  sub.textContent = stockName + ' — AI 뉴스 분석 중...';
-  body.innerHTML = '<div class="news-loading"><div class="news-spinner"></div>관련 뉴스를 수집하고 있습니다...</div>';
-
-  if (newsAbortController) newsAbortController.abort();
-  newsAbortController = new AbortController();
-
-  try {
-    const today = new Date().toLocaleDateString('ko-KR', {year:'numeric',month:'long',day:'numeric'});
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      signal: newsAbortController.signal,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-        system: `당신은 한국 주식 뉴스 전문 애널리스트입니다. 오늘(${today}) 기준으로 해당 종목의 최신 뉴스를 검색하여 투자자에게 유용한 핵심 내용만 한국어로 요약해 주세요.
-응답은 반드시 아래 JSON 형식만 출력하세요. 마크다운이나 다른 텍스트 없이 JSON만:
-{"summary":"2-3문장 핵심 요약 (투자 관점에서 가장 중요한 내용)","items":[{"title":"뉴스 제목","source":"언론사명","sentiment":"up|down|neutral"},{"title":"뉴스 제목2","source":"언론사명","sentiment":"up|down|neutral"},{"title":"뉴스 제목3","source":"언론사명","sentiment":"up|down|neutral"}]}`,
-        messages: [{ role: 'user', content: `${stockName} 오늘 최신 뉴스 3건과 핵심 요약을 알려주세요.` }]
-      })
-    });
-
-    if (!resp.ok) throw new Error('API 오류');
-    const data = await resp.json();
-
-    // content 블록에서 text 타입 찾기
-    const textBlock = data.content?.find(c => c.type === 'text');
-    if (!textBlock) throw new Error('응답 없음');
-
-    let parsed;
-    try {
-      const clean = textBlock.text.replace(/```json|```/g,'').trim();
-      parsed = JSON.parse(clean);
-    } catch(e) {
-      throw new Error('파싱 실패');
-    }
-
-    sub.textContent = stockName + ' — ' + today + ' 기준';
-
-    const sentColor = { up: 'var(--up)', down: 'var(--down)', neutral: 'var(--text3)' };
-    const sentLabel = { up: '▲', down: '▼', neutral: '—' };
-
-    let html = '';
-    if (parsed.summary) {
-      html += `<div class="news-summary">${parsed.summary}</div>`;
-    }
-    if (parsed.items?.length) {
-      html += '<div class="news-items">';
-      parsed.items.forEach(item => {
-        const sc = sentColor[item.sentiment] || 'var(--text3)';
-        const sl = sentLabel[item.sentiment] || '—';
-        html += `<div class="news-item">
-          <div class="news-item-title">${item.title}</div>
-          <div class="news-item-meta">
-            <span class="news-item-source">${item.source||'—'}</span>
-            <span style="color:${sc};font-weight:600">${sl}</span>
-          </div>
-        </div>`;
-      });
-      html += '</div>';
-    }
-    body.innerHTML = html || '<div class="news-error">뉴스를 불러올 수 없습니다.</div>';
-
-  } catch(e) {
-    if (e.name === 'AbortError') return;
-    sub.textContent = stockName + ' — 브리핑 불가';
-    body.innerHTML = '<div class="news-error">뉴스 로딩 실패. 잠시 후 종목을 다시 선택해주세요.</div>';
-  }
-}
 
 document.addEventListener('mousemove', e => {
   const tooltip = document.getElementById('customTooltip');
