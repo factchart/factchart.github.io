@@ -629,11 +629,12 @@ body {
 .comp-cell { background: rgba(255,255,255,0.02); border-radius: 8px; padding: 16px; }
 .comp-cell-label { font-size: 12px; color: var(--text3); }
 .comp-cell-val { font-size: 16px; font-weight: 600; color: var(--text); margin-top: 4px; }
-.comp-info-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
-.comp-info-left { }
-.comp-info-right { }
-.comp-grid4 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-.comp-own-card { background: rgba(255,255,255,0.02); border-radius: 8px; padding: 16px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; min-height: 100%; }
+.comp-info-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; align-items: stretch; }
+.comp-info-left { display: flex; flex-direction: column; }
+.comp-info-right { display: flex; flex-direction: column; }
+.comp-grid4 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; flex: 1; }
+.comp-own-card { background: rgba(255,255,255,0.02); border-radius: 8px; padding: 16px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; flex: 1; }
+@media (max-width: 600px) { .comp-info-row { grid-template-columns: 1fr; } }
 .comp-own-title { font-size: 12px; color: var(--text3); margin-bottom: 10px; }
 .comp-own-sub { font-size: 10px; color: var(--text3); opacity: 0.6; margin-left: 4px; }
 .comp-own-loading { font-size: 12px; color: var(--text3); opacity: 0.5; }
@@ -2489,7 +2490,7 @@ tr.disc-highlight {
       <span style="font-family:var(--sans);font-size:11px;font-weight:600;color:var(--text3);letter-spacing:1px;text-transform:uppercase;">종목</span>
       <span class="stock-info-btn" onclick="toggleStockInfo()" title="종목 선택 기준">ⓘ</span>
       <div class="stock-info-tooltip" id="stockInfoTooltip" style="display:none">
-        코스피 시가총액 상위 75개 종목 선별 / 공시 빈도, 패턴 반복성, 거래량 기준 (향후 전 종목 확대 예정)
+        코스피200, 코스닥150 선별 / 공시 빈도, 패턴 반복성, 거래량 기준 (향후 전 종목 확대 예정)
       </div>
     </div>
     <div class="stock-row" id="stockRow">
