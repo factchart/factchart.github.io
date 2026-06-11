@@ -969,6 +969,41 @@ function renderChart(prices, disclosures, patternData) {
 
   const discLinePlugin = {
     id: 'discLine',
+    beforeDatasetsDraw(chart) {
+      // ── 캔들차트 렌더링 ──
+      const cd = chart._candleData;
+      if (!cd || !cd.length) return;
+      const { ctx, scales, chartArea } = chart;
+      const xScale = scales.x, yScale = scales.y;
+      const n = chart.data.labels.length;
+      // 봉 너비: 전체 차트 폭 / 데이터 수 * 0.6
+      const barW = Math.max(1, (chartArea.right - chartArea.left) / n * 0.55);
+      ctx.save();
+      for (let i = 0; i < cd.length; i++) {
+        const c = cd[i];
+        if (!c) continue;
+        const x = xScale.getPixelForValue(i);
+        const yO = yScale.getPixelForValue(c.o);
+        const yC = yScale.getPixelForValue(c.c);
+        const yH = yScale.getPixelForValue(c.h);
+        const yL = yScale.getPixelForValue(c.l);
+        const isUp = c.c >= c.o;
+        const color = isUp ? '#3182ce' : '#e53e3e';
+        // 심지(wick)
+        ctx.beginPath();
+        ctx.moveTo(x, yH);
+        ctx.lineTo(x, yL);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = Math.max(0.8, barW * 0.15);
+        ctx.stroke();
+        // 몸통(body)
+        const bodyTop = Math.min(yO, yC);
+        const bodyH = Math.max(1, Math.abs(yO - yC));
+        ctx.fillStyle = isUp ? 'rgba(49,130,206,0.85)' : 'rgba(229,62,62,0.85)';
+        ctx.fillRect(x - barW/2, bodyTop, barW, bodyH);
+      }
+      ctx.restore();
+    },
     afterDatasetsDraw(chart) {
       // 공시 pulse 그리기
       const { ctx, scales } = chart;
@@ -1043,7 +1078,7 @@ function renderChart(prices, disclosures, patternData) {
 
   const ctx = canvas.getContext('2d');
   // OHLC 데이터 준비
-  const ohlcArr = prices.map(p => p.open ? {o:p.open, h:p.high, l:p.low, c:p.close} : null);
+  const ohlcArr = prices.map(p => (p.open != null && p.open > 0) ? {o:p.open, h:p.high, l:p.low, c:p.close} : null);
   const useCandle = ohlcArr.some(d => d !== null);
   if (useCandle && datasets[0]) {
     datasets[0].data = prices.map(p => p.close);
@@ -1071,8 +1106,8 @@ function renderChart(prices, disclosures, patternData) {
           border:{color:'rgba(255,255,255,0.07)'}
         },
         y:{
-          min: useCandle ? Math.min(...prices.filter(p=>p.low).map(p=>p.low)) * 0.99 : undefined,
-          max: useCandle ? Math.max(...prices.filter(p=>p.high).map(p=>p.high)) * 1.01 : undefined,
+          min: (useCandle && prices.some(p=>p.low)) ? Math.min(...prices.filter(p=>p.low>0).map(p=>p.low)) * 0.99 : undefined,
+          max: (useCandle && prices.some(p=>p.high)) ? Math.max(...prices.filter(p=>p.high>0).map(p=>p.high)) * 1.01 : undefined,
           ticks:{color:'#8a9fb3',font:{family:'Inter',size:12},
             callback:v=>v>=10000000?(v/10000000).toFixed(1)+'천만':v>=1000000?(v/10000).toFixed(0)+'만':v>=10000?(v/10000).toFixed(1)+'만':v.toLocaleString()
           },
@@ -1660,7 +1695,10 @@ async function renderCompany(name) {
   (async function(){
     var ownCard = document.getElementById('ownCard_' + name.replace(/\s/g,'_'));
     if (!ownCard) return;
-    // 웹앱 미배포 또는 investor 엔드포인트 없으면 준비중 표시
+    // 웹앱 재배포 전까지 준비중 표시
+    // TODO: Code.gs 웹앱 재배포 후 아래 return 제거
+    ownCard.innerHTML = '<div class="comp-own-title">주주 구성 <span class="comp-own-sub">최근 거래일 기준</span></div><div class="own-na">웹앱 재배포 후 활성화돼요</div>';
+    return;
     if (!KIS_PROXY_URL || KIS_PROXY_URL.indexOf('배포후') !== -1) {
       ownCard.innerHTML = '<div class="comp-own-title">주주 구성</div><div class="own-na">준비 중이에요</div>';
       return;
