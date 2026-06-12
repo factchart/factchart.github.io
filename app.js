@@ -1717,8 +1717,8 @@ async function renderCompany(name) {
     + '</div>'
   + '</div>';
 
-  // 투자자 수급 비동기 로드 (외국인 보유율 + 누적 순매수)
-  (async function(){
+  // 투자자 수급 비동기 로드 (외국인 보유율 + 누적 순매수) — DOM 렌더 후 실행되도록 지연
+  setTimeout(async function(){
     var flow = document.getElementById('ownFlow_' + name.replace(/\s/g,'_'));
     if (!flow) return;
     var TITLE = '<div class="comp-own-title">투자자 수급 <span class="comp-own-sub">최근 거래일 기준</span></div>';
@@ -1772,7 +1772,7 @@ async function renderCompany(name) {
     } catch(e) {
       flow.innerHTML = TITLE + '<div class="own-na">잠시 후 다시 볼게요</div>';
     }
-  })();
+  }, 0);
 
   // (실적 추이는 위 7:3 우측 컬럼으로 이동됨)
 
