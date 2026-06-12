@@ -2309,7 +2309,7 @@ function renderTableRows(disclosures) {
     return `<tr>
       <td class="td-date">${d.date}</td>
       <td>${typeBadge}</td>
-      <td>${titleCell}</td>
+      <td class="td-title">${titleCell}</td>
       <td class="td-3chg">
         <span class="chg-block">
           <span class="chg-grp"><span class="chg-lbl">당일</span>${cell(ch.d0)}</span>
