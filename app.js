@@ -1102,6 +1102,7 @@ function renderChart(prices, disclosures, patternData) {
     data:{ labels:prices.map(p=>p.date), datasets },
     options:{
       responsive:true,
+      animation:false,
       interaction:{mode:'index',intersect:false},
       plugins:{
         legend:{display:false},
