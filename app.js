@@ -976,8 +976,10 @@ function renderChart(prices, disclosures, patternData) {
       const { ctx, scales, chartArea } = chart;
       const xScale = scales.x, yScale = scales.y;
       const n = chart.data.labels.length;
-      // 봉 너비: 전체 차트 폭 / 데이터 수 * 0.6
-      const barW = Math.max(1, (chartArea.right - chartArea.left) / n * 0.55);
+      // 봉 너비: 화면에 보이는 인접 봉 간격 기준 → 확대할수록 봉도 두꺼워짐(반응형)
+      let _step = Math.abs(xScale.getPixelForValue(1) - xScale.getPixelForValue(0));
+      if (!_step || !isFinite(_step) || _step <= 0) _step = (chartArea.right - chartArea.left) / Math.max(1, n);
+      const barW = Math.max(1, _step * 0.7);
       ctx.save();
       for (let i = 0; i < cd.length; i++) {
         const c = cd[i];
@@ -994,13 +996,19 @@ function renderChart(prices, disclosures, patternData) {
         ctx.moveTo(x, yH);
         ctx.lineTo(x, yL);
         ctx.strokeStyle = color;
-        ctx.lineWidth = Math.max(0.8, barW * 0.15);
+        ctx.lineWidth = Math.max(0.8, Math.min(2.5, barW * 0.12));
         ctx.stroke();
-        // 몸통(body)
+        // 몸통(body) — 반투명 채움 + 두꺼워지면 테두리로 또렷하게(꽉 찬 느낌)
         const bodyTop = Math.min(yO, yC);
         const bodyH = Math.max(1, Math.abs(yO - yC));
-        ctx.fillStyle = isUp ? 'rgba(49,130,206,0.85)' : 'rgba(229,62,62,0.85)';
+        const fillA = barW >= 3 ? 0.5 : 0.85;
+        ctx.fillStyle = isUp ? `rgba(49,130,206,${fillA})` : `rgba(229,62,62,${fillA})`;
         ctx.fillRect(x - barW/2, bodyTop, barW, bodyH);
+        if (barW >= 3) {
+          ctx.strokeStyle = isUp ? 'rgba(49,130,206,0.95)' : 'rgba(229,62,62,0.95)';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x - barW/2 + 0.5, bodyTop + 0.5, barW - 1, Math.max(1, bodyH - 1));
+        }
       }
       ctx.restore();
     },
