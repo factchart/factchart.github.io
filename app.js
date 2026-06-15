@@ -1499,6 +1499,9 @@ document.addEventListener('mousemove', e => {
 }
 
 function externalTooltip(context, discMap, patternData, prices) {
+  // 툴팁은 항상 최신 차트 배열(chartPrices)을 참조한다.
+  // (오늘 캔들이 updateTodayCandle로 chartPrices에 추가되므로, 호버 시 오늘 봉도 찾을 수 있음)
+  if (chartPrices && chartPrices.length) prices = chartPrices;
   const tooltip = document.getElementById('customTooltip');
   const {chart,tooltip:tt} = context;
   if (tt.opacity===0) { tooltip.style.display='none'; return; }
@@ -3065,6 +3068,15 @@ function updateTodayCandle(p) {
     }
     if (chartInstance._candleData) {
       chartInstance._candleData.push({ o:candle.open, h:candle.high, l:candle.low, c:candle.close });
+    }
+    // 줌 범위에도 새 봉을 반영 (안 하면 확대 시 오늘 봉이 범위 밖으로 사라짐)
+    const wasAtEnd = (_zoomMax >= _zoomTotal - 1);
+    _zoomTotal = labels.length;
+    if (wasAtEnd) {
+      _zoomMax = _zoomTotal - 1;                 // 끝을 보고 있었으면 새 봉까지 확장
+      if (chartInstance.options.scales.x.max != null) {
+        chartInstance.options.scales.x.max = _zoomMax;
+      }
     }
   }
   // 애니메이션 없이 즉시 갱신 → 깜빡임·위치 리셋 없음
