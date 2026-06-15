@@ -3055,6 +3055,16 @@ function updateTodayCandle(p) {
     }
   }
   // 애니메이션 없이 즉시 갱신 → 깜빡임·위치 리셋 없음
+  // 오늘 봉이 기존 Y축 범위를 벗어나면 축도 넓혀준다 (봉이 차트 밖으로 튀는 문제 방지)
+  try {
+    const ys = chartInstance.options.scales.y;
+    if (ys && (ys.min != null || ys.max != null)) {
+      const hi = candle.high || candle.price;
+      const lo = candle.low || candle.price;
+      if (ys.max != null && hi * 1.01 > ys.max) ys.max = hi * 1.01;
+      if (ys.min != null && lo * 0.99 < ys.min) ys.min = lo * 0.99;
+    }
+  } catch (e) {}
   chartInstance.update('none');
 }
 
