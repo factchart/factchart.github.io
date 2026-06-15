@@ -1607,7 +1607,7 @@ function switchTab(tab) {
   });
   document.getElementById('tabChart').style.display   = (tab === 'chart') ? '' : 'none';
   document.getElementById('tabCompany').style.display = (tab === 'company') ? '' : 'none';
-  if (tab === 'company') renderCompany(currentStock);
+  if (tab === 'company') { renderCompany(currentStock); fetchRealtime(); }
 }
 
 async function renderCompany(name) {
@@ -1929,6 +1929,10 @@ async function renderCompany(name) {
   html += '</div>';
 
   body.innerHTML = html;
+  // 이미 받아둔 실시간가가 현재 종목 것이면 헤더 가격/등락률/시총을 즉시 반영
+  if (realtimePrice && realtimePriceStock === name) {
+    try { applyRealtimePrice(); } catch(e) {}
+  }
 }
 
 
