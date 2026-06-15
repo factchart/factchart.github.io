@@ -720,6 +720,8 @@ async function selectStock(name) {
   chartPrices = prices;        // 실시간 캔들 갱신이 참조할 배열
   chartDisclosures = disclosures;
   todayCandleAdded = false;    // 새 종목이므로 오늘 캔들 초기화
+  // 종목이 바뀌면 이전 종목의 실시간가를 비운다 (A값이 B차트에 새는 것 방지)
+  if (realtimePriceStock !== name) { realtimePrice = null; realtimePriceStock = null; }
   window._lastShownPrice = null; // 굴림 방향 비교용 직전가 리셋(다른 종목과 비교 방지)
 
   // 장중/시간외/마감 무관하게 종목 선택 시 오늘 시세를 한 번 가져온다.
@@ -1163,7 +1165,8 @@ function renderChart(prices, disclosures, patternData) {
 
   // 차트를 (재)렌더할 때마다, 이미 받아둔 오늘 실시간가가 현재 종목 것이면
   // 오늘 캔들을 다시 붙인다. (패턴 토글 등으로 renderChart가 재호출돼도 오늘 봉 유지)
-  if (realtimePrice && currentStock && allData && allData.prices[currentStock]) {
+  // ★ realtimePriceStock === currentStock 확인: 이전 종목 값이 새 종목에 새는 것 방지
+  if (realtimePrice && realtimePriceStock === currentStock && allData && allData.prices[currentStock]) {
     try { updateTodayCandle(realtimePrice); } catch(e) {}
   }
   canvas.addEventListener('mousemove', e => {
@@ -2871,6 +2874,7 @@ const KIS_PROXY_URL = 'https://script.google.com/macros/s/AKfycbzz6fr6yCeli_Tzri
 // ▲▲ (Apps Script → 배포 → 새 배포 → 웹앱 → URL 복사) ▲▲
 
 let realtimePrice = null;
+let realtimePriceStock = null;  // realtimePrice가 속한 종목명 (다른 종목에 잘못 적용 방지)
 
 // 현재 보고 있는 종목 1개만 실시간 조회 (on-demand, 10초 폴링)
 // 서버(getRealtimePriceResponse)가 CacheService로 9초 캐시 → 동시 시청자 중복호출 제거
@@ -2884,6 +2888,7 @@ async function fetchRealtime() {
     const data = await res.json();
     if (data && data.prices && data.prices[currentStock]) {
       realtimePrice = data.prices[currentStock];
+      realtimePriceStock = currentStock;   // 이 실시간가가 어느 종목 것인지 기록
       applyRealtimePrice();
     }
   } catch (e) {}
@@ -2942,6 +2947,7 @@ function flipNumber(el, text, dir) {
 
 function applyRealtimePrice() {
   if (!realtimePrice || !currentStock) return;
+  if (realtimePriceStock !== currentStock) return;  // 다른 종목 실시간가면 적용 안 함
   const p = realtimePrice;
   const priceEl  = document.getElementById('currentPrice');
   const changeEl = document.getElementById('currentChange');
