@@ -724,8 +724,10 @@ async function selectStock(name) {
 
   // 장중이면 현재가 요청을 '먼저' 출발시킨다(렌더링과 병렬). 응답이 오면
   // applyRealtimePrice가 가격 텍스트 + 차트 마지막 캔들을 갱신.
+  // 장중/시간외/마감 무관하게 종목 선택 시 오늘 시세를 한 번 가져온다.
+  // (KIS는 장 마감 후에도 당일 종가를 주므로, 어제 종가가 굳는 문제 방지)
   const marketOpenNow = (typeof isMarketOpen === 'function' && isMarketOpen());
-  if (marketOpenNow) fetchRealtime();
+  fetchRealtime();
   if (prices.length > 0) {
     const latest = prices[prices.length-1];
     const prev = prices[prices.length-2];
@@ -2644,13 +2646,16 @@ function initMarketStatus() {
     const h = kst.getHours(), m = kst.getMinutes();
     const timeVal = h * 60 + m;
     const isWeekday = day >= 1 && day <= 5;
-    const isOpen = isWeekday && !isHoliday(kst) && timeVal >= 9*60 && timeVal < 15*60+30;
+    const tradingDay = isWeekday && !isHoliday(kst);
+    const isRegular = tradingDay && timeVal >= 9*60 && timeVal < 15*60+30;
+    const isAfter = tradingDay && timeVal >= 15*60+40 && timeVal < 18*60; // 시간외 단일가
+    const isOpen = isRegular || isAfter;
     const dot = document.getElementById('marketDot');
     const label = document.getElementById('marketLabel');
     const wrap = document.getElementById('marketStatus');
     if (dot && label) {
       dot.className = 'market-dot ' + (isOpen ? 'open' : 'closed');
-      label.textContent = isOpen ? '국내 정규장' : '장 마감';
+      label.textContent = isRegular ? '국내 정규장' : (isAfter ? '시간외 거래' : '장 마감');
       if (wrap) wrap.classList.toggle('open', isOpen);
     }
   }
@@ -3054,11 +3059,13 @@ function updateTodayCandle(p) {
 }
 
 function isMarketOpen() {
+  // 폴링 대상 시간: 정규장(9:00~15:30) + 시간외 단일가(~18:00).
+  // KIS가 이 시간대에 당일 가격을 갱신해 주므로 폴링 유지.
   const now = new Date();
   const kst = new Date(now.toLocaleString('en-US', {timeZone:'Asia/Seoul'}));
   const day = kst.getDay();
   const t = kst.getHours() * 60 + kst.getMinutes();
-  return (day >= 1 && day <= 5 && t >= 9*60 && t < 15*60+36);
+  return (day >= 1 && day <= 5 && t >= 9*60 && t < 18*60);
 }
 
 function scrollToTop() {
