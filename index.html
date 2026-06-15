@@ -618,13 +618,16 @@ body {
 .comp-head { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,0.07); }
 .comp-name { font-size: 20px; font-weight: 700; color: var(--text); }
 .comp-name-wrap { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
-.comp-live { display: flex; align-items: baseline; gap: 8px; }
-.comp-live-price { font-size: 20px; font-weight: 700; color: var(--text); transition: color 0.2s; }
+.comp-live { display: flex; align-items: baseline; gap: 8px; white-space: nowrap; }
+.comp-live-price { font-size: 20px; font-weight: 700; color: var(--text); transition: color 0.2s; white-space: nowrap; }
 .comp-live-price.up { color: var(--up); }
 .comp-live-price.down { color: var(--down); }
-.comp-live-chg { font-size: 14px; font-weight: 600; }
+.comp-live-chg { font-size: 14px; font-weight: 600; white-space: nowrap; }
 .comp-live-chg.up { color: var(--up); }
 .comp-live-chg.down { color: var(--down); }
+@media (max-width: 768px) {
+  .comp-live { flex-direction: column; align-items: flex-start; gap: 2px; }
+}
 .comp-sub2 { font-size: 11px; color: var(--text3); margin-top: 3px; }
 .comp-cap { text-align: right; }
 .comp-cap-k { font-size: 11px; color: var(--text3); }
@@ -643,9 +646,9 @@ body {
 .comp-info-row { display: flex; gap: 12px; margin-top: 16px; align-items: stretch; }
 .comp-info-left { flex: 7; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
 .comp-grid4 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-.comp-own-card { background: rgba(255,255,255,0.02); border-radius: 8px; padding: 13px; box-sizing: border-box; flex: 1; }
-.own-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: stretch; height: 100%; }
-.own-flow, .own-holders { display: flex; flex-direction: column; min-width: 0; }
+.comp-own-card { background: transparent; border-radius: 8px; padding: 0; box-sizing: border-box; flex: 1; }
+.own-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: stretch; height: 100%; }
+.own-flow, .own-holders { display: flex; flex-direction: column; min-width: 0; background: rgba(255,255,255,0.02); border-radius: 8px; padding: 14px; box-sizing: border-box; }
 .comp-own-title { font-size: 12px; color: var(--text3); margin-bottom: 9px; }
 .comp-own-sub { font-size: 10px; color: var(--text3); opacity: 0.6; margin-left: 4px; }
 .comp-own-loading { font-size: 12px; color: var(--text3); opacity: 0.5; }
@@ -2778,7 +2781,7 @@ tr.disc-highlight {
   </div>
 </div>
 
-<script src="/app.js?v=20260615i" defer></script>
+<script src="/app.js?v=20260615k" defer></script>
 <!-- 푸터 -->
 <footer class="site-footer">
   <div class="footer-top">
