@@ -722,12 +722,10 @@ async function selectStock(name) {
   todayCandleAdded = false;    // 새 종목이므로 오늘 캔들 초기화
   window._lastShownPrice = null; // 굴림 방향 비교용 직전가 리셋(다른 종목과 비교 방지)
 
-  // 장중이면 현재가 요청을 '먼저' 출발시킨다(렌더링과 병렬). 응답이 오면
-  // applyRealtimePrice가 가격 텍스트 + 차트 마지막 캔들을 갱신.
   // 장중/시간외/마감 무관하게 종목 선택 시 오늘 시세를 한 번 가져온다.
   // (KIS는 장 마감 후에도 당일 종가를 주므로, 어제 종가가 굳는 문제 방지)
+  // ※ fetchRealtime은 차트가 그려진 '뒤'에 호출해야 오늘 캔들이 차트에 안전히 추가됨.
   const marketOpenNow = (typeof isMarketOpen === 'function' && isMarketOpen());
-  fetchRealtime();
   if (prices.length > 0) {
     const latest = prices[prices.length-1];
     const prev = prices[prices.length-2];
@@ -766,6 +764,8 @@ async function selectStock(name) {
   renderChart(prices, disclosures, null);
   renderTable(disclosures);
   renderTypeFilter(disclosures);
+  // 차트가 그려진 뒤 오늘 시세를 가져와 오늘 캔들을 차트에 추가/갱신
+  fetchRealtime();
   renderStatsPanel(disclosures);
   renderThermometer(disclosures);
   renderHook(disclosures);
