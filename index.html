@@ -617,7 +617,7 @@ body {
 .comp-card-big { background: var(--bg2,#0f1421); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 22px; }
 .comp-head { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,0.07); }
 .comp-name { font-size: 20px; font-weight: 700; color: var(--text); }
-.comp-name-wrap { display: flex; flex-direction: column; gap: 6px; }
+.comp-name-wrap { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .comp-live { display: flex; align-items: baseline; gap: 8px; }
 .comp-live-price { font-size: 16px; font-weight: 700; color: var(--text); transition: color 0.2s; }
 .comp-live-price.up { color: var(--up); }
@@ -625,6 +625,9 @@ body {
 .comp-live-chg { font-size: 12px; font-weight: 600; }
 .comp-live-chg.up { color: var(--up); }
 .comp-live-chg.down { color: var(--down); }
+@media (max-width: 768px) {
+  .comp-name-wrap { flex-direction: column; align-items: flex-start; gap: 4px; }
+}
 .comp-sub2 { font-size: 11px; color: var(--text3); margin-top: 3px; }
 .comp-cap { text-align: right; }
 .comp-cap-k { font-size: 11px; color: var(--text3); }
@@ -738,6 +741,9 @@ body {
 .val-diff.na { color: var(--text3); }
 .val-basis { font-size: 11px; color: var(--text3); line-height: 1.6; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px; }
 .val-badge { background: rgba(186,117,23,0.2); color: #ef9f27; font-size: 9px; font-weight: 600; padding: 2px 6px; border-radius: 5px; }
+.val-info { position: relative; display: inline-block; margin-left: 5px; color: var(--text3); font-size: 11px; cursor: pointer; outline: none; }
+.val-tip { position: absolute; bottom: calc(100% + 6px); left: 0; width: 200px; background: #1a2433; color: var(--text2); font-size: 11px; font-weight: 400; line-height: 1.5; padding: 9px 11px; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.5); opacity: 0; visibility: hidden; transition: opacity 0.15s; z-index: 50; pointer-events: none; }
+.val-info:hover .val-tip, .val-info:focus .val-tip { opacity: 1; visibility: visible; }
 .val-explain { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
 .val-ex-row { background: var(--card); border-radius: 8px; padding: 9px 11px; font-size: 11px; color: var(--text3); line-height: 1.6; }
 .val-ex-row b { color: var(--text2); font-weight: 600; }
