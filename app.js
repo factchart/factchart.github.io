@@ -1707,12 +1707,24 @@ async function renderCompany(name) {
   // 헤더: 종목명 + 실시간가 + 시가총액
   window._compShares = shares;  // 실시간 시총 계산용
   var initPrice = (lastClose!=null) ? lastClose.toLocaleString()+'원' : '—';
+  // 초기 등락률: 전날 종가 대비 (실시간 데이터 오기 전에도 표시)
+  var prevClose = null;
+  if (prices.length >= 2) {
+    var pv = prices[prices.length-2];
+    prevClose = (pv.length===5 ? pv[4] : pv[1]);
+  }
+  var initChg = '', initChgCls = '';
+  if (prevClose && lastClose) {
+    var chgPct = (lastClose - prevClose) / prevClose * 100;
+    initChgCls = chgPct >= 0 ? 'up' : 'down';
+    initChg = (chgPct>=0?'▲ +':'▼ ') + Math.abs(chgPct).toFixed(2) + '%';
+  }
   html += '<div class="comp-head">'
     + '<div class="comp-name-wrap">'
     +   '<div class="comp-name">'+name+'</div>'
     +   '<div class="comp-live">'
     +     '<span class="comp-live-price" id="compLivePrice">'+initPrice+'</span>'
-    +     '<span class="comp-live-chg" id="compLiveChg"></span>'
+    +     '<span class="comp-live-chg '+initChgCls+'" id="compLiveChg">'+initChg+'</span>'
     +   '</div>'
     + '</div>'
     + '<div class="comp-cap"><div class="comp-cap-k">시가총액</div>'
