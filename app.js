@@ -917,6 +917,7 @@ function applyPattern() {
 function renderChart(prices, disclosures, patternData) {
   const container = document.getElementById('chartContainer');
   container.innerHTML = '<canvas id="myChart"></canvas>';
+  chartPrices = prices;   // 모든 호출 경로에서 실시간 캔들 갱신 기준 배열을 일치시킴
   if (window._pulseRAF) { cancelAnimationFrame(window._pulseRAF); window._pulseRAF = null; }
   if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
   if (!prices.length) { container.innerHTML='<div class="error">주가 데이터 없음</div>'; return; }
@@ -1140,6 +1141,7 @@ function renderChart(prices, disclosures, patternData) {
       },
       scales:{
         x:{
+          offset:true,
           ticks:{color:'#7a8fa3',font:{family:'Inter',size:12},maxTicksLimit:10,maxRotation:0},
           grid:{color:'rgba(255,255,255,0.05)'},
           border:{color:'rgba(255,255,255,0.07)'}
@@ -1159,6 +1161,11 @@ function renderChart(prices, disclosures, patternData) {
   });
   if (useCandle) chartInstance._candleData = ohlcArr;
 
+  // 차트를 (재)렌더할 때마다, 이미 받아둔 오늘 실시간가가 현재 종목 것이면
+  // 오늘 캔들을 다시 붙인다. (패턴 토글 등으로 renderChart가 재호출돼도 오늘 봉 유지)
+  if (realtimePrice && currentStock && allData && allData.prices[currentStock]) {
+    try { updateTodayCandle(realtimePrice); } catch(e) {}
+  }
   canvas.addEventListener('mousemove', e => {
     const rect = canvas.getBoundingClientRect();
     if (chartInstance) chartInstance._mouseY = e.clientY - rect.top;
