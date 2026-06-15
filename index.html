@@ -617,6 +617,14 @@ body {
 .comp-card-big { background: var(--bg2,#0f1421); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 22px; }
 .comp-head { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,0.07); }
 .comp-name { font-size: 20px; font-weight: 700; color: var(--text); }
+.comp-name-wrap { display: flex; flex-direction: column; gap: 6px; }
+.comp-live { display: flex; align-items: baseline; gap: 8px; }
+.comp-live-price { font-size: 16px; font-weight: 700; color: var(--text); transition: color 0.2s; }
+.comp-live-price.up { color: var(--up); }
+.comp-live-price.down { color: var(--down); }
+.comp-live-chg { font-size: 12px; font-weight: 600; }
+.comp-live-chg.up { color: var(--up); }
+.comp-live-chg.down { color: var(--down); }
 .comp-sub2 { font-size: 11px; color: var(--text3); margin-top: 3px; }
 .comp-cap { text-align: right; }
 .comp-cap-k { font-size: 11px; color: var(--text3); }
@@ -2733,7 +2741,7 @@ tr.disc-highlight {
             <span>3개월 전</span><span>오늘</span>
           </div>
         </div>
-        <div class="thermo-note">※ 과거 공시 빈도일 뿐 미래를 보장하지 않아요. 매수·매도 권유가 아닌 참고 자료예요.</div>
+        <div class="thermo-note">※ 최근 공시들의 호재·주의 성격을 집계한 통계예요.</div>
       </div>
       <div class="stats-panel">
         <div class="stats-panel-header">
@@ -2779,7 +2787,7 @@ tr.disc-highlight {
   </div>
   <div class="footer-disclaimer">
     <div class="footer-disclaimer-title">투자 유의사항</div>
-    <p>본 사이트는 금융감독원 전자공시(DART)·한국거래소 등 공개된 과거 데이터를 정리해 보여주는 정보 제공 서비스입니다. 특정 종목의 매수·매도를 권유하거나, 주가의 상승·하락을 예측·보장하지 않습니다. 모든 수치는 과거의 사실일 뿐 미래 수익을 보장하지 않으며, 표시되는 통계(공시 후 평균 변동률 등)는 과거 기록의 단순 집계로 향후 결과와 다를 수 있습니다. 본 정보를 근거로 한 투자 판단과 그 결과의 책임은 전적으로 이용자 본인에게 있으며, 운영자는 어떠한 투자 손익에도 책임지지 않습니다. 본 서비스는 금융투자업 인가·등록을 받지 않은 정보 제공 서비스로, 투자자문·투자일임 서비스를 제공하지 않습니다.</p>
+    <p>본 사이트는 금융감독원 전자공시(DART)·한국거래소 등 공개된 과거 데이터를 정리해 보여주는 정보 제공 서비스입니다. 특정 종목의 매수·매도를 권유하거나, 주가의 상승·하락을 예측·보장하지 않습니다. 모든 수치는 과거의 사실일 뿐 미래 수익을 보장하지 않으며, 표시되는 통계(공시 후 평균 변동률 등)와 PER·PBR·DCF로 환산한 적정주가는 과거·확정 실적 기준의 단순 계산값으로 향후 결과와 다를 수 있습니다. 본 정보를 근거로 한 투자 판단과 그 결과의 책임은 전적으로 이용자 본인에게 있으며, 운영자는 어떠한 투자 손익에도 책임지지 않습니다. 본 서비스는 금융투자업 인가·등록을 받지 않은 정보 제공 서비스로, 투자자문·투자일임 서비스를 제공하지 않습니다.</p>
   </div>
   <div class="footer-links">
     <span class="footer-link" onclick="openModal('terms')">이용약관</span>
