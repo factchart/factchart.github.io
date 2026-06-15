@@ -1785,6 +1785,12 @@ async function renderCompany(name) {
 
   // (실적 추이는 위 7:3 우측 컬럼으로 이동됨)
 
+  // ===== 밸류에이션 (적정주가 참고) — 재무건전성 위 =====
+  html += '<div class="comp-sec">밸류에이션 <span class="comp-sec-sub">적정주가 참고 · 여러 방식으로 환산한 값일 뿐, 매수·매도 신호가 아니에요</span></div>';
+  html += '<div id="val-wrap" class="val-wrap"><div class="own-na">적정주가를 계산하고 있어요…</div></div>';
+
+  // 밸류에이션 비동기 계산 (업종 peers 재무를 한 번에 가져와 PER/PBR 중앙값 산출)
+  setTimeout(function(){ renderValuation(name, info, lastClose, shares, ni0, ni1, eq0); }, 0);
 
   html += '<div class="comp-sec">재무 건전성 풀이 <span class="comp-sec-sub">숫자 뒤에 숨은 뜻을 풀어드려요 · DART 기준</span></div>';
   html += '<div class="rx-wrap">';
@@ -1850,10 +1856,145 @@ async function renderCompany(name) {
   html += '<div class="comp-sec">예상 실적 · 투자의견</div>';
   html += '<div class="comp-soon">증권사 컨센서스(예상 매출·목표주가)는 준비 중이에요.</div>';
 
-  html += '<div class="comp-foot">데이터 출처: 금융감독원 전자공시(DART) · 시가총액은 최근 종가×발행주식수로 계산한 참고치예요. · 동희 사랑해 🩵</div>';
+  html += '<div class="comp-foot">데이터 출처: 금융감독원 전자공시(DART) · 시가총액은 최근 종가×발행주식수로 계산한 참고치예요.</div>';
   html += '</div>';
 
   body.innerHTML = html;
+}
+
+
+// ════════════════════════════════════════
+// 밸류에이션 — PER/PBR/DCF(간이추정)로 적정주가 환산
+//   · 업종 peers의 PER/PBR 중앙값으로 환산 (FACT: 공식에 실제값 대입)
+//   · DCF는 가정(성장률·할인율) 명시한 간이추정
+//   · 절대 "싸다/사라" 단언 안 함 — 환산값과 계산근거만 노출
+// ════════════════════════════════════════
+function _median(arr){
+  var a = arr.filter(function(x){ return x!=null && isFinite(x); }).sort(function(p,q){ return p-q; });
+  if (!a.length) return null;
+  var m = Math.floor(a.length/2);
+  return a.length%2 ? a[m] : (a[m-1]+a[m])/2;
+}
+function _lastClose(stockName){
+  var p = (allData.prices[stockName]||[]);
+  if (!p.length) return null;
+  var last = p[p.length-1];
+  return last.length===5 ? last[4] : last[1];
+}
+async function renderValuation(name, info, lastClose, shares, ni0, ni1, eq0){
+  var wrap = document.getElementById('val-wrap');
+  if (!wrap) return;
+  try {
+    var sector = (STOCK_META[name]||{}).sector || null;
+    var EPS = (shares>0 && ni0) ? ni0/shares : null;
+    var BPS = (shares>0 && eq0>0) ? eq0/shares : null;
+    var ownPER = (EPS>0 && lastClose) ? lastClose/EPS : null;
+    var ownPBR = (BPS>0 && lastClose) ? lastClose/BPS : null;
+
+    // ── 업종 peers PER/PBR 중앙값 ──
+    var sectorPER = null, sectorPBR = null, peerCount = 0;
+    if (sector) {
+      var peers = Object.keys(STOCK_META).filter(function(n){
+        return n!==name && (STOCK_META[n].sector === sector);
+      });
+      if (peers.length) {
+        // peers 재무를 가져온다. IN 쿼리는 한글 인코딩이 까다로워,
+        // 검증된 개별 eq 쿼리를 병렬(Promise.all)로 돌린다. (업종당 보통 10~30종목)
+        var rows = [];
+        try {
+          var results = await Promise.all(peers.map(function(n){
+            return supabaseFetch('company_info',
+              'stock_name=eq.' + encodeURIComponent(n) +
+              '&select=stock_name,net_income_y0,equity_y0,shares&limit=1'
+            ).catch(function(){ return []; });
+          }));
+          results.forEach(function(rr){ if (rr && rr.length) rows.push(rr[0]); });
+        } catch(e){ rows = []; }
+        var perList = [], pbrList = [];
+        rows.forEach(function(r){
+          var sh = Number(r.shares)||0;
+          var ni = Number(r.net_income_y0)||0;
+          var eq = Number(r.equity_y0)||0;
+          var pc = _lastClose(r.stock_name);
+          if (!sh || !pc) return;
+          var eps = ni/sh, bps = eq/sh;
+          if (eps>0) perList.push(pc/eps);   // 적자(eps<=0)는 PER 제외
+          if (bps>0) pbrList.push(pc/bps);
+        });
+        peerCount = Math.max(perList.length, pbrList.length);
+        sectorPER = _median(perList);
+        sectorPBR = _median(pbrList);
+      }
+    }
+
+    // ── 적정주가 환산 ──
+    var fairPER = (sectorPER && EPS>0) ? sectorPER*EPS : null;
+    var fairPBR = (sectorPBR && BPS>0) ? sectorPBR*BPS : null;
+
+    // ── DCF 간이추정 ──
+    var dcf = null, gUsed = null, rUsed = 0.10;
+    if (ni0>0 && shares>0) {
+      var g = (ni1>0) ? (ni0-ni1)/ni1 : 0;       // 전기→당기 순이익 증가율
+      g = Math.max(-0.05, Math.min(0.15, g));     // -5%~+15%로 제한
+      gUsed = g;
+      var r = rUsed, pv = 0, ni = ni0;
+      for (var t=1; t<=5; t++){ ni = ni*(1+g); pv += ni/Math.pow(1+r, t); }
+      var terminal = (ni / r) / Math.pow(1+r, 5); // 5년차 이후 잔존가치
+      pv += terminal;
+      dcf = pv/shares;
+    }
+
+    function won(v){ return v==null ? '—' : Math.round(v).toLocaleString()+'원'; }
+    function diffPct(fair){
+      if (fair==null || !lastClose) return '';
+      var d = (fair-lastClose)/lastClose*100;
+      var cls = d>=0 ? 'up' : 'down';
+      var sign = d>=0 ? '+' : '';
+      return '<div class="val-diff '+cls+'">현재가 대비 '+sign+Math.round(d)+'%</div>';
+    }
+
+    // ── 카드 HTML ──
+    function card(tag, value, diff, basis, badge){
+      return '<div class="val-card">'
+        + '<div class="val-tag">'+tag+(badge||'')+'</div>'
+        + '<div class="val-price">'+won(value)+'</div>'
+        + (value!=null ? diff : '<div class="val-diff na">산출 불가</div>')
+        + '<div class="val-basis">'+basis+'</div>'
+        + '</div>';
+    }
+
+    var perBasis = (sectorPER && EPS>0)
+      ? '업종평균 PER '+sectorPER.toFixed(1)+'배<br>× 주당순이익 '+Math.round(EPS).toLocaleString()+'원'
+      : (EPS<=0||!EPS ? '적자라 PER 산출 불가' : '업종 표본 부족');
+    var pbrBasis = (sectorPBR && BPS>0)
+      ? '업종평균 PBR '+sectorPBR.toFixed(2)+'배<br>× 주당순자산 '+Math.round(BPS).toLocaleString()+'원'
+      : (BPS<=0||!BPS ? '자본 데이터 부족' : '업종 표본 부족');
+    var dcfBasis = (dcf!=null)
+      ? '성장률 '+Math.round(gUsed*100)+'% · 할인율 '+Math.round(rUsed*100)+'% 가정<br>5년 추정 + 잔존가치'
+      : '순이익 데이터 부족';
+
+    var html = '';
+    html += '<div class="val-note">'+(sector?('<b>'+sector+'</b> 업종 '+peerCount+'개 종목과 비교'):'업종 정보 없음')
+      + ' · 방식·가정에 따라 다르게 나와요. 절대적 정답이 아니에요.</div>';
+    html += '<div class="val-grid">';
+    html += card('PER 방식', fairPER, diffPct(fairPER), perBasis, '');
+    html += card('PBR 방식', fairPBR, diffPct(fairPBR), pbrBasis, '');
+    html += card('DCF 방식', dcf, diffPct(dcf), dcfBasis, ' <span class="val-badge">간이추정</span>');
+    html += '</div>';
+
+    // 지표 설명 (접지 않고 항상 표시 — 일반인 이해용)
+    html += '<div class="val-explain">'
+      + '<div class="val-ex-row"><b>PER</b> 주가÷주당순이익. 비슷한 업종 회사들의 평균 배수에 이 회사 순이익을 넣어 환산해요.</div>'
+      + '<div class="val-ex-row"><b>PBR</b> 주가÷주당순자산. 회사가 가진 순자산 기준으로 업종 평균 배수를 적용해 환산해요.</div>'
+      + '<div class="val-ex-row"><b>DCF</b> <span class="val-badge">간이추정</span> 앞으로 벌 돈을 현재가치로 환산. 성장률·할인율 <b>가정</b>에 따라 크게 달라져 참고용이에요.</div>'
+      + '</div>';
+
+    html += '<div class="val-disc">DART 재무데이터로 자동 환산한 <b>참고치</b>예요. 매수·매도 권유가 아니며, 미래 주가를 보장하지 않아요.</div>';
+
+    wrap.innerHTML = html;
+  } catch(e) {
+    wrap.innerHTML = '<div class="own-na">적정주가를 계산하지 못했어요</div>';
+  }
 }
 
 // ════════════════════════════════════════
