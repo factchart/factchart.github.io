@@ -1704,11 +1704,19 @@ async function renderCompany(name) {
   // ===== 카드 조립 시작 =====
   let html = '<div class="comp-card-big">';
 
-  // 헤더: 종목명 + 시가총액
+  // 헤더: 종목명 + 실시간가 + 시가총액
+  window._compShares = shares;  // 실시간 시총 계산용
+  var initPrice = (lastClose!=null) ? lastClose.toLocaleString()+'원' : '—';
   html += '<div class="comp-head">'
-    + '<div class="comp-name">'+name+'</div>'
+    + '<div class="comp-name-wrap">'
+    +   '<div class="comp-name">'+name+'</div>'
+    +   '<div class="comp-live">'
+    +     '<span class="comp-live-price" id="compLivePrice">'+initPrice+'</span>'
+    +     '<span class="comp-live-chg" id="compLiveChg"></span>'
+    +   '</div>'
+    + '</div>'
     + '<div class="comp-cap"><div class="comp-cap-k">시가총액</div>'
-    + '<div class="comp-cap-v">'+(mktCap!=null?won(mktCap):'—')+'</div></div>'
+    + '<div class="comp-cap-v" id="compMktCap">'+(mktCap!=null?won(mktCap):'—')+'</div></div>'
     + '</div>';
 
   // 주요주주 파싱 (info.major_holders: "이름:비율|...")
@@ -1814,7 +1822,7 @@ async function renderCompany(name) {
   // (실적 추이는 위 7:3 우측 컬럼으로 이동됨)
 
   // ===== 밸류에이션 (적정주가 참고) — 재무건전성 위 =====
-  html += '<div class="comp-sec">밸류에이션 <span class="comp-sec-sub">적정주가 참고 · 여러 방식으로 환산한 값일 뿐, 매수·매도 신호가 아니에요</span></div>';
+  html += '<div class="comp-sec">밸류에이션 <span class="comp-sec-sub">적정주가 참고 · 여러 방식으로 환산한 값</span></div>';
   html += '<div id="val-wrap" class="val-wrap"><div class="own-na">적정주가를 계산하고 있어요…</div></div>';
 
   // 밸류에이션 계산 (이 종목 과거 PER/PBR 평균으로 적정가 환산 + DCF 간이추정)
@@ -1897,14 +1905,12 @@ async function renderCompany(name) {
 //   · 절대 "싸다/사라" 단언 안 함 — 환산값과 계산근거만 노출
 // ════════════════════════════════════════
 function _avg(arr){
+  // 중앙값(median) 사용 — 이상치(적자 직전 초고PER 등)에 평균보다 강건.
   var a = arr.filter(function(x){ return x!=null && isFinite(x) && x>0; });
   if (!a.length) return null;
-  // 이상치 완화: 정렬 후 상하위 10% 잘라낸 평균(절사평균)
   a.sort(function(p,q){ return p-q; });
-  var cut = Math.floor(a.length*0.1);
-  var core = a.slice(cut, a.length-cut);
-  if (!core.length) core = a;
-  return core.reduce(function(s,x){ return s+x; },0)/core.length;
+  var m = Math.floor(a.length/2);
+  return a.length%2 ? a[m] : (a[m-1]+a[m])/2;
 }
 function _lastClose(stockName){
   var p = (allData.prices[stockName]||[]);
@@ -1947,8 +1953,9 @@ async function renderValuation(name, info, lastClose, shares, ni0, ni1, eq0){
           var pc=_lastClose(r.stock_name);
           if (!sh||!pc) return;
           var eps=ni/sh, bps=eq/sh;
-          if (eps>0) perL.push(pc/eps);
-          if (bps>0) pbrL.push(pc/bps);
+          // 비현실적 배수 제외 (적자 직전 초고PER, 자본잠식 등 이상치 차단)
+          if (eps>0){ var pr=pc/eps; if (pr>0 && pr<=60) perL.push(pr); }
+          if (bps>0){ var pb=pc/bps; if (pb>0 && pb<=10) pbrL.push(pb); }
         });
         peerN = Math.max(perL.length, pbrL.length);
         grpPER=_avg(perL); grpPBR=_avg(pbrL);
@@ -1982,10 +1989,10 @@ async function renderValuation(name, info, lastClose, shares, ni0, ni1, eq0){
     }
 
     var perBasis = (fairPER!=null)
-      ? '업종평균 PER '+grpPER.toFixed(1)+'배<br>× 주당순이익 '+Math.round(curEPS).toLocaleString()+'원'
+      ? '업종 중앙값 PER '+grpPER.toFixed(1)+'배<br>× 주당순이익 '+Math.round(curEPS).toLocaleString()+'원'
       : (curEPS==null||curEPS<=0 ? '적자라 산출 불가' : '업종 표본 부족');
     var pbrBasis = (fairPBR!=null)
-      ? '업종평균 PBR '+grpPBR.toFixed(2)+'배<br>× 주당순자산 '+Math.round(curBPS).toLocaleString()+'원'
+      ? '업종 중앙값 PBR '+grpPBR.toFixed(2)+'배<br>× 주당순자산 '+Math.round(curBPS).toLocaleString()+'원'
       : (curBPS==null ? '자본 데이터 부족' : '업종 표본 부족');
     var dcfBasis = (dcf!=null)
       ? '순이익 성장률 '+Math.round(gUsed*100)+'% · 할인율 '+Math.round(rUsed*100)+'% 가정<br>향후 5년 추정'
@@ -1995,13 +2002,13 @@ async function renderValuation(name, info, lastClose, shares, ni0, ni1, eq0){
     var posLine = '';
     if (ownPER!=null && grpPER!=null){
       var lower = ownPER < grpPER;
-      posLine = '이 종목 PER <b>'+ownPER.toFixed(1)+'배</b> vs '+grp+' 업종평균 <b>'+grpPER.toFixed(1)+'배</b>'
-        + ' · 업종 대비 '+(lower?'<span class="vp-low">낮은 편</span>':'<span class="vp-high">높은 편</span>');
+      posLine = '이 종목 PER <b>'+ownPER.toFixed(1)+'배</b> vs '+grp+' 업종 중앙값 <b>'+grpPER.toFixed(1)+'배</b>'
+        + ' · 업종보다 '+(lower?'<span class="vp-low">낮음</span>':'<span class="vp-high">높음</span>');
     }
 
     var html='';
     html += '<div class="val-note">'+(grp?('<b>'+grp+'</b> 업종 '+peerN+'개 종목과 비교'):'업종 정보 없음')
-      + ' · 방식마다 다르게 나오며, 절대적 정답이 아니에요.</div>';
+      + ' · <b>최근 확정 실적(DART) 기준</b>이라, 미래 성장 기대가 큰 종목은 적정가가 현재가보다 낮게 나올 수 있어요. 방식마다 결과가 다른 게 정상이에요.</div>';
     if (posLine) html += '<div class="val-pos">'+posLine+'</div>';
     html += '<div class="val-grid">'
       + card('PER 방식', fairPER, perBasis, '')
@@ -2009,11 +2016,12 @@ async function renderValuation(name, info, lastClose, shares, ni0, ni1, eq0){
       + card('DCF 방식', dcf, dcfBasis, ' <span class="val-badge">간이추정</span>')
       + '</div>';
     html += '<div class="val-explain">'
-      + '<div class="val-ex-row"><b>PER</b> 주가가 1년 순이익의 몇 배인지. 같은 업종 평균 배수를 이 회사 순이익에 적용해 환산해요. 업종평균보다 낮으면 상대적으로 싸게 거래되는 편이에요.</div>'
-      + '<div class="val-ex-row"><b>PBR</b> 주가가 순자산의 몇 배인지. 업종 평균 배수를 이 회사 순자산에 적용해 환산해요.</div>'
+      + '<div class="val-ex-row"><b>PER</b> 주가가 1년 순이익의 몇 배인지. 같은 업종 평균 배수를 이 회사 순이익에 적용해 환산해요. <b>실적이 급변하는 종목</b>(반도체 등)은 과거 순이익 기준이라 적정가가 크게 차이날 수 있어요.</div>'
+      + '<div class="val-ex-row"><b>PBR</b> 주가가 순자산의 몇 배인지. 업종 평균 배수를 이 회사 순자산에 적용해 환산해요. 자산 기준이라 실적 변동에 덜 흔들려요.</div>'
       + '<div class="val-ex-row"><b>DCF</b> <span class="val-badge">간이추정</span> 앞으로 벌 돈을 현재가치로 환산. 성장률·할인율 <b>가정</b>에 따라 달라져 참고용이에요.</div>'
+      + '<div class="val-ex-row" style="color:var(--text3)">업종평균은 적자·이상치 종목(PER 60배·PBR 10배 초과)을 빼고, 남은 종목들의 <b>중앙값</b>으로 계산해요. 극단값에 흔들리지 않게요.</div>'
       + '</div>';
-    html += '<div class="val-disc">DART 재무데이터로 자동 환산한 <b>참고치</b>예요. 매수·매도 권유가 아니며, 미래 주가를 보장하지 않아요.</div>';
+    html += '<div class="val-disc">DART 최근 확정 실적으로 자동 환산한 <b>참고치</b>예요. 미래 실적·성장 기대는 반영되지 않아요.</div>';
 
     wrap.innerHTML = html;
   } catch(e){
@@ -2203,7 +2211,7 @@ function renderMentorCard(prices, disclosures, focusType) {
     '<button class="mentor-close" onclick="closeMentor()" aria-label="닫기">&times;</button>'
     + '<div class="mentor-head">💡 잠깐, 이건 알고 가세요</div>'
     + '<div class="mentor-body">' + bodyHtml + '</div>'
-    + '<div class="mentor-note">※ 과거 데이터일 뿐 미래 수익을 보장하지 않아요. 매수·매도 권유가 아니라, 스스로 점검해보시라는 참고 자료예요.</div>';
+    + '<div class="mentor-note">※ 과거 공시 발생 후 실제 주가 기록을 집계한 통계예요.</div>';
   // 표시는 전구가 제어 — 새 종목 선택 시 카드는 닫고 전구 pulse를 다시 켬
   card.style.display = 'none';
   const bulb = document.getElementById('mentorBulb');
@@ -2954,6 +2962,25 @@ function applyRealtimePrice() {
   }
   // ── 차트에 오늘 캔들 추가/갱신 ──
   updateTodayCandle(p);
+
+  // ── 기업분석 헤더 실시간가 + 시총 갱신 ──
+  const clpEl = document.getElementById('compLivePrice');
+  if (clpEl) {
+    clpEl.textContent = priceStr + '원';
+    clpEl.classList.remove('up','down');
+    if (dir>0) clpEl.classList.add('up'); else if (dir<0) clpEl.classList.add('down');
+  }
+  const clcEl = document.getElementById('compLiveChg');
+  if (clcEl && typeof p.change === 'number') {
+    clcEl.textContent = (p.change>=0?'▲ +':'▼ ') + Math.abs(p.change).toFixed(2) + '%';
+    clcEl.className = 'comp-live-chg ' + (p.change>=0?'up':'down');
+  }
+  // 시총도 실시간가 기준으로 갱신 (발행주식수 × 현재가)
+  const cmcEl = document.getElementById('compMktCap');
+  if (cmcEl && window._compShares && p.price) {
+    const mc = p.price * window._compShares;
+    cmcEl.textContent = (mc>=1e12) ? (mc/1e12).toFixed(1)+'조' : (mc>=1e8) ? Math.round(mc/1e8).toLocaleString()+'억' : Math.round(mc).toLocaleString()+'원';
+  }
 }
 
 // 장중 실시간가로 차트 끝에 '오늘 캔들'을 추가하거나 갱신
