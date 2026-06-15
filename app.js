@@ -1104,6 +1104,12 @@ function renderChart(prices, disclosures, patternData) {
   const canvas = document.getElementById('myChart');
   canvas.style.cursor = 'crosshair';
 
+  // total을 동적으로: 오늘 캔들이 추가되면 라벨이 늘어나므로 현재 개수를 반영
+  // (고정값이면 줌 상한이 어제까지로 굳어 오늘 봉이 확대 시 잘림)
+  function curTotal() {
+    return (chartInstance && chartInstance.data && chartInstance.data.labels)
+      ? chartInstance.data.labels.length : prices.length;
+  }
   const total = prices.length;
   _zoomTotal = total;
   _zoomMin = 0;
@@ -1230,12 +1236,12 @@ function renderChart(prices, disclosures, patternData) {
       pinchDist = newDist;
       const range = zoomMax - zoomMin;
       const center = Math.round((zoomMin + zoomMax) / 2);
-      let newRange = clamp(Math.round(range * scale), 20, total - 1);
+      let newRange = clamp(Math.round(range * scale), 20, curTotal() - 1);
       let newMin = Math.round(center - newRange / 2);
       let newMax = newMin + newRange;
       if (newMin < 0) { newMin = 0; newMax = newRange; }
-      if (newMax >= total) { newMax = total - 1; newMin = newMax - newRange; }
-      setZoom(clamp(newMin,0,total-1), clamp(newMax,0,total-1));
+      if (newMax >= curTotal()) { newMax = curTotal() - 1; newMin = newMax - newRange; }
+      setZoom(clamp(newMin,0,curTotal()-1), clamp(newMax,0,curTotal()-1));
       _applyZoom();
     }
   }, { passive: false });
@@ -1250,18 +1256,18 @@ function renderChart(prices, disclosures, patternData) {
       const ratio = (e.clientX - rect.left) / rect.width;
       const center = Math.round(zoomMin + range * ratio);
       const factor = e.deltaY > 0 ? 1.15 : 0.87;
-      let newRange = clamp(Math.round(range * factor), 20, total - 1);
+      let newRange = clamp(Math.round(range * factor), 20, curTotal() - 1);
       let newMin = Math.round(center - newRange * ratio);
       let newMax = newMin + newRange;
       if (newMin < 0) { newMin = 0; newMax = newRange; }
-      if (newMax >= total) { newMax = total - 1; newMin = newMax - newRange; }
-      setZoom(clamp(newMin,0,total-1), clamp(newMax,0,total-1));
+      if (newMax >= curTotal()) { newMax = curTotal() - 1; newMin = newMax - newRange; }
+      setZoom(clamp(newMin,0,curTotal()-1), clamp(newMax,0,curTotal()-1));
     } else {
       const step = Math.max(1, Math.round(range * 0.05));
       const dir = e.deltaY > 0 ? step : -step;
       let newMin = zoomMin + dir, newMax = zoomMax + dir;
       if (newMin < 0) { newMin = 0; newMax = range; }
-      if (newMax >= total) { newMax = total - 1; newMin = newMax - range; }
+      if (newMax >= curTotal()) { newMax = curTotal() - 1; newMin = newMax - range; }
       setZoom(newMin, newMax);
     }
     _applyZoom();
@@ -1363,14 +1369,14 @@ document.addEventListener('mousemove', e => {
     const delta = Math.round((dragStart - e.clientX) / pxPerBar);
     let newMin = dragZoomMin + delta, newMax = dragZoomMax + delta;
     if (newMin < 0) { newMin = 0; newMax = range; }
-    if (newMax >= total) { newMax = total - 1; newMin = newMax - range; }
+    if (newMax >= curTotal()) { newMax = curTotal() - 1; newMin = newMax - range; }
     setZoom(newMin, newMax);
     _applyZoom();
   });
   document.addEventListener('mouseup', () => {
     if (dragStart !== null) { dragStart = null; canvas.style.cursor = 'crosshair'; }
   });
-  canvas.addEventListener('dblclick', () => { setZoom(0, total-1); _applyZoom(); });
+  canvas.addEventListener('dblclick', () => { setZoom(0, curTotal()-1); _applyZoom(); });
 
   // 미니맵
   let minimapWrap = document.getElementById('minimapWrap');
@@ -1400,7 +1406,7 @@ document.addEventListener('mousemove', e => {
     if (!prices.length) return;
     const vals = prices.map(p=>p.price);
     const minV = Math.min(...vals), maxV = Math.max(...vals);
-    const scaleX = w/(total-1), scaleY = (h-4)/(maxV-minV||1);
+    const scaleX = w/(curTotal()-1), scaleY = (h-4)/(maxV-minV||1);
     mctx.beginPath();
     vals.forEach((v,i)=>{
       const x = i*scaleX, y = h-2-(v-minV)*scaleY;
