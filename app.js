@@ -1023,7 +1023,7 @@ function renderChart(prices, disclosures, patternData) {
         const yH = yScale.getPixelForValue(c.h);
         const yL = yScale.getPixelForValue(c.l);
         const isUp = c.c >= c.o;
-        const color = isUp ? '#3182ce' : '#e53e3e';
+        const color = isUp ? '#e53e3e' : '#3182ce';
         // 심지(wick)
         ctx.beginPath();
         ctx.moveTo(x, yH);
@@ -1035,10 +1035,10 @@ function renderChart(prices, disclosures, patternData) {
         const bodyTop = Math.min(yO, yC);
         const bodyH = Math.max(1, Math.abs(yO - yC));
         const fillA = barW >= 3 ? 0.5 : 0.85;
-        ctx.fillStyle = isUp ? `rgba(49,130,206,${fillA})` : `rgba(229,62,62,${fillA})`;
+        ctx.fillStyle = isUp ? `rgba(229,62,62,${fillA})` : `rgba(49,130,206,${fillA})`;
         ctx.fillRect(x - barW/2, bodyTop, barW, bodyH);
         if (barW >= 3) {
-          ctx.strokeStyle = isUp ? 'rgba(49,130,206,0.95)' : 'rgba(229,62,62,0.95)';
+          ctx.strokeStyle = isUp ? 'rgba(229,62,62,0.95)' : 'rgba(49,130,206,0.95)';
           ctx.lineWidth = 1;
           ctx.strokeRect(x - barW/2 + 0.5, bodyTop + 0.5, barW - 1, Math.max(1, bodyH - 1));
         }
