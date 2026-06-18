@@ -1003,6 +1003,74 @@ function renderChart(prices, disclosures, patternData) {
   const discLinePlugin = {
     id: 'discLine',
     beforeDatasetsDraw(chart) {
+      // ── 유사패턴 괴리 빗금(해칭) ── (캔들보다 먼저 그려 z순서 최하단: 빗금→캔들→패턴선→공시점)
+      // 패턴선(patternData)과 종가선 사이 영역을 노란 단색 빗금으로 채워, 현재가가 평균 대비 얼마나 벌어졌나를 면적으로 표현.
+      // 방향색 없음(노랑 단색). 패턴선이 있는 구간(patternData 非null)에서만. 새 계산 없음 — 기존 patternData·종가만 사용.
+      if (patternData) {
+        const { ctx: hctx, scales: hsc, chartArea: harea } = chart;
+        const hx = hsc.x, hy = hsc.y;
+        const closeArr = chart.data.datasets[0] && chart.data.datasets[0].data;
+        if (closeArr) {
+          // patternData가 null이 아닌 연속 구간(segment)들을 모은다 — 토막마다 따로 채움.
+          const segs = [];
+          let cur = null;
+          for (let i = 0; i < patternData.length; i++) {
+            const has = patternData[i] != null && closeArr[i] != null;
+            if (has) { if (!cur) cur = [i]; else cur.push(i); }
+            else { if (cur) { segs.push(cur); cur = null; } }
+          }
+          if (cur) segs.push(cur);
+
+          // 45도 해칭 패턴을 1회 생성해 재사용 (얇은 노란 사선)
+          if (!chart._hatchPattern) {
+            const pc = document.createElement('canvas');
+            pc.width = 6; pc.height = 6;
+            const pctx = pc.getContext('2d');
+            pctx.strokeStyle = 'rgba(246,173,85,0.5)'; // #f6ad55, 투명도 0.5
+            pctx.lineWidth = 0.8;
+            pctx.beginPath(); pctx.moveTo(0, 6); pctx.lineTo(6, 0); pctx.stroke();   // 45도
+            pctx.beginPath(); pctx.moveTo(-1, 1); pctx.lineTo(1, -1); pctx.stroke();
+            pctx.beginPath(); pctx.moveTo(5, 7); pctx.lineTo(7, 5); pctx.stroke();
+            chart._hatchPattern = hctx.createPattern(pc, 'repeat');
+          }
+
+          hctx.save();
+          // 차트 영역 밖으로 안 삐져나가게 클립
+          hctx.beginPath();
+          hctx.rect(harea.left, harea.top, harea.right - harea.left, harea.bottom - harea.top);
+          hctx.clip();
+
+          segs.forEach(seg => {
+            if (seg.length < 2) return;
+            hctx.beginPath();
+            // 위쪽 경계: 종가선
+            for (let k = 0; k < seg.length; k++) {
+              const i = seg[k];
+              const px = hx.getPixelForValue(i);
+              const py = hy.getPixelForValue(closeArr[i]);
+              if (k === 0) hctx.moveTo(px, py); else hctx.lineTo(px, py);
+            }
+            // 아래쪽 경계: 패턴선(역순)
+            for (let k = seg.length - 1; k >= 0; k--) {
+              const i = seg[k];
+              const px = hx.getPixelForValue(i);
+              const py = hy.getPixelForValue(patternData[i]);
+              hctx.lineTo(px, py);
+            }
+            hctx.closePath();
+            // 아주 옅은 면 fill
+            hctx.fillStyle = 'rgba(246,173,85,0.04)';
+            hctx.fill();
+            // 그 위에 해칭 사선
+            if (chart._hatchPattern) {
+              hctx.fillStyle = chart._hatchPattern;
+              hctx.fill();
+            }
+          });
+          hctx.restore();
+        }
+      }
+
       // ── 캔들차트 렌더링 ──
       const cd = chart._candleData;
       if (!cd || !cd.length) return;
