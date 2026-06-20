@@ -459,6 +459,13 @@ async function supabaseFetch(table, params) {
   return res.json();
 }
 
+// 공시 제목 공백 정규화 — DART 원문에 섞인 연속공백·전각공백(\u3000)·탭·줄바꿈을
+// 단일 공백 1칸으로 줄이고 양끝을 다듬는다. (2칸 이상 → 1칸, 정상 1칸 띄어쓰기는 유지)
+function normalizeTitle(s) {
+  if (s == null) return '';
+  return String(s).replace(/[\s\u3000]+/g, ' ').trim();
+}
+
 // 종목 주가 + 공시 로드 (Supabase)
 async function loadStockFromSupabase(stockName) {
   const [prices, discs] = await Promise.all([
@@ -474,7 +481,7 @@ async function loadStockFromSupabase(stockName) {
       date: d.date ? d.date.slice(0,10) : '',
       name: stockName,
       type: d.type || '기타',
-      title: d.title || '',
+      title: normalizeTitle(d.title),
       change: d.change != null ? String(d.change) : '0',
       rcpNo: d.rcp_no || ''
     }))
@@ -1604,7 +1611,8 @@ function externalTooltip(context, discMap, patternData, prices) {
   const discDiv = document.getElementById('ttDisclosure');
   if (discMap[date]?.length>0) {
     const d = discMap[date][0];
-    let t = d.title.length>38?d.title.slice(0,38)+'…':d.title;
+    let t = normalizeTitle(d.title);
+    t = t.length>38?t.slice(0,38)+'…':t;
     if (discMap[date].length>1) t+=` 외 ${discMap[date].length-1}건`;
     document.getElementById('ttDiscTitle').textContent = t;
     const raw = String(d.change).replace('%','').trim();
@@ -2588,8 +2596,8 @@ function renderTableRows(disclosures) {
     const dartUrl = d.rcpNo && d.rcpNo !== '' && d.rcpNo !== 'undefined'
       ? `https://dart.fss.or.kr/dsaf001/main.do?rcpNo=${d.rcpNo}` : null;
     const titleCell = dartUrl
-      ? `<a class="dart-link" href="${dartUrl}" target="_blank" rel="noopener">${d.title}<span class="dart-icon">↗</span></a>`
-      : d.title;
+      ? `<a class="dart-link" href="${dartUrl}" target="_blank" rel="noopener">${normalizeTitle(d.title)}<span class="dart-icon">↗</span></a>`
+      : normalizeTitle(d.title);
     return `<tr>
       <td class="td-date">${d.date}</td>
       <td>${typeBadge}</td>
@@ -3240,7 +3248,7 @@ function buildTodayDisc() {
     html += '<div onclick="goTodayDisc(\'' + encodeURIComponent(d.name) + '\')" style="display:flex;align-items:center;gap:11px;padding:12px 13px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;cursor:pointer;">'
       + '<div style="font-size:12px;font-weight:700;color:var(--text3);">' + (i+1) + '</div>'
       + '<div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:600;color:var(--text);">' + d.name + '</div>'
-      + '<div style="font-size:12px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (d.title || d.type) + '</div></div>'
+      + '<div style="font-size:12px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (normalizeTitle(d.title) || d.type) + '</div></div>'
       + '<div style="font-size:10.5px;color:' + badgeColor + ';background:' + badgeBg + ';padding:2px 7px;border-radius:6px;font-weight:600;white-space:nowrap;">' + badgeText + '</div>'
       + '</div>';
   });
