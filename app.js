@@ -3104,6 +3104,7 @@ function applyRealtimePrice() {
 // 사용자의 줌/스크롤 위치를 유지하고 깜빡임을 없앤다.
 function updateTodayCandle(p) {
   if (!chartPrices || !chartPrices.length || !p || !p.price) return;
+  if (!chartPrices || !chartPrices.length || !p || !p.price) return;
   // 오늘 날짜(KST) YYYY-MM-DD
   const kst = new Date(new Date().toLocaleString('en-US', {timeZone:'Asia/Seoul'}));
   const today = kst.getFullYear() + '-'
@@ -3179,6 +3180,119 @@ function updateTodayCandle(p) {
   chartInstance.update('none');
 }
 
+// 장중 실시간가로 차트 끝에 '오늘 캔들'을 추가하거나 갱신
+// ── B 방식: 평일 장중일 때만 붙이고, 장 마감·주말·장전엔 안 붙임(가짜 봉 방지) ──
+function updateTodayCandle(p) {
+  if (!chartPrices || !chartPrices.length || !p || !p.price) return;
+
+  // 오늘 날짜(KST) YYYY-MM-DD
+  const kst = new Date(new Date().toLocaleString('en-US', {timeZone:'Asia/Seoul'}));
+  const today = kst.getFullYear() + '-'
+    + String(kst.getMonth()+1).padStart(2,'0') + '-'
+    + String(kst.getDate()).padStart(2,'0');
+
+  // 장중 판정: 평일(월~금) 09:00~15:30. (시간외는 종가 미확정이라 봉으로 안 그림)
+  const day = kst.getDay();
+  const tmin = kst.getHours()*60 + kst.getMinutes();
+  const isTradingNow = (day >= 1 && day <= 5) && (tmin >= 9*60) && (tmin <= 15*60+30);
+
+  const last = chartPrices[chartPrices.length-1];
+
+  // 장중이 아니면: 이전에 붙여둔 실시간 '오늘 봉'이 있으면 제거하고 종료.
+  // (KIS가 장 마감 후/주말에 직전 거래일 종가를 현재가로 주므로, 그걸 오늘 봉으로 붙이면 가짜 봉이 생김)
+  if (!isTradingNow) {
+    if (last && last.date === today && last._isRealtime) {
+      chartPrices.pop();
+      todayCandleAdded = false;
+      if (chartInstance && chartInstance.data && chartInstance.data.labels) {
+        const lb = chartInstance.data.labels;
+        const dss = chartInstance.data.datasets;
+        if (lb[lb.length-1] === today) {
+          lb.pop();
+          dss.forEach(function(d){ if (d && Array.isArray(d.data)) d.data.pop(); });
+          if (chartInstance._candleData) chartInstance._candleData.pop();
+          _zoomTotal = lb.length;
+          if (_zoomMax > _zoomTotal - 1) _zoomMax = _zoomTotal - 1;
+          chartInstance.update('none');
+        }
+      }
+    }
+    return;
+  }
+
+  // 장중이라도, 확정 일봉(prices)에 오늘 날짜가 이미 있으면(실시간 봉이 아닌 진짜 확정봉) 그걸 쓰고 붙이지 않음.
+  if (last && last.date === today && !last._isRealtime) return;
+
+  const candle = {
+    date: today,
+    open:  p.open || p.price,
+    high:  p.high || p.price,
+    low:   p.low  || p.price,
+    close: p.price,
+    price: p.price,
+    _isRealtime: true   // 실시간으로 붙인 '오늘 봉' 표식 (장 마감 후 자동 제거용)
+  };
+
+  const hadToday = last && last.date === today;
+  if (hadToday) {
+    chartPrices[chartPrices.length-1] = candle;       // 값만 갱신
+  } else if (!last || last.date < today) {
+    chartPrices.push(candle);                          // 오늘 캔들 신규 추가
+    todayCandleAdded = true;
+  } else {
+    return; // 오늘보다 미래 데이터가 있는 비정상 상황 — 무시
+  }
+
+  // 차트 인스턴스가 없으면(아직 렌더 전) 다음 정식 렌더에 반영되므로 종료
+  if (!chartInstance || !chartInstance.data) return;
+
+  const ds = chartInstance.data.datasets;
+  const labels = chartInstance.data.labels;
+  if (!labels || !ds || !ds.length) return;
+
+  if (hadToday) {
+    // 마지막 포인트 in-place 갱신
+    const i = labels.length - 1;
+    if (ds[0] && ds[0].data) ds[0].data[i] = candle.price;            // 종가 라인
+    if (chartInstance._candleData) {
+      chartInstance._candleData[i] = { o:candle.open, h:candle.high, l:candle.low, c:candle.close };
+    }
+  } else {
+    // 새 라벨/포인트 추가
+    labels.push(today);
+    if (ds[0] && ds[0].data) ds[0].data.push(candle.price);
+    if (ds[1] && ds[1].data) ds[1].data.push(null);                  // 공시 마커 없음
+    // 패턴평균 등 추가 데이터셋이 있으면 null로 자리 맞춤
+    for (let k = 2; k < ds.length; k++) {
+      if (ds[k] && Array.isArray(ds[k].data)) ds[k].data.push(null);
+    }
+    if (chartInstance._candleData) {
+      chartInstance._candleData.push({ o:candle.open, h:candle.high, l:candle.low, c:candle.close });
+    }
+    // 줌 범위에도 새 봉을 반영 (안 하면 확대 시 오늘 봉이 범위 밖으로 사라짐)
+    const wasAtEnd = (_zoomMax >= _zoomTotal - 1);
+    _zoomTotal = labels.length;
+    if (wasAtEnd) {
+      _zoomMax = _zoomTotal - 1;                 // 끝을 보고 있었으면 새 봉까지 확장
+      if (chartInstance.options.scales.x.max != null) {
+        chartInstance.options.scales.x.max = _zoomMax;
+      }
+    }
+  }
+  // 애니메이션 없이 즉시 갱신 → 깜빡임·위치 리셋 없음
+  // 오늘 봉이 기존 Y축 범위를 벗어나면 축도 넓혀준다 (봉이 차트 밖으로 튀는 문제 방지)
+  try {
+    const ys = chartInstance.options.scales.y;
+    if (ys && (ys.min != null || ys.max != null)) {
+      const hi = candle.high || candle.price;
+      const lo = candle.low || candle.price;
+      if (ys.max != null && hi * 1.01 > ys.max) ys.max = hi * 1.01;
+      if (ys.min != null && lo * 0.99 < ys.min) ys.min = lo * 0.99;
+    }
+  } catch (e) {}
+  chartInstance.update('none');
+}
+
 function isMarketOpen() {
   // 폴링 대상 시간: 정규장(9:00~15:30) + 시간외 단일가(~18:00).
   // KIS가 이 시간대에 당일 가격을 갱신해 주므로 폴링 유지.
@@ -3188,7 +3302,6 @@ function isMarketOpen() {
   const t = kst.getHours() * 60 + kst.getMinutes();
   return (day >= 1 && day <= 5 && t >= 9*60 && t < 18*60);
 }
-
 function scrollToTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
