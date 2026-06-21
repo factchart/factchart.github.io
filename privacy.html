@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="index,follow">
+<title>개인정보처리방침 · FactChart</title>
+<style>
+  :root{
+    --bg:#0B0E13;
+    --surface:#121620;
+    --surface-2:#161B27;
+    --line:#222A39;
+    --line-soft:#1B2230;
+    --text:#E6EAF2;
+    --text-soft:#A4ADBE;
+    --text-dim:#6B7588;
+    --accent:#3DD68C;       /* 상승(녹) — 시세 상징 */
+    --accent-down:#FF5A6E;   /* 하락(적) */
+    --accent-blue:#4C7DFF;
+    --radius:14px;
+    --maxw:760px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Noto Sans KR",system-ui,sans-serif;
+    line-height:1.75;
+    font-size:16px;
+    letter-spacing:-0.01em;
+    padding:0 20px;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ── 헤더 ── */
+  header{
+    max-width:var(--maxw);
+    margin:0 auto;
+    padding:56px 0 28px;
+    border-bottom:1px solid var(--line);
+  }
+  .brand{
+    display:inline-flex;align-items:center;gap:9px;
+    font-size:14px;font-weight:700;letter-spacing:0.02em;
+    color:var(--text);
+    margin-bottom:30px;
+  }
+  .brand .tick{
+    width:22px;height:22px;display:block;
+  }
+  h1{
+    font-size:30px;
+    font-weight:800;
+    letter-spacing:-0.025em;
+    line-height:1.25;
+    margin-bottom:14px;
+  }
+  .lead{
+    color:var(--text-soft);
+    font-size:15px;
+    max-width:60ch;
+  }
+  .meta{
+    margin-top:22px;
+    display:flex;flex-wrap:wrap;gap:8px 10px;
+    font-size:12.5px;
+  }
+  .chip{
+    background:var(--surface-2);
+    border:1px solid var(--line-soft);
+    color:var(--text-soft);
+    padding:5px 11px;
+    border-radius:999px;
+    white-space:nowrap;
+  }
+  .chip b{color:var(--text);font-weight:600}
+
+  /* ── 비수집 배너 (핵심 차별점) ── */
+  .nocollect{
+    max-width:var(--maxw);
+    margin:28px auto 0;
+    background:linear-gradient(180deg,rgba(61,214,140,0.07),rgba(61,214,140,0.02));
+    border:1px solid rgba(61,214,140,0.28);
+    border-radius:var(--radius);
+    padding:18px 20px;
+    display:flex;gap:14px;align-items:flex-start;
+  }
+  .nocollect .ico{
+    flex:none;width:26px;height:26px;margin-top:1px;
+  }
+  .nocollect h2{
+    font-size:15px;font-weight:700;color:var(--accent);
+    margin-bottom:4px;letter-spacing:-0.01em;
+  }
+  .nocollect p{
+    font-size:13.5px;color:var(--text-soft);margin:0;
+  }
+
+  /* ── 목차 ── */
+  nav.toc{
+    max-width:var(--maxw);
+    margin:34px auto 0;
+    background:var(--surface);
+    border:1px solid var(--line-soft);
+    border-radius:var(--radius);
+    padding:20px 22px;
+  }
+  nav.toc .toc-h{
+    font-size:11px;font-weight:700;letter-spacing:0.13em;
+    color:var(--text-dim);text-transform:uppercase;margin-bottom:13px;
+  }
+  nav.toc ol{list-style:none;counter-reset:toc;display:grid;gap:2px}
+  nav.toc li{counter-increment:toc}
+  nav.toc a{
+    display:flex;gap:12px;align-items:baseline;
+    color:var(--text-soft);text-decoration:none;
+    font-size:14px;padding:6px 8px;border-radius:8px;
+    transition:background .15s,color .15s;
+  }
+  nav.toc a::before{
+    content:counter(toc,decimal-leading-zero);
+    color:var(--text-dim);font-variant-numeric:tabular-nums;
+    font-size:12px;font-weight:600;flex:none;width:22px;
+  }
+  nav.toc a:hover{background:var(--surface-2);color:var(--text)}
+  nav.toc a:hover::before{color:var(--accent)}
+
+  /* ── 본문 ── */
+  main{
+    max-width:var(--maxw);
+    margin:0 auto;
+    padding:8px 0 40px;
+  }
+  section{
+    padding:34px 0 8px;
+    border-bottom:1px solid var(--line-soft);
+  }
+  section:last-of-type{border-bottom:none}
+  .sec-no{
+    font-size:12px;font-weight:700;color:var(--accent);
+    letter-spacing:0.1em;font-variant-numeric:tabular-nums;
+    display:block;margin-bottom:7px;
+  }
+  h2.sec-title{
+    font-size:19px;font-weight:700;letter-spacing:-0.02em;
+    margin-bottom:16px;line-height:1.35;
+  }
+  p{color:var(--text-soft);margin-bottom:13px;font-size:15px}
+  p.tight{margin-bottom:8px}
+  strong{color:var(--text);font-weight:600}
+  a.inline{color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(61,214,140,.35)}
+  a.inline:hover{border-bottom-color:var(--accent)}
+
+  ul.list{list-style:none;margin:4px 0 16px;display:grid;gap:9px}
+  ul.list li{
+    position:relative;padding-left:20px;color:var(--text-soft);font-size:15px;
+  }
+  ul.list li::before{
+    content:"";position:absolute;left:2px;top:11px;
+    width:6px;height:6px;border-radius:50%;
+    background:var(--accent);opacity:.85;
+  }
+  ul.list li strong{color:var(--text)}
+
+  /* 표 */
+  .table-wrap{
+    margin:6px 0 18px;
+    border:1px solid var(--line);
+    border-radius:12px;
+    overflow:hidden;
+  }
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th,td{
+    text-align:left;padding:12px 14px;
+    border-bottom:1px solid var(--line-soft);
+    vertical-align:top;
+  }
+  th{
+    background:var(--surface-2);
+    color:var(--text);font-weight:600;font-size:12.5px;
+    letter-spacing:0.01em;white-space:nowrap;
+  }
+  td{color:var(--text-soft)}
+  tr:last-child td{border-bottom:none}
+  td b{color:var(--text);font-weight:600}
+
+  .callout{
+    background:var(--surface);
+    border:1px solid var(--line-soft);
+    border-left:3px solid var(--accent-blue);
+    border-radius:10px;
+    padding:14px 16px;
+    margin:6px 0 16px;
+    font-size:13.5px;color:var(--text-soft);
+  }
+  .callout strong{color:var(--text)}
+
+  .fill{
+    color:var(--accent-blue);
+    background:rgba(76,125,255,.1);
+    border:1px solid rgba(76,125,255,.3);
+    border-radius:5px;
+    padding:1px 7px;font-size:13px;font-weight:600;
+    white-space:nowrap;
+  }
+
+  footer{
+    max-width:var(--maxw);
+    margin:0 auto;
+    padding:30px 0 70px;
+    color:var(--text-dim);
+    font-size:12.5px;
+    line-height:1.7;
+  }
+  footer .row{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;align-items:center}
+  footer a{color:var(--text-soft);text-decoration:none}
+  footer a:hover{color:var(--accent)}
+
+  @media (max-width:600px){
+    header{padding:40px 0 24px}
+    h1{font-size:25px}
+    section{padding:28px 0 6px}
+    h2.sec-title{font-size:17px}
+    body{font-size:15.5px}
+    th,td{padding:10px 11px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="brand">
+    <svg class="tick" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="2" y="13" width="3.4" height="8" rx="1" fill="#3DD68C"/>
+      <rect x="8" y="7" width="3.4" height="14" rx="1" fill="#3DD68C"/>
+      <rect x="14" y="10" width="3.4" height="11" rx="1" fill="#FF5A6E"/>
+      <rect x="20" y="4" width="2" height="17" rx="1" fill="#4C7DFF"/>
+    </svg>
+    FactChart
+  </span>
+  <h1>개인정보처리방침</h1>
+  <p class="lead">
+    FactChart(팩트차트)는 이용자의 개인정보를 소중히 여기며,
+    「개인정보 보호법」 등 관련 법령을 준수합니다. 이 방침은
+    FactChart의 웹사이트와 모바일 앱이 어떤 정보를 어떤 목적으로 처리하고
+    어떻게 보호하는지를 설명합니다.
+  </p>
+  <div class="meta">
+    <span class="chip">서비스 <b>FactChart (factchart.co.kr)</b></span>
+    <span class="chip">운영 <b>개인 개발자</b></span>
+    <span class="chip">시행일 <b><span class="fill">2026년 6월 22일</span></b></span>
+  </div>
+</header>
+
+<div class="nocollect">
+  <svg class="ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M12 2.5l7.5 3v5.2c0 4.7-3.2 8.1-7.5 9.3-4.3-1.2-7.5-4.6-7.5-9.3V5.5L12 2.5z" stroke="#3DD68C" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M8.6 12.2l2.3 2.3 4.5-4.8" stroke="#3DD68C" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <div>
+    <h2>FactChart는 금융거래 정보를 수집하지 않습니다</h2>
+    <p>FactChart는 공시·시세 <strong>정보를 제공</strong>하는 서비스로, 주식 매매·거래 기능이 없습니다.
+    따라서 증권계좌, 주민등록번호, 거래내역, 결제·금융 정보는 일절 수집하지 않습니다.
+    수집하는 정보는 로그인에 필요한 식별정보와 이용자가 직접 담은 관심종목뿐입니다.</p>
+  </div>
+</div>
+
+<nav class="toc" aria-label="목차">
+  <div class="toc-h">목차</div>
+  <ol>
+    <li><a href="#s1">수집하는 개인정보 항목 및 방법</a></li>
+    <li><a href="#s2">개인정보의 처리 목적</a></li>
+    <li><a href="#s3">개인정보의 보유 및 이용 기간</a></li>
+    <li><a href="#s4">개인정보 처리의 위탁</a></li>
+    <li><a href="#s5">개인정보의 국외 이전</a></li>
+    <li><a href="#s6">개인정보의 제3자 제공</a></li>
+    <li><a href="#s7">정보주체의 권리와 행사 방법</a></li>
+    <li><a href="#s8">개인정보의 파기 절차 및 방법</a></li>
+    <li><a href="#s9">만 14세 미만 아동의 개인정보</a></li>
+    <li><a href="#s10">개인정보의 안전성 확보 조치</a></li>
+    <li><a href="#s11">개인정보 보호책임자 및 문의</a></li>
+    <li><a href="#s12">방침의 변경</a></li>
+  </ol>
+</nav>
+
+<main>
+
+  <section id="s1">
+    <span class="sec-no">01</span>
+    <h2 class="sec-title">수집하는 개인정보 항목 및 방법</h2>
+    <p>FactChart는 <strong>회원 가입 없이도 이용할 수 있습니다.</strong>
+    관심종목 저장·동기화 등 일부 기능을 위해 이용자가 직접 소셜 로그인을 선택한 경우에만
+    아래의 최소한의 정보를 수집합니다. 이는 웹사이트와 모바일 앱에 공통으로 적용됩니다.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>구분</th><th>수집 항목</th><th>수집 시점</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>소셜 로그인</b><br>(카카오)</td>
+            <td>이메일, 카카오 회원번호(식별자), 닉네임, 프로필 이미지</td>
+            <td>카카오 계정으로 로그인 시</td>
+          </tr>
+          <tr>
+            <td><b>소셜 로그인</b><br>(구글)</td>
+            <td>이메일, 구글 계정 식별자(sub)</td>
+            <td>구글 계정으로 로그인 시</td>
+          </tr>
+          <tr>
+            <td><b>서비스 이용</b></td>
+            <td>관심종목 목록, 정렬 순서, 알림 설정값</td>
+            <td>관심종목 등록·편집 시</td>
+          </tr>
+          <tr>
+            <td><b>문의·제휴</b></td>
+            <td>이메일 주소, 문의 내용</td>
+            <td>이용자가 문의 양식을 작성·전송 시</td>
+          </tr>
+          <tr>
+            <td><b>자동 수집</b></td>
+            <td>접속 일시, 기기·브라우저 정보, 서비스 이용 기록, 오류 로그, 익명 방문 통계</td>
+            <td>서비스 이용 과정에서 자동 생성</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="tight"><strong>수집 방법</strong></p>
+    <ul class="list">
+      <li>이용자가 소셜 로그인에 동의하고 인증하는 과정에서 수집</li>
+      <li>이용자가 관심종목을 등록·정렬·알림 설정하는 과정에서 수집</li>
+      <li>이용자가 문의·제휴 양식을 작성·전송하는 과정에서 수집</li>
+      <li>서비스 운영·보안을 위한 로그 및 익명 방문 통계(Google Analytics)가 자동으로 생성·수집</li>
+    </ul>
+
+    <div class="callout">
+      <strong>수집하지 않는 정보.</strong> FactChart는 주민등록번호, 증권계좌번호,
+      거래·결제 내역, 신용·금융 정보 등 민감한 금융정보를 수집하지 않습니다.
+      소셜 로그인 시에도 위 표에 명시된 항목 외의 정보는 제공받지 않습니다.
+    </div>
+  </section>
+
+  <section id="s2">
+    <span class="sec-no">02</span>
+    <h2 class="sec-title">개인정보의 처리 목적</h2>
+    <p>수집한 개인정보는 다음 목적으로만 이용하며, 목적이 변경될 경우 사전에 동의를 받습니다.</p>
+    <ul class="list">
+      <li><strong>회원 식별 및 로그인</strong> — 소셜 계정 기반 본인 확인 및 로그인 상태 유지</li>
+      <li><strong>관심종목 기능 제공</strong> — 이용자별 관심종목 저장·동기화, 정렬·알림 설정 반영</li>
+      <li><strong>서비스 운영 및 개선</strong> — 오류 분석, 익명 방문 통계 기반 기능 개선, 부정 이용 방지</li>
+      <li><strong>고지 및 문의 응대</strong> — 공지사항 전달, 이용자 문의·제휴 요청 처리</li>
+    </ul>
+  </section>
+
+  <section id="s3">
+    <span class="sec-no">03</span>
+    <h2 class="sec-title">개인정보의 보유 및 이용 기간</h2>
+    <p>원칙적으로 개인정보는 <strong>수집·이용 목적이 달성되면 지체 없이 파기</strong>합니다.
+    구체적인 보유 기간은 다음과 같습니다.</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>항목</th><th>보유 기간</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>회원 계정 정보(이메일, 소셜 식별자, 닉네임 등)</td><td><b>회원 탈퇴 시까지</b> — 탈퇴 즉시 파기</td></tr>
+          <tr><td>관심종목·설정 데이터</td><td><b>회원 탈퇴 시까지</b> — 탈퇴 즉시 파기</td></tr>
+          <tr><td>문의·제휴 내역(이메일, 문의 내용)</td><td>처리 완료 후 <b>1년</b> 이내 파기</td></tr>
+          <tr><td>자동 수집 로그·익명 방문 통계</td><td>생성일로부터 <b>최대 1년</b> 후 파기</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>다만 관계 법령에 따라 보존이 필요한 경우, 해당 법령에서 정한 기간 동안 보관합니다.</p>
+  </section>
+
+  <section id="s4">
+    <span class="sec-no">04</span>
+    <h2 class="sec-title">개인정보 처리의 위탁</h2>
+    <p>FactChart는 서비스 제공을 위해 다음과 같이 개인정보 처리 업무를 위탁하고 있습니다.
+    위탁계약 시 개인정보가 안전하게 관리되도록 필요한 사항을 규정합니다.</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>수탁자</th><th>위탁 업무</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><b>Supabase, Inc.</b></td><td>데이터베이스 저장·관리 및 사용자 인증 인프라 운영</td></tr>
+          <tr><td><b>카카오 (Kakao Corp.)</b></td><td>카카오 계정 기반 소셜 로그인 인증</td></tr>
+          <tr><td><b>구글 (Google LLC)</b></td><td>구글 계정 기반 소셜 로그인 인증, 익명 방문 통계 분석(Google Analytics)</td></tr>
+          <tr><td><b>EmailJS</b></td><td>문의·제휴 양식 전송 처리</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>위탁 업무의 내용이나 수탁자가 변경될 경우, 이 방침을 통해 지체 없이 공개합니다.</p>
+  </section>
+
+  <section id="s5">
+    <span class="sec-no">05</span>
+    <h2 class="sec-title">개인정보의 국외 이전</h2>
+    <p>FactChart는 데이터 저장·인증을 위해 국외에 서버를 둔 사업자(Supabase)를 이용하며,
+    이 과정에서 개인정보가 국외로 이전·보관될 수 있습니다.</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>이전받는 자</th><th>이전 항목</th><th>이전 목적</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Supabase, Inc.</b><br>(미국 등)</td>
+            <td>이메일, 소셜 식별자, 닉네임, 프로필 이미지, 관심종목·설정, 접속 로그</td>
+            <td>데이터 저장 및 인증 인프라 운영</td>
+          </tr>
+          <tr>
+            <td><b>Google LLC</b><br>(미국 등)</td>
+            <td>구글 계정 식별자, 익명 방문 통계 데이터</td>
+            <td>소셜 로그인 인증 및 방문 통계 분석</td>
+          </tr>
+          <tr>
+            <td><b>EmailJS</b><br>(미국 등)</td>
+            <td>문의 시 입력한 이메일·문의 내용</td>
+            <td>문의·제휴 양식 전송 처리</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>이용자는 국외 이전을 원하지 않을 경우 회원 탈퇴를 통해 거부할 수 있으나,
+    이 경우 로그인 및 관심종목 기능 이용이 제한됩니다.</p>
+  </section>
+
+  <section id="s6">
+    <span class="sec-no">06</span>
+    <h2 class="sec-title">개인정보의 제3자 제공</h2>
+    <p>FactChart는 이용자의 개인정보를 <strong>제3자에게 제공하지 않습니다.</strong>
+    다만 다음의 경우는 예외로 합니다.</p>
+    <ul class="list">
+      <li>이용자가 사전에 동의한 경우</li>
+      <li>법령에 근거가 있거나, 수사기관이 적법한 절차에 따라 요청한 경우</li>
+    </ul>
+  </section>
+
+  <section id="s7">
+    <span class="sec-no">07</span>
+    <h2 class="sec-title">정보주체의 권리와 행사 방법</h2>
+    <p>이용자는 언제든지 자신의 개인정보에 대해 다음 권리를 행사할 수 있습니다.</p>
+    <ul class="list">
+      <li><strong>열람·정정</strong> — 등록된 개인정보 및 관심종목의 확인·수정</li>
+      <li><strong>삭제·처리정지</strong> — 개인정보 삭제 또는 처리 중단 요청</li>
+      <li><strong>회원 탈퇴(동의 철회)</strong> — 앱 내 탈퇴 기능 또는 아래 문의처를 통한 철회</li>
+    </ul>
+    <p>권리 행사는 앱 내 설정 또는 아래 <a href="#s11" class="inline">개인정보 보호책임자</a> 연락처로 요청할 수 있으며,
+    FactChart는 지체 없이 조치합니다. 회원 탈퇴 시 계정 및 관심종목 정보는 즉시 파기됩니다.</p>
+  </section>
+
+  <section id="s8">
+    <span class="sec-no">08</span>
+    <h2 class="sec-title">개인정보의 파기 절차 및 방법</h2>
+    <p class="tight"><strong>파기 절차</strong></p>
+    <ul class="list">
+      <li>보유 기간이 지나거나 처리 목적이 달성된 개인정보는 지체 없이 파기 대상으로 분류됩니다.</li>
+      <li>회원 탈퇴 시 계정·관심종목 정보는 즉시 삭제됩니다.</li>
+    </ul>
+    <p class="tight"><strong>파기 방법</strong></p>
+    <ul class="list">
+      <li>전자적 파일 형태의 정보는 복구·재생할 수 없는 기술적 방법으로 영구 삭제합니다.</li>
+    </ul>
+  </section>
+
+  <section id="s9">
+    <span class="sec-no">09</span>
+    <h2 class="sec-title">만 14세 미만 아동의 개인정보</h2>
+    <p>FactChart는 <strong>만 14세 미만 아동의 회원 가입을 받지 않으며</strong>,
+    만 14세 미만 아동의 개인정보를 수집하지 않습니다.
+    만 14세 미만임이 확인된 경우 해당 계정과 정보는 지체 없이 삭제합니다.</p>
+  </section>
+
+  <section id="s10">
+    <span class="sec-no">10</span>
+    <h2 class="sec-title">개인정보의 안전성 확보 조치</h2>
+    <p>FactChart는 개인정보 보호를 위해 다음과 같은 조치를 취하고 있습니다.</p>
+    <ul class="list">
+      <li><strong>전송 구간 암호화</strong> — 모든 통신은 HTTPS(TLS)로 암호화하여 전송합니다.</li>
+      <li><strong>접근 통제</strong> — 사용자별 데이터 접근 권한을 분리하여, 본인 외에는 관심종목 등 개인 데이터에 접근할 수 없도록 제한합니다.</li>
+      <li><strong>최소 수집</strong> — 서비스 제공에 필요한 최소한의 정보만 수집·보관합니다.</li>
+    </ul>
+  </section>
+
+  <section id="s11">
+    <span class="sec-no">11</span>
+    <h2 class="sec-title">개인정보 보호책임자 및 문의</h2>
+    <p>개인정보 처리에 관한 문의, 불만 처리, 피해 구제 등은 아래로 연락해 주시기 바랍니다.</p>
+    <div class="table-wrap">
+      <table>
+        <tbody>
+          <tr><th>개인정보 보호책임자</th><td>FactChart 운영자</td></tr>
+          <tr><th>문의 이메일</th><td><a class="inline" href="mailto:kim.tj129@gmail.com">kim.tj129@gmail.com</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>기타 개인정보 침해에 대한 신고·상담이 필요한 경우 아래 기관에 문의할 수 있습니다.</p>
+    <ul class="list">
+      <li>개인정보침해 신고센터 — <a href="https://privacy.kisa.or.kr" class="inline" target="_blank" rel="noopener">privacy.kisa.or.kr</a> (국번 없이 118)</li>
+      <li>개인정보 분쟁조정위원회 — <a href="https://www.kopico.go.kr" class="inline" target="_blank" rel="noopener">www.kopico.go.kr</a> (1833-6972)</li>
+      <li>대검찰청 사이버수사과 — <a href="https://www.spo.go.kr" class="inline" target="_blank" rel="noopener">www.spo.go.kr</a> (국번 없이 1301)</li>
+      <li>경찰청 사이버수사국 — <a href="https://ecrm.police.go.kr" class="inline" target="_blank" rel="noopener">ecrm.police.go.kr</a> (국번 없이 182)</li>
+    </ul>
+  </section>
+
+  <section id="s12">
+    <span class="sec-no">12</span>
+    <h2 class="sec-title">방침의 변경</h2>
+    <p>이 개인정보처리방침은 법령·서비스 변경에 따라 수정될 수 있으며,
+    변경 시 앱 또는 웹사이트 공지를 통해 사전에 알립니다.
+    중요한 변경의 경우 최소 7일 전에 고지합니다.</p>
+    <div class="callout">
+      이 개인정보처리방침은 <strong><span class="fill">2026년 6월 22일</span></strong>부터 적용됩니다.
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="row">
+    <span>© FactChart · factchart.co.kr</span>
+    <a href="#top">맨 위로 ↑</a>
+  </div>
+</footer>
+
+</body>
+</html>
