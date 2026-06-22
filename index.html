@@ -2796,11 +2796,11 @@ tr.disc-highlight {
     <p>본 사이트는 금융감독원 전자공시(DART)·한국거래소 등 공개된 과거 데이터를 정리해 보여주는 정보 제공 서비스입니다. 특정 종목의 매수·매도를 권유하거나, 주가의 상승·하락을 예측·보장하지 않습니다. 모든 수치는 과거의 사실일 뿐 미래 수익을 보장하지 않으며, 표시되는 통계(공시 후 평균 변동률 등)와 PER·PBR·DCF로 환산한 적정주가는 과거·확정 실적 기준의 단순 계산값으로 향후 결과와 다를 수 있습니다. 본 정보를 근거로 한 투자 판단과 그 결과의 책임은 전적으로 이용자 본인에게 있으며, 운영자는 어떠한 투자 손익에도 책임지지 않습니다. 본 서비스는 금융투자업 인가·등록을 받지 않은 정보 제공 서비스로, 투자자문·투자일임 서비스를 제공하지 않습니다.</p>
   </div>
   <div class="footer-links">
-    <span class="footer-link" onclick="openModal('terms')">이용약관</span>
+    <a class="footer-link" href="/terms.html">이용약관</a>
     <span class="footer-sep">·</span>
-    <span class="footer-link" onclick="openModal('privacy')">개인정보 처리방침</span>
+    <a class="footer-link" href="/privacy.html">개인정보 처리방침</a>
     <span class="footer-sep">·</span>
-    <span class="footer-link" onclick="openModal('disclaimer')">투자 고지·면책</span>
+    <a class="footer-link" href="/disclaimer.html">투자 고지·면책</a>
     <span class="footer-sep">·</span>
     <span class="footer-link" onclick="openModal('contact')">문의·제휴</span>
   </div>
@@ -2809,50 +2809,6 @@ tr.disc-highlight {
     <div class="footer-data">데이터 출처: 금융감독원 전자공시(DART) · 한국거래소 · Yahoo Finance</div>
   </div>
 </footer>
-
-<!-- 이용약관 모달 -->
-<div class="modal-overlay" id="modal-terms" style="display:none" onclick="if(event.target===this)closeModal('terms')">
-  <div class="modal-box">
-    <button class="modal-x" onclick="closeModal('terms')">✕</button>
-    <div class="modal-title">이용약관</div><div class="modal-date">최종 업데이트: 2026-06-02</div>
-    <div class="modal-content">
-      <h3>1. 서비스 개요</h3><p>FACT CHART는 DART 공시 데이터와 주가 변동의 1:1 패턴을 분석하여 제공하는 정보 제공용 서비스입니다. 매매를 중개하거나 투자 판단을 권유하지 않습니다.</p>
-      <h3>2. 이용 조건</h3><ul><li>본 사이트의 정보는 투자 참고 목적으로만 제공됩니다.</li><li>제공되는 데이터는 정확성·적시성·완전성을 보장하지 않습니다.</li><li>투자 결정의 책임은 전적으로 이용자에게 있습니다.</li><li>콘텐츠 무단 크롤링·복제·재배포는 금지됩니다.</li></ul>
-      <h3>3. 면책</h3><ul><li>외부 API 장애로 데이터가 일시 누락되거나 지연될 수 있습니다.</li><li>본 사이트의 정보로 인한 손익에 대해 운영자는 책임지지 않습니다.</li></ul>
-      <h3>4. 약관 변경</h3><p>본 약관은 필요에 의해 변경될 수 있으며, 변경 시 본 페이지에 게시합니다.</p>
-    </div>
-
-  </div>
-</div>
-
-<!-- 개인정보 처리방침 모달 -->
-<div class="modal-overlay" id="modal-privacy" style="display:none" onclick="if(event.target===this)closeModal('privacy')">
-  <div class="modal-box">
-    <button class="modal-x" onclick="closeModal('privacy')">✕</button>
-    <div class="modal-title">개인정보 처리방침</div><div class="modal-date">최종 업데이트: 2026-06-02</div>
-    <div class="modal-content">
-      <h3>1. 수집하는 개인정보</h3><p>본 사이트는 회원가입 없이 이용 가능하며, 별도의 개인정보를 수집하지 않습니다. Google Analytics를 통해 익명화된 방문 통계가 수집될 수 있습니다.</p>
-      <h3>2. Google Analytics</h3><p>서비스 개선을 위해 Google Analytics를 사용합니다. 수집된 데이터는 개인을 식별하지 않으며, Google의 개인정보 처리방침에 따라 처리됩니다.</p>
-      <h3>3. 문의</h3><p>개인정보 관련 문의: factchart.kr@gmail.com</p>
-    </div>
-
-  </div>
-</div>
-
-<!-- 투자 고지·면책 모달 -->
-<div class="modal-overlay" id="modal-disclaimer" style="display:none" onclick="if(event.target===this)closeModal('disclaimer')">
-  <div class="modal-box">
-    <button class="modal-x" onclick="closeModal('disclaimer')">✕</button>
-    <div class="modal-title">투자 고지·면책</div><div class="modal-date">최종 업데이트: 2026-06-02</div>
-    <div class="modal-content">
-      <h3>투자 위험 고지</h3><ul><li>모든 투자의 결정 및 최종 책임은 투자자 본인에게 있습니다.</li><li>본 사이트는 투자를 권유하거나 종목을 추천하지 않습니다.</li><li>금융투자상품은 자산가격 변동에 따라 투자원금의 손실(0~100%)이 발생할 수 있습니다.</li><li>과거의 수익률이 미래의 수익률을 보장하지 않습니다.</li><li>패턴 분석은 통계적 참고자료이며, 투자 결과를 보장하지 않습니다.</li></ul>
-      <h3>데이터 면책</h3><ul><li>공시·재무·기업정보 데이터는 DART(금융감독원 전자공시시스템)에서 수집됩니다.</li><li>주가(과거) 데이터는 Yahoo Finance, 장중 시세는 한국투자증권 API에서 수집되며, 지연·오차가 있을 수 있습니다.</li><li>시가총액 등 일부 수치는 수집 데이터를 바탕으로 계산한 참고치이며 실제와 다를 수 있습니다.</li><li>데이터 오류·누락·지연으로 인한 손해에 대해 운영자는 책임지지 않습니다.</li></ul>
-      <h3>서비스 면책</h3><p>본 서비스는 금융투자업 인가를 받지 않은 정보 제공 서비스입니다. 투자 판단 전 공인된 금융 전문가의 조언을 구하시기 바랍니다.</p>
-    </div>
-
-  </div>
-</div>
-
 
 
 <!-- 문의/제휴 모달 -->
