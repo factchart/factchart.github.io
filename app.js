@@ -3194,12 +3194,15 @@ function updateTodayCandle(p) {
   // 장중 판정: 평일(월~금) 09:00~15:30. (시간외는 종가 미확정이라 봉으로 안 그림)
   const day = kst.getDay();
   const tmin = kst.getHours()*60 + kst.getMinutes();
-  const isTradingNow = (day >= 1 && day <= 5) && (tmin >= 9*60) && (tmin <= 15*60+30);
+  const isTradingNow = (day >= 1 && day <= 5) && (tmin >= 9*60);
 
   const last = chartPrices[chartPrices.length-1];
 
-  // 장중이 아니면: 이전에 붙여둔 실시간 '오늘 봉'이 있으면 제거하고 종료.
-  // (KIS가 장 마감 후/주말에 직전 거래일 종가를 현재가로 주므로, 그걸 오늘 봉으로 붙이면 가짜 봉이 생김)
+// 변경 전 주석
+// 장중 판정: 평일(월~금) 09:00~15:30. (시간외는 종가 미확정이라 봉으로 안 그림)
+
+// 변경 후 주석
+// 봉 유지 판정: 평일(월~금) 09:00 이후 그날 내내. (시간외 포함, 마감 후엔 DB 확정봉으로 전환)
   if (!isTradingNow) {
     if (last && last.date === today && last._isRealtime) {
       chartPrices.pop();
