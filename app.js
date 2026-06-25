@@ -1801,10 +1801,9 @@ async function renderCompany(name) {
   // ===== 카드 조립 시작 =====
   let html = '<div class="comp-card-big">';
 
-  // 헤더: 종목명 + 실시간가 + 시가총액
-  window._compShares = shares;  // 실시간 시총 계산용
+// 헤더: 종목명 + 전일 종가 + 52주 대비 (공공데이터 기준)
+  window._compShares = shares;
   var initPrice = (lastClose!=null) ? lastClose.toLocaleString()+'원' : '—';
-  // 초기 등락률: 전날 종가 대비 (실시간 데이터 오기 전에도 표시)
   var prevClose = null;
   if (prices.length >= 2) {
     var pv = prices[prices.length-2];
@@ -1816,6 +1815,26 @@ async function renderCompany(name) {
     initChgCls = chgPct >= 0 ? 'up' : 'down';
     initChg = (chgPct>=0?'▲ +':'▼ ') + Math.abs(chgPct).toFixed(2) + '%';
   }
+
+  // 52주(최근 약 250거래일) 최고/최저 + 고점 대비
+  var hi52 = null, lo52 = null, pos52html = '';
+  if (prices.length && lastClose) {
+    var recent = prices.slice(-250);
+    recent.forEach(function(p){
+      var c = (p.length===5 ? p[4] : p[1]);
+      if (c > 0) { if (hi52===null || c>hi52) hi52=c; if (lo52===null || c<lo52) lo52=c; }
+    });
+    if (hi52 && lo52 && hi52 > lo52) {
+      var fromHi = (lastClose - hi52) / hi52 * 100;
+      var fromHiCls = (fromHi >= -0.5) ? 'up' : '';
+      pos52html = '<div class="comp-cap">'
+        + '<div class="comp-cap-k">52주 고점 대비</div>'
+        + '<div class="comp-cap-v ' + fromHiCls + '">' + (fromHi>=0?'+':'') + fromHi.toFixed(1) + '%</div>'
+        + '<div class="comp-cap-range">최고 ' + hi52.toLocaleString() + ' · 최저 ' + lo52.toLocaleString() + '</div>'
+        + '</div>';
+    }
+  }
+
   html += '<div class="comp-head">'
     + '<div class="comp-name-wrap">'
     +   '<div class="comp-name">'+name+'</div>'
@@ -1824,8 +1843,7 @@ async function renderCompany(name) {
     +     '<span class="comp-live-chg '+initChgCls+'" id="compLiveChg">'+initChg+'</span>'
     +   '</div>'
     + '</div>'
-    + '<div class="comp-cap"><div class="comp-cap-k">시가총액</div>'
-    + '<div class="comp-cap-v" id="compMktCap">'+(mktCap!=null?won(mktCap):'—')+'</div></div>'
+    + (pos52html || '<div class="comp-cap"><div class="comp-cap-k">시가총액</div><div class="comp-cap-v">'+(mktCap!=null?won(mktCap):'—')+'</div></div>')
     + '</div>';
 
   // 주요주주 파싱 (info.major_holders: "이름:비율|...")
