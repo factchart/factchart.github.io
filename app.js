@@ -504,9 +504,8 @@ const TYPE_COLORS = {
 let currentStock = null;
 let chartInstance = null;
 let allData = null;
-let chartPrices = null;       // 현재 차트에 그려진 가격 배열(실시간 캔들 갱신용)
-let chartDisclosures = null;  // 현재 차트의 공시 배열(실시간 재렌더용)
-let todayCandleAdded = false; // 오늘 캔들이 차트에 추가됐는지
+let chartPrices = null;       // 현재 차트에 그려진 가격 배열
+let chartDisclosures = null;  // 현재 차트의 공시 배열
 let patternOn = true; // 기본값 ON
 let selectedType = null;
 let activeTypeFilter = '전체';
@@ -726,15 +725,9 @@ async function selectStock(name) {
   disclosures = allData.disclosures.filter(d=>d.name===name);
   chartPrices = prices;        // 실시간 캔들 갱신이 참조할 배열
   chartDisclosures = disclosures;
-  todayCandleAdded = false;    // 새 종목이므로 오늘 캔들 초기화
-  // 종목이 바뀌면 이전 종목의 실시간가를 비운다 (A값이 B차트에 새는 것 방지)
-  if (realtimePriceStock !== name) { realtimePrice = null; realtimePriceStock = null; }
   window._lastShownPrice = null; // 굴림 방향 비교용 직전가 리셋(다른 종목과 비교 방지)
 
-  // 장중/시간외/마감 무관하게 종목 선택 시 오늘 시세를 한 번 가져온다.
-  // (KIS는 장 마감 후에도 당일 종가를 주므로, 어제 종가가 굳는 문제 방지)
-  // ※ fetchRealtime은 차트가 그려진 '뒤'에 호출해야 오늘 캔들이 차트에 안전히 추가됨.
-  const marketOpenNow = (typeof isMarketOpen === 'function' && isMarketOpen());
+  // 공공데이터 전환: 실시간 없음. 항상 마지막 일봉(전일 종가)을 또렷하게 표시.
   if (prices.length > 0) {
     const latest = prices[prices.length-1];
     const prev = prices[prices.length-2];
@@ -745,19 +738,13 @@ async function selectStock(name) {
     const priceStr = fmtPriceComma(latest.price);
     if (numEl) flipNumber(numEl, priceStr, 0);   // 애니메이션 없이 초기 표시
     if (wonEl) wonEl.textContent = '원';
-    if (marketOpenNow) {
-      // 장중: 직전 종가를 흐리게 먼저 보여주고, 현재가 오면 또렷하게 교체.
-      if (latestEl) latestEl.style.opacity = '0.45';
-      if (pcEl) pcEl.style.opacity = '0.45';
-    } else {
-      if (latestEl) latestEl.style.opacity = '1';
-      if (prev) {
-        const chg = ((latest.price-prev.price)/prev.price*100).toFixed(2);
-        if (pcEl) {
-          pcEl.textContent = (chg>0?'▲ +':'▼ ')+Math.abs(chg)+'%';
-          pcEl.className = 'price-change '+(chg>=0?'up':'down');
-          pcEl.style.opacity = '1';
-        }
+    if (latestEl) latestEl.style.opacity = '1';
+    if (prev) {
+      const chg = ((latest.price-prev.price)/prev.price*100).toFixed(2);
+      if (pcEl) {
+        pcEl.textContent = (chg>0?'▲ +':'▼ ')+Math.abs(chg)+'%';
+        pcEl.className = 'price-change '+(chg>=0?'up':'down');
+        pcEl.style.opacity = '1';
       }
     }
   }
@@ -773,8 +760,6 @@ async function selectStock(name) {
   renderChart(prices, disclosures, null);
   renderTable(disclosures);
   renderTypeFilter(disclosures);
-  // 차트가 그려진 뒤 오늘 시세를 가져와 오늘 캔들을 차트에 추가/갱신
-  fetchRealtime();
   renderStatsPanel(disclosures);
   renderThermometer(disclosures);
   renderHook(disclosures);
@@ -1244,12 +1229,6 @@ function renderChart(prices, disclosures, patternData) {
   });
   if (useCandle) chartInstance._candleData = ohlcArr;
 
-  // 차트를 (재)렌더할 때마다, 이미 받아둔 오늘 실시간가가 현재 종목 것이면
-  // 오늘 캔들을 다시 붙인다. (패턴 토글 등으로 renderChart가 재호출돼도 오늘 봉 유지)
-  // ★ realtimePriceStock === currentStock 확인: 이전 종목 값이 새 종목에 새는 것 방지
-  if (realtimePrice && realtimePriceStock === currentStock && allData && allData.prices[currentStock]) {
-    try { updateTodayCandle(realtimePrice); } catch(e) {}
-  }
   canvas.addEventListener('mousemove', e => {
     const rect = canvas.getBoundingClientRect();
     if (chartInstance) chartInstance._mouseY = e.clientY - rect.top;
@@ -1581,7 +1560,6 @@ document.addEventListener('mousemove', e => {
 
 function externalTooltip(context, discMap, patternData, prices) {
   // 툴팁은 항상 최신 차트 배열(chartPrices)을 참조한다.
-  // (오늘 캔들이 updateTodayCandle로 chartPrices에 추가되므로, 호버 시 오늘 봉도 찾을 수 있음)
   if (chartPrices && chartPrices.length) prices = chartPrices;
   const tooltip = document.getElementById('customTooltip');
   const {chart,tooltip:tt} = context;
@@ -1683,7 +1661,7 @@ function switchTab(tab) {
   });
   document.getElementById('tabChart').style.display   = (tab === 'chart') ? '' : 'none';
   document.getElementById('tabCompany').style.display = (tab === 'company') ? '' : 'none';
-  if (tab === 'company') { renderCompany(currentStock); fetchRealtime(); }
+  if (tab === 'company') { renderCompany(currentStock); }
 }
 
 async function renderCompany(name) {
@@ -1801,9 +1779,10 @@ async function renderCompany(name) {
   // ===== 카드 조립 시작 =====
   let html = '<div class="comp-card-big">';
 
-// 헤더: 종목명 + 전일 종가 + 52주 대비 (공공데이터 기준)
-  window._compShares = shares;
+  // 헤더: 종목명 + 실시간가 + 시가총액
+  window._compShares = shares;  // 실시간 시총 계산용
   var initPrice = (lastClose!=null) ? lastClose.toLocaleString()+'원' : '—';
+  // 초기 등락률: 전날 종가 대비 (실시간 데이터 오기 전에도 표시)
   var prevClose = null;
   if (prices.length >= 2) {
     var pv = prices[prices.length-2];
@@ -1815,26 +1794,6 @@ async function renderCompany(name) {
     initChgCls = chgPct >= 0 ? 'up' : 'down';
     initChg = (chgPct>=0?'▲ +':'▼ ') + Math.abs(chgPct).toFixed(2) + '%';
   }
-
-  // 52주(최근 약 250거래일) 최고/최저 + 고점 대비
-  var hi52 = null, lo52 = null, pos52html = '';
-  if (prices.length && lastClose) {
-    var recent = prices.slice(-250);
-    recent.forEach(function(p){
-      var c = (p.length===5 ? p[4] : p[1]);
-      if (c > 0) { if (hi52===null || c>hi52) hi52=c; if (lo52===null || c<lo52) lo52=c; }
-    });
-    if (hi52 && lo52 && hi52 > lo52) {
-      var fromHi = (lastClose - hi52) / hi52 * 100;
-      var fromHiCls = (fromHi >= -0.5) ? 'up' : '';
-      pos52html = '<div class="comp-cap">'
-        + '<div class="comp-cap-k">52주 고점 대비</div>'
-        + '<div class="comp-cap-v ' + fromHiCls + '">' + (fromHi>=0?'+':'') + fromHi.toFixed(1) + '%</div>'
-        + '<div class="comp-cap-range">최고 ' + hi52.toLocaleString() + ' · 최저 ' + lo52.toLocaleString() + '</div>'
-        + '</div>';
-    }
-  }
-
   html += '<div class="comp-head">'
     + '<div class="comp-name-wrap">'
     +   '<div class="comp-name">'+name+'</div>'
@@ -1843,7 +1802,8 @@ async function renderCompany(name) {
     +     '<span class="comp-live-chg '+initChgCls+'" id="compLiveChg">'+initChg+'</span>'
     +   '</div>'
     + '</div>'
-    + (pos52html || '<div class="comp-cap"><div class="comp-cap-k">시가총액</div><div class="comp-cap-v">'+(mktCap!=null?won(mktCap):'—')+'</div></div>')
+    + '<div class="comp-cap"><div class="comp-cap-k">시가총액</div>'
+    + '<div class="comp-cap-v" id="compMktCap">'+(mktCap!=null?won(mktCap):'—')+'</div></div>'
     + '</div>';
 
   // 주요주주 파싱 (info.major_holders: "이름:비율|...")
@@ -1870,10 +1830,6 @@ async function renderCompany(name) {
       + '</div>'
       + '<div class="comp-own-card">'
         + '<div class="own-grid">'
-          + '<div class="own-flow" id="ownFlow_' + name.replace(/\s/g,'_') + '">'
-            + '<div class="comp-own-title">시장 정보 <span class="comp-own-sub">전일 종가 기준 · KRX</span></div>'
-            + '<div class="comp-own-loading">불러오는 중…</div>'
-          + '</div>'
           + '<div class="own-holders">'
             + '<div class="comp-own-title">주요 주주 <span class="comp-own-sub">· DART</span></div>'
             + holdersHtml
@@ -1889,70 +1845,6 @@ async function renderCompany(name) {
     + '</div>'
   + '</div>';
 
-  // 시장정보 카드 렌더 (공공데이터 — 시총·거래대금·거래량·10일추이)
-  setTimeout(function(){
-    var flow = document.getElementById('ownFlow_' + name.replace(/\s/g,'_'));
-    if (!flow) return;
-    var TITLE = '<div class="comp-own-title">시장 정보 <span class="comp-own-sub">전일 종가 기준 · KRX</span></div>';
-    var m = (allData && allData.market) ? allData.market[name] : null;
-    if (!m) { flow.innerHTML = TITLE + '<div class="own-na">준비 중이에요</div>'; return; }
-
-    // 단위 포맷
-    function won(v){
-      var n = Number(v)||0;
-      if (n >= 1e12) return (n/1e12).toFixed(1) + '조';
-      if (n >= 1e8)  return Math.round(n/1e8).toLocaleString() + '억';
-      if (n >= 1e4)  return Math.round(n/1e4).toLocaleString() + '만';
-      return Math.round(n).toLocaleString();
-    }
-    function vol(v){
-      var n = Number(v)||0;
-      if (n >= 1e8) return (n/1e8).toFixed(1) + '억';
-      if (n >= 1e4) return Math.round(n/1e4).toLocaleString() + '만';
-      return Math.round(n).toLocaleString();
-    }
-
-    // 시총 순위 (전체 종목 중)
-    var rankTxt = '';
-    try {
-      var caps = Object.keys(allData.market).map(function(k){ return { n:k, c:Number(allData.market[k].marketCap)||0 }; })
-                  .filter(function(x){ return x.c>0; }).sort(function(a,b){ return b.c - a.c; });
-      var rank = caps.findIndex(function(x){ return x.n === name; }) + 1;
-      var mkt = (STOCK_META[name]||{}).market || '';  // 'KOSPI'/'KOSDAQ' 있으면 사용
-      if (rank > 0) rankTxt = ' · ' + (mkt || '시총') + ' ' + rank + '위';
-    } catch(e) {}
-
-    // 거래대금 막대 폭 (10일 중 최댓값 기준)
-    var amt10 = m.amt10 || [];
-    var maxAmt = Math.max.apply(null, amt10.concat([1]));
-    var tradeW = Math.round((Number(m.tradeAmt)||0) / maxAmt * 100);
-    if (tradeW > 100) tradeW = 100; if (tradeW < 5) tradeW = 5;
-    // 거래량 막대: 거래대금 대비 상대치로 대충 (시각적 보조)
-    var volW = 64;
-
-    // 10일 추이 막대
-    var spark = amt10.map(function(a, i){
-      var h = Math.round((Number(a)||0) / maxAmt * 100);
-      if (h < 6) h = 6;
-      var op = 0.3 + (i/Math.max(amt10.length-1,1)) * 0.7;
-     return '<div style="flex:1;height:'+h+'%;background:#4d9fff;opacity:'+op.toFixed(2)+';border-radius:2px 2px 0 0"></div>';
-    }).join('');
-
-    flow.innerHTML = TITLE
-      + '<div class="mkt-sub">시가총액 ' + won(m.marketCap) + rankTxt + '</div>'
-      + '<div class="mkt-row">'
-      +   '<div class="mkt-row-top"><span class="mkt-lbl">거래대금</span><span class="mkt-val">' + won(m.tradeAmt) + '</span></div>'
-      +   '<div class="mkt-track"><div class="mkt-fill" style="width:' + tradeW + '%"></div></div>'
-      + '</div>'
-      + '<div class="mkt-row">'
-      +   '<div class="mkt-row-top"><span class="mkt-lbl">거래량</span><span class="mkt-val">' + vol(m.volume) + ' 주</span></div>'
-      +   '<div class="mkt-track"><div class="mkt-fill mkt-fill-light" style="width:' + volW + '%"></div></div>'
-      + '</div>'
-      + '<div class="mkt-spark-wrap">'
-      +   '<div class="mkt-spark-title">거래대금 최근 10일 추이</div>'
-      +   '<div class="mkt-spark">' + spark + '</div>'
-      + '</div>';
-  }, 0);
 
   // (실적 추이는 위 7:3 우측 컬럼으로 이동됨)
 
@@ -2031,10 +1923,6 @@ async function renderCompany(name) {
   html += '</div>';
 
   body.innerHTML = html;
-  // 이미 받아둔 실시간가가 현재 종목 것이면 헤더 가격/등락률/시총을 즉시 반영
-  if (realtimePrice && realtimePriceStock === name) {
-    try { applyRealtimePrice(); } catch(e) {}
-  }
 }
 
 
@@ -2980,436 +2868,3 @@ document.addEventListener('keydown', e => {
     ['terms','privacy','disclaimer','contact'].forEach(closeModal);
   }
 });
-
-// ════════════════════════════════════════
-// 실시간 시세 (한국투자증권 KIS → Apps Script 웹앱 on-demand)
-// ════════════════════════════════════════
-// ▼▼ 배포 후 여기에 Apps Script 웹앱 URL을 넣으세요 ▼▼
-const KIS_PROXY_URL = 'https://script.google.com/macros/s/AKfycbzz6fr6yCeli_TzriLE3IkAB1m7-9p1qDGz0MfKhO4KBAjLmfDI6M7VpL1J0yK2xI8/exec';
-// ▲▲ (Apps Script → 배포 → 새 배포 → 웹앱 → URL 복사) ▲▲
-
-let realtimePrice = null;
-let realtimePriceStock = null;  // realtimePrice가 속한 종목명 (다른 종목에 잘못 적용 방지)
-
-// 현재 보고 있는 종목 1개만 실시간 조회 (on-demand, 10초 폴링)
-// 서버(getRealtimePriceResponse)가 CacheService로 9초 캐시 → 동시 시청자 중복호출 제거
-async function fetchRealtime() {
-  // 실시간 시세(KIS) 제거됨 — 공공데이터 전일 종가 기준
-  // 호출돼도 아무것도 하지 않음 (realtimePrice는 계속 null → 헤더/차트는 전일 종가 고정)
-  return;
-}
-
-// 숫자 굴림 애니메이션: el 안에 자릿수별 컬럼을 만들고, 바뀐 자리만 방향에 맞춰 굴린다.
-// dir > 0(상승): 아래에서 위로, dir < 0(하락): 위에서 아래로. 색 변화는 없음.
-function flipNumber(el, text, dir) {
-  if (!el) return;
-  const h = el.dataset.flipH || (el.dataset.flipH = String(parseFloat(getComputedStyle(el).fontSize) * 1.0 || 34) + 'px');
-  // 자릿수 개수가 바뀌면(예: 99,000→100,000) 컬럼 재생성
-  if (!el.classList.contains('flip') || el._len !== text.length) {
-    el.classList.add('flip');
-    el.innerHTML = '';
-    el._cols = [];
-    for (let i = 0; i < text.length; i++) {
-      const col = document.createElement('span');
-      col.className = 'flip-col';
-      col.style.height = h;
-      const inner = document.createElement('span');
-      inner.className = 'flip-inner';
-      const a = document.createElement('span'); a.style.height = h; a.textContent = text[i];
-      const b = document.createElement('span'); b.style.height = h; b.textContent = text[i];
-      inner.appendChild(a); inner.appendChild(b);
-      col.appendChild(inner);
-      col._inner = inner; col._a = a; col._b = b; col._val = text[i];
-      el.appendChild(col);
-      el._cols.push(col);
-    }
-    el._len = text.length;
-    return;
-  }
-  // 바뀐 자리만 굴림
-  for (let i = 0; i < text.length; i++) {
-    const col = el._cols[i];
-    const c = text[i];
-    if (!col || col._val === c) continue;
-    if (dir >= 0) {
-      col._a.textContent = c; col._b.textContent = col._val;
-      col._inner.style.transition = 'none';
-      col._inner.style.transform = 'translateY(-' + col.offsetHeight + 'px)';
-      col.offsetHeight; // reflow
-      col._inner.style.transition = '';
-      col._inner.style.transform = 'translateY(0)';
-    } else {
-      col._a.textContent = col._val; col._b.textContent = c;
-      col._inner.style.transition = 'none';
-      col._inner.style.transform = 'translateY(0)';
-      col.offsetHeight;
-      col._inner.style.transition = '';
-      col._inner.style.transform = 'translateY(-' + col.offsetHeight + 'px)';
-    }
-    col._val = c;
-  }
-}
-
-function applyRealtimePrice() {
-  if (!realtimePrice || !currentStock) return;
-  if (realtimePriceStock !== currentStock) return;  // 다른 종목 실시간가면 적용 안 함
-  const p = realtimePrice;
-  const priceEl  = document.getElementById('currentPrice');
-  const changeEl = document.getElementById('currentChange');
-  const numEl  = document.getElementById('latestPriceNum');
-  const wonEl  = document.getElementById('latestPriceWon');
-  const latestEl = document.getElementById('latestPrice');
-  const priceStr = fmtPriceComma(p.price);
-  // 방향: 직전 표시가 대비 상승/하락
-  const dir = (window._lastShownPrice == null) ? 0 : (p.price - window._lastShownPrice);
-  if (priceEl)  priceEl.textContent  = priceStr + '원';
-  if (numEl) flipNumber(numEl, priceStr, dir);
-  if (wonEl) wonEl.textContent = '원';
-  if (latestEl) latestEl.style.opacity = '1';
-  window._lastShownPrice = p.price;
-  // priceChange(과거 종가 기준)도 실시간 등락률로 갱신
-  const pcEl = document.getElementById('priceChange');
-  if (pcEl && typeof p.change === 'number') {
-    const sign = p.change >= 0 ? '▲ +' : '▼ ';
-    pcEl.textContent = sign + Math.abs(p.change).toFixed(2) + '%';
-    pcEl.className = 'price-change ' + (p.change >= 0 ? 'up' : 'down');
-    pcEl.style.opacity = '1';
-  }
-  if (changeEl) {
-    const sign = p.change >= 0 ? '▲' : '▼';
-    changeEl.textContent = sign + ' ' + Math.abs(p.change).toFixed(2) + '%';
-    changeEl.className = 'price-change ' + (p.change >= 0 ? 'up' : 'down');
-  }
-  // 티커바: 현재 종목이 고정 10종목에 있으면 그 항목(원본+복제 'b')도 갱신
-  const tIdx = TICKER_NAMES.indexOf(currentStock);
-  if (tIdx !== -1) {
-    const chgStr = (p.change>=0?'▲ +':'▼ ') + Math.abs(p.change).toFixed(2)+'%';
-    const cls = 'ticker-chg ' + (Math.abs(p.change)<0.01?'flat':p.change>0?'up':'down');
-    ['', 'b'].forEach(function(sfx){
-      const pe = document.getElementById('tk-'+tIdx+sfx);
-      const ce = document.getElementById('tkc-'+tIdx+sfx);
-      if (pe) flipNumber(pe, priceStr, dir);
-      if (ce) { ce.textContent = chgStr; ce.className = cls; }
-    });
-  }
-  // ── 차트에 오늘 캔들 추가/갱신 ──
-  updateTodayCandle(p);
-
-  // ── 기업분석 헤더 실시간가 + 시총 갱신 ──
-  const clpEl = document.getElementById('compLivePrice');
-  if (clpEl) {
-    clpEl.textContent = priceStr + '원';
-    clpEl.classList.remove('up','down');
-    if (dir>0) clpEl.classList.add('up'); else if (dir<0) clpEl.classList.add('down');
-  }
-  const clcEl = document.getElementById('compLiveChg');
-  if (clcEl && typeof p.change === 'number') {
-    clcEl.textContent = (p.change>=0?'▲ +':'▼ ') + Math.abs(p.change).toFixed(2) + '%';
-    clcEl.className = 'comp-live-chg ' + (p.change>=0?'up':'down');
-  }
-  // 시총도 실시간가 기준으로 갱신 (발행주식수 × 현재가)
-  const cmcEl = document.getElementById('compMktCap');
-  if (cmcEl && window._compShares && p.price) {
-    const mc = p.price * window._compShares;
-    cmcEl.textContent = (mc>=1e12) ? (mc/1e12).toFixed(1)+'조' : (mc>=1e8) ? Math.round(mc/1e8).toLocaleString()+'억' : Math.round(mc).toLocaleString()+'원';
-  }
-}
-
-// 장중 실시간가로 차트 끝에 '오늘 캔들'을 추가하거나 갱신
-// 차트를 통째로 다시 그리지 않고, 마지막 포인트만 in-place 갱신하여
-// 사용자의 줌/스크롤 위치를 유지하고 깜빡임을 없앤다.
-function updateTodayCandle(p) {
-  if (!chartPrices || !chartPrices.length || !p || !p.price) return;
-  if (!chartPrices || !chartPrices.length || !p || !p.price) return;
-  // 오늘 날짜(KST) YYYY-MM-DD
-  const kst = new Date(new Date().toLocaleString('en-US', {timeZone:'Asia/Seoul'}));
-  const today = kst.getFullYear() + '-'
-    + String(kst.getMonth()+1).padStart(2,'0') + '-'
-    + String(kst.getDate()).padStart(2,'0');
-  const last = chartPrices[chartPrices.length-1];
-  const candle = {
-    date: today,
-    open:  p.open || p.price,
-    high:  p.high || p.price,
-    low:   p.low  || p.price,
-    close: p.price,
-    price: p.price
-  };
-
-  const hadToday = last && last.date === today;
-  if (hadToday) {
-    chartPrices[chartPrices.length-1] = candle;       // 값만 갱신
-  } else if (!last || last.date < today) {
-    chartPrices.push(candle);                          // 오늘 캔들 신규 추가
-    todayCandleAdded = true;
-  } else {
-    return; // 오늘보다 미래 데이터가 있는 비정상 상황 — 무시
-  }
-
-  // 차트 인스턴스가 없으면(아직 렌더 전) 다음 정식 렌더에 반영되므로 종료
-  if (!chartInstance || !chartInstance.data) return;
-
-  const ds = chartInstance.data.datasets;
-  const labels = chartInstance.data.labels;
-  if (!labels || !ds || !ds.length) return;
-
-  if (hadToday) {
-    // 마지막 포인트 in-place 갱신
-    const i = labels.length - 1;
-    if (ds[0] && ds[0].data) ds[0].data[i] = candle.price;            // 종가 라인
-    if (chartInstance._candleData) {
-      chartInstance._candleData[i] = { o:candle.open, h:candle.high, l:candle.low, c:candle.close };
-    }
-  } else {
-    // 새 라벨/포인트 추가
-    labels.push(today);
-    if (ds[0] && ds[0].data) ds[0].data.push(candle.price);
-    if (ds[1] && ds[1].data) ds[1].data.push(null);                  // 공시 마커 없음
-    // 패턴평균 등 추가 데이터셋이 있으면 null로 자리 맞춤
-    for (let k = 2; k < ds.length; k++) {
-      if (ds[k] && Array.isArray(ds[k].data)) ds[k].data.push(null);
-    }
-    if (chartInstance._candleData) {
-      chartInstance._candleData.push({ o:candle.open, h:candle.high, l:candle.low, c:candle.close });
-    }
-    // 줌 범위에도 새 봉을 반영 (안 하면 확대 시 오늘 봉이 범위 밖으로 사라짐)
-    const wasAtEnd = (_zoomMax >= _zoomTotal - 1);
-    _zoomTotal = labels.length;
-    if (wasAtEnd) {
-      _zoomMax = _zoomTotal - 1;                 // 끝을 보고 있었으면 새 봉까지 확장
-      if (chartInstance.options.scales.x.max != null) {
-        chartInstance.options.scales.x.max = _zoomMax;
-      }
-    }
-  }
-  // 애니메이션 없이 즉시 갱신 → 깜빡임·위치 리셋 없음
-  // 오늘 봉이 기존 Y축 범위를 벗어나면 축도 넓혀준다 (봉이 차트 밖으로 튀는 문제 방지)
-  try {
-    const ys = chartInstance.options.scales.y;
-    if (ys && (ys.min != null || ys.max != null)) {
-      const hi = candle.high || candle.price;
-      const lo = candle.low || candle.price;
-      if (ys.max != null && hi * 1.01 > ys.max) ys.max = hi * 1.01;
-      if (ys.min != null && lo * 0.99 < ys.min) ys.min = lo * 0.99;
-    }
-  } catch (e) {}
-  chartInstance.update('none');
-}
-
-// 장중 실시간가로 차트 끝에 '오늘 캔들'을 추가하거나 갱신
-// ── B 방식: 평일 장중일 때만 붙이고, 장 마감·주말·장전엔 안 붙임(가짜 봉 방지) ──
-function updateTodayCandle(p) {
-  if (!chartPrices || !chartPrices.length || !p || !p.price) return;
-
-  // 오늘 날짜(KST) YYYY-MM-DD
-  const kst = new Date(new Date().toLocaleString('en-US', {timeZone:'Asia/Seoul'}));
-  const today = kst.getFullYear() + '-'
-    + String(kst.getMonth()+1).padStart(2,'0') + '-'
-    + String(kst.getDate()).padStart(2,'0');
-
-  // 장중 판정: 평일(월~금) 09:00~15:30. (시간외는 종가 미확정이라 봉으로 안 그림)
-  const day = kst.getDay();
-  const tmin = kst.getHours()*60 + kst.getMinutes();
-  const isTradingNow = (day >= 1 && day <= 5) && (tmin >= 9*60);
-
-  const last = chartPrices[chartPrices.length-1];
-
-// 변경 전 주석
-// 장중 판정: 평일(월~금) 09:00~15:30. (시간외는 종가 미확정이라 봉으로 안 그림)
-
-// 변경 후 주석
-// 봉 유지 판정: 평일(월~금) 09:00 이후 그날 내내. (시간외 포함, 마감 후엔 DB 확정봉으로 전환)
-  if (!isTradingNow) {
-    if (last && last.date === today && last._isRealtime) {
-      chartPrices.pop();
-      todayCandleAdded = false;
-      if (chartInstance && chartInstance.data && chartInstance.data.labels) {
-        const lb = chartInstance.data.labels;
-        const dss = chartInstance.data.datasets;
-        if (lb[lb.length-1] === today) {
-          lb.pop();
-          dss.forEach(function(d){ if (d && Array.isArray(d.data)) d.data.pop(); });
-          if (chartInstance._candleData) chartInstance._candleData.pop();
-          _zoomTotal = lb.length;
-          if (_zoomMax > _zoomTotal - 1) _zoomMax = _zoomTotal - 1;
-          chartInstance.update('none');
-        }
-      }
-    }
-    return;
-  }
-
-  // 장중이라도, 확정 일봉(prices)에 오늘 날짜가 이미 있으면(실시간 봉이 아닌 진짜 확정봉) 그걸 쓰고 붙이지 않음.
-  if (last && last.date === today && !last._isRealtime) return;
-
-  const candle = {
-    date: today,
-    open:  p.open || p.price,
-    high:  p.high || p.price,
-    low:   p.low  || p.price,
-    close: p.price,
-    price: p.price,
-    _isRealtime: true   // 실시간으로 붙인 '오늘 봉' 표식 (장 마감 후 자동 제거용)
-  };
-
-  const hadToday = last && last.date === today;
-  if (hadToday) {
-    chartPrices[chartPrices.length-1] = candle;       // 값만 갱신
-  } else if (!last || last.date < today) {
-    chartPrices.push(candle);                          // 오늘 캔들 신규 추가
-    todayCandleAdded = true;
-  } else {
-    return; // 오늘보다 미래 데이터가 있는 비정상 상황 — 무시
-  }
-
-  // 차트 인스턴스가 없으면(아직 렌더 전) 다음 정식 렌더에 반영되므로 종료
-  if (!chartInstance || !chartInstance.data) return;
-
-  const ds = chartInstance.data.datasets;
-  const labels = chartInstance.data.labels;
-  if (!labels || !ds || !ds.length) return;
-
-  if (hadToday) {
-    // 마지막 포인트 in-place 갱신
-    const i = labels.length - 1;
-    if (ds[0] && ds[0].data) ds[0].data[i] = candle.price;            // 종가 라인
-    if (chartInstance._candleData) {
-      chartInstance._candleData[i] = { o:candle.open, h:candle.high, l:candle.low, c:candle.close };
-    }
-  } else {
-    // 새 라벨/포인트 추가
-    labels.push(today);
-    if (ds[0] && ds[0].data) ds[0].data.push(candle.price);
-    if (ds[1] && ds[1].data) ds[1].data.push(null);                  // 공시 마커 없음
-    // 패턴평균 등 추가 데이터셋이 있으면 null로 자리 맞춤
-    for (let k = 2; k < ds.length; k++) {
-      if (ds[k] && Array.isArray(ds[k].data)) ds[k].data.push(null);
-    }
-    if (chartInstance._candleData) {
-      chartInstance._candleData.push({ o:candle.open, h:candle.high, l:candle.low, c:candle.close });
-    }
-    // 줌 범위에도 새 봉을 반영 (안 하면 확대 시 오늘 봉이 범위 밖으로 사라짐)
-    const wasAtEnd = (_zoomMax >= _zoomTotal - 1);
-    _zoomTotal = labels.length;
-    if (wasAtEnd) {
-      _zoomMax = _zoomTotal - 1;                 // 끝을 보고 있었으면 새 봉까지 확장
-      if (chartInstance.options.scales.x.max != null) {
-        chartInstance.options.scales.x.max = _zoomMax;
-      }
-    }
-  }
-  // 애니메이션 없이 즉시 갱신 → 깜빡임·위치 리셋 없음
-  // 오늘 봉이 기존 Y축 범위를 벗어나면 축도 넓혀준다 (봉이 차트 밖으로 튀는 문제 방지)
-  try {
-    const ys = chartInstance.options.scales.y;
-    if (ys && (ys.min != null || ys.max != null)) {
-      const hi = candle.high || candle.price;
-      const lo = candle.low || candle.price;
-      if (ys.max != null && hi * 1.01 > ys.max) ys.max = hi * 1.01;
-      if (ys.min != null && lo * 0.99 < ys.min) ys.min = lo * 0.99;
-    }
-  } catch (e) {}
-  chartInstance.update('none');
-}
-
-function isMarketOpen() {
-  // 폴링 대상 시간: 정규장(9:00~15:30) + 시간외 단일가(~18:00).
-  // KIS가 이 시간대에 당일 가격을 갱신해 주므로 폴링 유지.
-  const now = new Date();
-  const kst = new Date(now.toLocaleString('en-US', {timeZone:'Asia/Seoul'}));
-  const day = kst.getDay();
-  const t = kst.getHours() * 60 + kst.getMinutes();
-  return (day >= 1 && day <= 5 && t >= 9*60 && t < 18*60);
-}
-function scrollToTop() {
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-// ── 오늘의 공시 모달 (당일 최초 방문 1회) ──
-function closeTodayDisc() {
-  var o = document.getElementById('todayDiscOverlay');
-  if (o) o.style.display = 'none';
-}
-function buildTodayDisc() {
-  if (!allData || !allData.disclosures) return;
-  // 오늘(KST) YYYY-MM-DD
-  var kst = new Date(new Date().toLocaleString('en-US', {timeZone:'Asia/Seoul'}));
-  var today = kst.getFullYear() + '-' + String(kst.getMonth()+1).padStart(2,'0') + '-' + String(kst.getDate()).padStart(2,'0');
-
-  // 하루 1회: 오늘 이미 봤으면 표시 안 함
-  try {
-    if (localStorage.getItem('fc_today_disc_seen') === today) return;
-  } catch(e) {}
-
-  // 코드 역매핑
-  var nameToCode = {};
-  for (var c in CODE_TO_NAME) nameToCode[CODE_TO_NAME[c]] = c;
-
-  // 오늘 공시 추출 → 없으면 최근 공시 폴백
-  var all = allData.disclosures.slice();
-  var todays = all.filter(function(d){ return d.date === today; });
-  var isFallback = false;
-  var list;
-  if (todays.length) {
-    list = todays;
-  } else {
-    isFallback = true;
-    // 최근 날짜순 정렬 후 상위
-    list = all.slice().sort(function(a,b){ return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
-  }
-
-  // 영향도(가중치 절댓값) 순 정렬 후 상위 3 (폴백이면 최근순 유지하며 상위 3)
-  var scored = list.map(function(d){ return { d:d, w: signalWeightOf(d) }; });
-  if (!isFallback) scored.sort(function(a,b){ return Math.abs(b.w) - Math.abs(a.w); });
-  var top = scored.slice(0, 3);
-  if (!top.length) return;
-
-  // 제목/날짜
-  document.getElementById('todayDiscTitle').innerHTML = isFallback ? '🔥 최근 공시' : '🔥 오늘의 공시';
-
-  // 목록 렌더
-  var html = '';
-  top.forEach(function(it, i){
-    var d = it.d;
-    var code = nameToCode[d.name] || '';
-    var href = code ? ('/stock/' + code + '.html') : ('/?stock=' + encodeURIComponent(d.name));
-    var isWarn = it.w < 0;
-    var badgeColor = isWarn ? '#ff5b6e' : '#00d084';
-    var badgeBg = isWarn ? 'rgba(255,91,110,0.12)' : 'rgba(0,208,132,0.12)';
-    var badgeText = isWarn ? '주의 공시' : d.type;
-    html += '<div onclick="goTodayDisc(\'' + encodeURIComponent(d.name) + '\')" style="display:flex;align-items:center;gap:11px;padding:12px 13px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;cursor:pointer;">'
-      + '<div style="font-size:12px;font-weight:700;color:var(--text3);">' + (i+1) + '</div>'
-      + '<div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:600;color:var(--text);">' + d.name + '</div>'
-      + '<div style="font-size:12px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (normalizeTitle(d.title) || d.type) + '</div></div>'
-      + '<div style="font-size:10.5px;color:' + badgeColor + ';background:' + badgeBg + ';padding:2px 7px;border-radius:6px;font-weight:600;white-space:nowrap;">' + badgeText + '</div>'
-      + '</div>';
-  });
-  document.getElementById('todayDiscList').innerHTML = html;
-
-  // 표시 + 오늘 본 것으로 기록
-  document.getElementById('todayDiscOverlay').style.display = 'flex';
-  try { localStorage.setItem('fc_today_disc_seen', today); } catch(e) {}
-}
-function goTodayDisc(encName) {
-  var name = decodeURIComponent(encName);
-  closeTodayDisc();
-  if (typeof selectStock === 'function') selectStock(name);
-}
-// 페이지 1/3 이상 스크롤 시 '맨 위로' 버튼 표시
-function updateToTopBtn() {
-  const btn = document.getElementById('toTopBtn');
-  if (!btn) return;
-  const threshold = (document.documentElement.scrollHeight - window.innerHeight) / 3;
-  if (window.scrollY > threshold && threshold > 40) btn.classList.add('show');
-  else btn.classList.remove('show');
-}
-window.addEventListener('scroll', updateToTopBtn, { passive: true });
-window.addEventListener('resize', updateToTopBtn, { passive: true });
-document.addEventListener('DOMContentLoaded', updateToTopBtn);
-
-function startRealtimePolling() {
-  // 실시간 시세(KIS) 제거됨 — 공공데이터 전일 종가 기준으로 전환
-  // 헤더 현재가/등락률은 전일 종가로 고정, 차트는 확정 일봉까지만 표시
-}
-
-document.addEventListener('DOMContentLoaded', startRealtimePolling);
