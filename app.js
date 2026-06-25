@@ -1853,7 +1853,7 @@ async function renderCompany(name) {
       + '<div class="comp-own-card">'
         + '<div class="own-grid">'
           + '<div class="own-flow" id="ownFlow_' + name.replace(/\s/g,'_') + '">'
-            + '<div class="comp-own-title">투자자 수급 <span class="comp-own-sub">최근 거래일 기준</span></div>'
+            + '<div class="comp-own-title">시장 정보 <span class="comp-own-sub">전일 종가 기준 · KRX</span></div>'
             + '<div class="comp-own-loading">불러오는 중…</div>'
           + '</div>'
           + '<div class="own-holders">'
@@ -1871,61 +1871,69 @@ async function renderCompany(name) {
     + '</div>'
   + '</div>';
 
-  // 투자자 수급 비동기 로드 (외국인 보유율 + 누적 순매수) — DOM 렌더 후 실행되도록 지연
-  setTimeout(async function(){
+  // 시장정보 카드 렌더 (공공데이터 — 시총·거래대금·거래량·10일추이)
+  setTimeout(function(){
     var flow = document.getElementById('ownFlow_' + name.replace(/\s/g,'_'));
     if (!flow) return;
-    var TITLE = '<div class="comp-own-title">투자자 수급 <span class="comp-own-sub">최근 거래일 기준</span></div>';
-    if (!KIS_PROXY_URL || KIS_PROXY_URL.indexOf('AKfycb') === -1) {
-      flow.innerHTML = TITLE + '<div class="own-na">준비 중이에요</div>';
-      return;
+    var TITLE = '<div class="comp-own-title">시장 정보 <span class="comp-own-sub">전일 종가 기준 · KRX</span></div>';
+    var m = (allData && allData.market) ? allData.market[name] : null;
+    if (!m) { flow.innerHTML = TITLE + '<div class="own-na">준비 중이에요</div>'; return; }
+
+    // 단위 포맷
+    function won(v){
+      var n = Number(v)||0;
+      if (n >= 1e12) return (n/1e12).toFixed(1) + '조';
+      if (n >= 1e8)  return Math.round(n/1e8).toLocaleString() + '억';
+      if (n >= 1e4)  return Math.round(n/1e4).toLocaleString() + '만';
+      return Math.round(n).toLocaleString();
     }
+    function vol(v){
+      var n = Number(v)||0;
+      if (n >= 1e8) return (n/1e8).toFixed(1) + '억';
+      if (n >= 1e4) return Math.round(n/1e4).toLocaleString() + '만';
+      return Math.round(n).toLocaleString();
+    }
+
+    // 시총 순위 (전체 종목 중)
+    var rankTxt = '';
     try {
-      var meta2 = STOCK_META[name] || {};
-      var code = meta2.ticker || '';
-      if (!code) throw new Error('no code');
-      var controller = new AbortController();
-      var timeout = setTimeout(function(){ controller.abort(); }, 6000);
-      var url = KIS_PROXY_URL + '?action=investor&code=' + code + '&t=' + Date.now();
-      var res = await fetch(url, { signal: controller.signal });
-      clearTimeout(timeout);
-      var json = await res.json();
-      var d = json.data;
-      if (!d) throw new Error('no data');
+      var caps = Object.keys(allData.market).map(function(k){ return { n:k, c:Number(allData.market[k].marketCap)||0 }; })
+                  .filter(function(x){ return x.c>0; }).sort(function(a,b){ return b.c - a.c; });
+      var rank = caps.findIndex(function(x){ return x.n === name; }) + 1;
+      var mkt = (STOCK_META[name]||{}).market || '';  // 'KOSPI'/'KOSDAQ' 있으면 사용
+      if (rank > 0) rankTxt = ' · ' + (mkt || '시총') + ' ' + rank + '위';
+    } catch(e) {}
 
-      function qty(v){ // 주식 수 → 보기 좋은 단위
-        var n = Number(v)||0, s = n>0?'+':(n<0?'−':''), a = Math.abs(n);
-        if (a >= 1e8) return s + (a/1e8).toFixed(1) + '억';
-        if (a >= 1e4) return s + Math.round(a/1e4).toLocaleString() + '만';
-        return s + Math.round(a).toLocaleString();
-      }
-      var rows2 = [
-        { label:'외국인', val: Number(d.cum_foreign)||0 },
-        { label:'기관',   val: Number(d.cum_institute)||0 },
-        { label:'개인',   val: Number(d.cum_individual)||0 },
-      ];
-      var maxAbs = Math.max.apply(null, rows2.map(function(r){ return Math.abs(r.val); }).concat([1]));
-      var flowRows = rows2.map(function(r){
-        var w = (Math.abs(r.val)/maxAbs*50).toFixed(0); // 중앙 기준 좌우 최대 50%
-        var pos = r.val >= 0;
-        var bar = pos
-          ? '<div class="flow-fill" style="left:50%;width:'+w+'%;background:#e53e3e;border-radius:0 3px 3px 0"></div>'
-          : '<div class="flow-fill" style="right:50%;width:'+w+'%;background:#3182ce;border-radius:3px 0 0 3px"></div>';
-        return '<div class="flow-row"><div class="flow-top"><span class="flow-lbl">'+r.label+'</span>'
-          + '<span class="flow-val" style="color:'+(pos?'#e53e3e':'#3182ce')+'">'+qty(r.val)+'</span></div>'
-          + '<div class="flow-track"><div class="flow-mid"></div>'+bar+'</div></div>';
-      }).join('');
+    // 거래대금 막대 폭 (10일 중 최댓값 기준)
+    var amt10 = m.amt10 || [];
+    var maxAmt = Math.max.apply(null, amt10.concat([1]));
+    var tradeW = Math.round((Number(m.tradeAmt)||0) / maxAmt * 100);
+    if (tradeW > 100) tradeW = 100; if (tradeW < 5) tradeW = 5;
+    // 거래량 막대: 거래대금 대비 상대치로 대충 (시각적 보조)
+    var volW = 64;
 
-      var ratio = (d.foreign_ratio != null && !isNaN(d.foreign_ratio))
-        ? '<div class="flow-ratio"><span class="flow-ratio-k">외국인 보유율</span><span class="flow-ratio-v">'+Number(d.foreign_ratio).toFixed(1)+'%</span></div>'
-        : '';
-      var span = d.days ? ('최근 '+d.days+'일 순매수') : '누적 순매수';
-      flow.innerHTML = TITLE + ratio
-        + '<div class="flow-sub">'+span+'</div>'
-        + '<div class="flow-bars">'+flowRows+'</div>';
-    } catch(e) {
-      flow.innerHTML = TITLE + '<div class="own-na">잠시 후 다시 볼게요</div>';
-    }
+    // 10일 추이 막대
+    var spark = amt10.map(function(a, i){
+      var h = Math.round((Number(a)||0) / maxAmt * 100);
+      if (h < 6) h = 6;
+      var op = 0.35 + (i/Math.max(amt10.length-1,1)) * 0.65;  // 최신일수록 진하게
+      return '<div style="flex:1;height:'+h+'%;background:rgba(0,229,160,'+op.toFixed(2)+');border-radius:2px 2px 0 0"></div>';
+    }).join('');
+
+    flow.innerHTML = TITLE
+      + '<div class="mkt-sub">시가총액 ' + won(m.marketCap) + rankTxt + '</div>'
+      + '<div class="mkt-row">'
+      +   '<div class="mkt-row-top"><span class="mkt-lbl">거래대금</span><span class="mkt-val">' + won(m.tradeAmt) + '</span></div>'
+      +   '<div class="mkt-track"><div class="mkt-fill" style="width:' + tradeW + '%"></div></div>'
+      + '</div>'
+      + '<div class="mkt-row">'
+      +   '<div class="mkt-row-top"><span class="mkt-lbl">거래량</span><span class="mkt-val">' + vol(m.volume) + ' 주</span></div>'
+      +   '<div class="mkt-track"><div class="mkt-fill mkt-fill-light" style="width:' + volW + '%"></div></div>'
+      + '</div>'
+      + '<div class="mkt-spark-wrap">'
+      +   '<div class="mkt-spark-title">거래대금 최근 10일 추이</div>'
+      +   '<div class="mkt-spark">' + spark + '</div>'
+      + '</div>';
   }, 0);
 
   // (실적 추이는 위 7:3 우측 컬럼으로 이동됨)
