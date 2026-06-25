@@ -3418,10 +3418,8 @@ window.addEventListener('resize', updateToTopBtn, { passive: true });
 document.addEventListener('DOMContentLoaded', updateToTopBtn);
 
 function startRealtimePolling() {
-  fetchRealtime();
-  setInterval(function() {
-    if (isMarketOpen()) fetchRealtime();
-  }, 10000);
+  // 실시간 시세(KIS) 제거됨 — 공공데이터 전일 종가 기준으로 전환
+  // 헤더 현재가/등락률은 전일 종가로 고정, 차트는 확정 일봉까지만 표시
 }
 
 document.addEventListener('DOMContentLoaded', startRealtimePolling);
