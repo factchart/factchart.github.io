@@ -1916,8 +1916,8 @@ async function renderCompany(name) {
     var spark = amt10.map(function(a, i){
       var h = Math.round((Number(a)||0) / maxAmt * 100);
       if (h < 6) h = 6;
-      var op = 0.35 + (i/Math.max(amt10.length-1,1)) * 0.65;  // 최신일수록 진하게
-      return '<div style="flex:1;height:'+h+'%;background:rgba(0,229,160,'+op.toFixed(2)+');border-radius:2px 2px 0 0"></div>';
+      var op = 0.3 + (i/Math.max(amt10.length-1,1)) * 0.7;
+      return '<div style="flex:1;height:'+h+'%;background:var(--accent);opacity:'+op.toFixed(2)+';border-radius:2px 2px 0 0"></div>';
     }).join('');
 
     flow.innerHTML = TITLE
