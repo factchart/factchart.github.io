@@ -2994,19 +2994,9 @@ let realtimePriceStock = null;  // realtimePrice가 속한 종목명 (다른 종
 // 현재 보고 있는 종목 1개만 실시간 조회 (on-demand, 10초 폴링)
 // 서버(getRealtimePriceResponse)가 CacheService로 9초 캐시 → 동시 시청자 중복호출 제거
 async function fetchRealtime() {
-  if (!currentStock) return;
-  if (!KIS_PROXY_URL || KIS_PROXY_URL.indexOf('AKfycb') === -1) return; // 웹앱 URL 미설정 시 건너뜀
-  try {
-    const url = KIS_PROXY_URL + '?action=price&stock=' + encodeURIComponent(currentStock) + '&t=' + Date.now();
-    const res = await fetch(url);
-    if (!res.ok) return;
-    const data = await res.json();
-    if (data && data.prices && data.prices[currentStock]) {
-      realtimePrice = data.prices[currentStock];
-      realtimePriceStock = currentStock;   // 이 실시간가가 어느 종목 것인지 기록
-      applyRealtimePrice();
-    }
-  } catch (e) {}
+  // 실시간 시세(KIS) 제거됨 — 공공데이터 전일 종가 기준
+  // 호출돼도 아무것도 하지 않음 (realtimePrice는 계속 null → 헤더/차트는 전일 종가 고정)
+  return;
 }
 
 // 숫자 굴림 애니메이션: el 안에 자릿수별 컬럼을 만들고, 바뀐 자리만 방향에 맞춰 굴린다.
