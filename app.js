@@ -504,8 +504,9 @@ const TYPE_COLORS = {
 let currentStock = null;
 let chartInstance = null;
 let allData = null;
-let chartPrices = null;       // 현재 차트에 그려진 가격 배열
-let chartDisclosures = null;  // 현재 차트의 공시 배열
+let chartPrices = null;       // 현재 차트에 그려진 가격 배열(실시간 캔들 갱신용)
+let chartDisclosures = null;  // 현재 차트의 공시 배열(실시간 재렌더용)
+let todayCandleAdded = false; // 오늘 캔들이 차트에 추가됐는지
 let patternOn = true; // 기본값 ON
 let selectedType = null;
 let activeTypeFilter = '전체';
@@ -723,10 +724,13 @@ async function selectStock(name) {
 
   prices = (allData.prices[name]||[]).map(p=>p.length===5?{date:p[0],open:p[1],high:p[2],low:p[3],close:p[4],price:p[4]}:{date:p[0],price:p[1],close:p[1]});
   disclosures = allData.disclosures.filter(d=>d.name===name);
-  chartPrices = prices;
+  chartPrices = prices;        // 실시간 캔들 갱신이 참조할 배열
   chartDisclosures = disclosures;
+  todayCandleAdded = false;    // 새 종목이므로 오늘 캔들 초기화
+  window._lastShownPrice = null; // 굴림 방향 비교용 직전가 리셋(다른 종목과 비교 방지)
 
-  // 공공데이터 전환: 실시간 없음. 항상 마지막 일봉(전일 종가)을 또렷하게 표시.
+  // 종목 선택 시 전일 종가 기준으로 헤더/차트 표시 (실시간 시세 제거됨)
+  const marketOpenNow = false;  // KIS 제거 — 전일 종가 고정 표시
   if (prices.length > 0) {
     const latest = prices[prices.length-1];
     const prev = prices[prices.length-2];
@@ -735,15 +739,21 @@ async function selectStock(name) {
     const wonEl = document.getElementById('latestPriceWon');
     const pcEl = document.getElementById('priceChange');
     const priceStr = fmtPriceComma(latest.price);
-    if (numEl) numEl.textContent = priceStr;   // 전일 종가 고정 — 일반 표시
+    if (numEl) numEl.textContent = priceStr;   // 전일 종가 고정 표시
     if (wonEl) wonEl.textContent = '원';
-    if (latestEl) latestEl.style.opacity = '1';
-    if (prev) {
-      const chg = ((latest.price-prev.price)/prev.price*100).toFixed(2);
-      if (pcEl) {
-        pcEl.textContent = (chg>0?'▲ +':'▼ ')+Math.abs(chg)+'%';
-        pcEl.className = 'price-change '+(chg>=0?'up':'down');
-        pcEl.style.opacity = '1';
+    if (marketOpenNow) {
+      // 장중: 직전 종가를 흐리게 먼저 보여주고, 현재가 오면 또렷하게 교체.
+      if (latestEl) latestEl.style.opacity = '0.45';
+      if (pcEl) pcEl.style.opacity = '0.45';
+    } else {
+      if (latestEl) latestEl.style.opacity = '1';
+      if (prev) {
+        const chg = ((latest.price-prev.price)/prev.price*100).toFixed(2);
+        if (pcEl) {
+          pcEl.textContent = (chg>0?'▲ +':'▼ ')+Math.abs(chg)+'%';
+          pcEl.className = 'price-change '+(chg>=0?'up':'down');
+          pcEl.style.opacity = '1';
+        }
       }
     }
   }
@@ -1227,7 +1237,6 @@ function renderChart(prices, disclosures, patternData) {
     plugins:[discLinePlugin]
   });
   if (useCandle) chartInstance._candleData = ohlcArr;
-
   canvas.addEventListener('mousemove', e => {
     const rect = canvas.getBoundingClientRect();
     if (chartInstance) chartInstance._mouseY = e.clientY - rect.top;
@@ -1559,6 +1568,7 @@ document.addEventListener('mousemove', e => {
 
 function externalTooltip(context, discMap, patternData, prices) {
   // 툴팁은 항상 최신 차트 배열(chartPrices)을 참조한다.
+  // (차트 배열이 갱신되면 호버 시 해당 봉도 찾을 수 있음)
   if (chartPrices && chartPrices.length) prices = chartPrices;
   const tooltip = document.getElementById('customTooltip');
   const {chart,tooltip:tt} = context;
@@ -1778,10 +1788,9 @@ async function renderCompany(name) {
   // ===== 카드 조립 시작 =====
   let html = '<div class="comp-card-big">';
 
-  // 헤더: 종목명 + 실시간가 + 시가총액
-  window._compShares = shares;  // 실시간 시총 계산용
+// 헤더: 종목명 + 전일 종가 + 52주 대비 (공공데이터 기준)
+  window._compShares = shares;
   var initPrice = (lastClose!=null) ? lastClose.toLocaleString()+'원' : '—';
-  // 초기 등락률: 전날 종가 대비 (실시간 데이터 오기 전에도 표시)
   var prevClose = null;
   if (prices.length >= 2) {
     var pv = prices[prices.length-2];
@@ -1793,6 +1802,26 @@ async function renderCompany(name) {
     initChgCls = chgPct >= 0 ? 'up' : 'down';
     initChg = (chgPct>=0?'▲ +':'▼ ') + Math.abs(chgPct).toFixed(2) + '%';
   }
+
+  // 52주(최근 약 250거래일) 최고/최저 + 고점 대비
+  var hi52 = null, lo52 = null, pos52html = '';
+  if (prices.length && lastClose) {
+    var recent = prices.slice(-250);
+    recent.forEach(function(p){
+      var c = (p.length===5 ? p[4] : p[1]);
+      if (c > 0) { if (hi52===null || c>hi52) hi52=c; if (lo52===null || c<lo52) lo52=c; }
+    });
+    if (hi52 && lo52 && hi52 > lo52) {
+      var fromHi = (lastClose - hi52) / hi52 * 100;
+      var fromHiCls = (fromHi >= -0.5) ? 'up' : '';
+      pos52html = '<div class="comp-cap">'
+        + '<div class="comp-cap-k">52주 고점 대비</div>'
+        + '<div class="comp-cap-v ' + fromHiCls + '">' + (fromHi>=0?'+':'') + fromHi.toFixed(1) + '%</div>'
+        + '<div class="comp-cap-range">최고 ' + hi52.toLocaleString() + ' · 최저 ' + lo52.toLocaleString() + '</div>'
+        + '</div>';
+    }
+  }
+
   html += '<div class="comp-head">'
     + '<div class="comp-name-wrap">'
     +   '<div class="comp-name">'+name+'</div>'
@@ -1801,8 +1830,7 @@ async function renderCompany(name) {
     +     '<span class="comp-live-chg '+initChgCls+'" id="compLiveChg">'+initChg+'</span>'
     +   '</div>'
     + '</div>'
-    + '<div class="comp-cap"><div class="comp-cap-k">시가총액</div>'
-    + '<div class="comp-cap-v" id="compMktCap">'+(mktCap!=null?won(mktCap):'—')+'</div></div>'
+    + (pos52html || '<div class="comp-cap"><div class="comp-cap-k">시가총액</div><div class="comp-cap-v">'+(mktCap!=null?won(mktCap):'—')+'</div></div>')
     + '</div>';
 
   // 주요주주 파싱 (info.major_holders: "이름:비율|...")
@@ -1829,6 +1857,10 @@ async function renderCompany(name) {
       + '</div>'
       + '<div class="comp-own-card">'
         + '<div class="own-grid">'
+          + '<div class="own-flow" id="ownFlow_' + name.replace(/\s/g,'_') + '">'
+            + '<div class="comp-own-title">시장 정보 <span class="comp-own-sub">전일 종가 기준 · KRX</span></div>'
+            + '<div class="comp-own-loading">불러오는 중…</div>'
+          + '</div>'
           + '<div class="own-holders">'
             + '<div class="comp-own-title">주요 주주 <span class="comp-own-sub">· DART</span></div>'
             + holdersHtml
@@ -1844,6 +1876,70 @@ async function renderCompany(name) {
     + '</div>'
   + '</div>';
 
+  // 시장정보 카드 렌더 (공공데이터 — 시총·거래대금·거래량·10일추이)
+  setTimeout(function(){
+    var flow = document.getElementById('ownFlow_' + name.replace(/\s/g,'_'));
+    if (!flow) return;
+    var TITLE = '<div class="comp-own-title">시장 정보 <span class="comp-own-sub">전일 종가 기준 · KRX</span></div>';
+    var m = (allData && allData.market) ? allData.market[name] : null;
+    if (!m) { flow.innerHTML = TITLE + '<div class="own-na">준비 중이에요</div>'; return; }
+
+    // 단위 포맷
+    function won(v){
+      var n = Number(v)||0;
+      if (n >= 1e12) return (n/1e12).toFixed(1) + '조';
+      if (n >= 1e8)  return Math.round(n/1e8).toLocaleString() + '억';
+      if (n >= 1e4)  return Math.round(n/1e4).toLocaleString() + '만';
+      return Math.round(n).toLocaleString();
+    }
+    function vol(v){
+      var n = Number(v)||0;
+      if (n >= 1e8) return (n/1e8).toFixed(1) + '억';
+      if (n >= 1e4) return Math.round(n/1e4).toLocaleString() + '만';
+      return Math.round(n).toLocaleString();
+    }
+
+    // 시총 순위 (전체 종목 중)
+    var rankTxt = '';
+    try {
+      var caps = Object.keys(allData.market).map(function(k){ return { n:k, c:Number(allData.market[k].marketCap)||0 }; })
+                  .filter(function(x){ return x.c>0; }).sort(function(a,b){ return b.c - a.c; });
+      var rank = caps.findIndex(function(x){ return x.n === name; }) + 1;
+      var mkt = (STOCK_META[name]||{}).market || '';  // 'KOSPI'/'KOSDAQ' 있으면 사용
+      if (rank > 0) rankTxt = ' · ' + (mkt || '시총') + ' ' + rank + '위';
+    } catch(e) {}
+
+    // 거래대금 막대 폭 (10일 중 최댓값 기준)
+    var amt10 = m.amt10 || [];
+    var maxAmt = Math.max.apply(null, amt10.concat([1]));
+    var tradeW = Math.round((Number(m.tradeAmt)||0) / maxAmt * 100);
+    if (tradeW > 100) tradeW = 100; if (tradeW < 5) tradeW = 5;
+    // 거래량 막대: 거래대금 대비 상대치로 대충 (시각적 보조)
+    var volW = 64;
+
+    // 10일 추이 막대
+    var spark = amt10.map(function(a, i){
+      var h = Math.round((Number(a)||0) / maxAmt * 100);
+      if (h < 6) h = 6;
+      var op = 0.3 + (i/Math.max(amt10.length-1,1)) * 0.7;
+     return '<div style="flex:1;height:'+h+'%;background:#4d9fff;opacity:'+op.toFixed(2)+';border-radius:2px 2px 0 0"></div>';
+    }).join('');
+
+    flow.innerHTML = TITLE
+      + '<div class="mkt-sub">시가총액 ' + won(m.marketCap) + rankTxt + '</div>'
+      + '<div class="mkt-row">'
+      +   '<div class="mkt-row-top"><span class="mkt-lbl">거래대금</span><span class="mkt-val">' + won(m.tradeAmt) + '</span></div>'
+      +   '<div class="mkt-track"><div class="mkt-fill" style="width:' + tradeW + '%"></div></div>'
+      + '</div>'
+      + '<div class="mkt-row">'
+      +   '<div class="mkt-row-top"><span class="mkt-lbl">거래량</span><span class="mkt-val">' + vol(m.volume) + ' 주</span></div>'
+      +   '<div class="mkt-track"><div class="mkt-fill mkt-fill-light" style="width:' + volW + '%"></div></div>'
+      + '</div>'
+      + '<div class="mkt-spark-wrap">'
+      +   '<div class="mkt-spark-title">거래대금 최근 10일 추이</div>'
+      +   '<div class="mkt-spark">' + spark + '</div>'
+      + '</div>';
+  }, 0);
 
   // (실적 추이는 위 7:3 우측 컬럼으로 이동됨)
 
@@ -1923,7 +2019,6 @@ async function renderCompany(name) {
 
   body.innerHTML = html;
 }
-
 
 // ════════════════════════════════════════
 // 밸류에이션 — PER/PBR/DCF(간이추정)로 적정주가 환산
@@ -2530,7 +2625,6 @@ function renderTableRows(disclosures) {
   </table>`;
 }
 
-
 document.addEventListener('mousemove', e => {
   const tooltip = document.getElementById('customTooltip');
   if (tooltip.style.display === 'block') {
@@ -2809,7 +2903,6 @@ function closeModal(name) {
   document.body.style.overflow = '';
 }
 
-
 function sendContactForm() {
   // EmailJS 초기화 (매번 확인)
   try { emailjs.init('ab10m2BKGfZFSyt3b'); } catch(e) {}
@@ -2861,9 +2954,12 @@ function sendContactForm() {
   }
 }
 
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    ['terms','privacy','disclaimer','contact'].forEach(closeModal);
+  }
+});
 
-
-// ── 스크롤 / 오늘의 공시 모달 / 맨 위로 버튼 ──
 function scrollToTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -2949,9 +3045,3 @@ function updateToTopBtn() {
 window.addEventListener('scroll', updateToTopBtn, { passive: true });
 window.addEventListener('resize', updateToTopBtn, { passive: true });
 document.addEventListener('DOMContentLoaded', updateToTopBtn);
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    ['terms','privacy','disclaimer','contact'].forEach(closeModal);
-  }
-});
