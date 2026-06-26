@@ -1909,36 +1909,46 @@ async function renderCompany(name) {
       if (rank > 0) rankTxt = ' · ' + (mkt || '시총') + ' ' + rank + '위';
     } catch(e) {}
 
-    // 거래대금 막대 폭 (10일 중 최댓값 기준)
-    var amt10 = m.amt10 || [];
-    var maxAmt = Math.max.apply(null, amt10.concat([1]));
-    var tradeW = Math.round((Number(m.tradeAmt)||0) / maxAmt * 100);
-    if (tradeW > 100) tradeW = 100; if (tradeW < 5) tradeW = 5;
-    // 거래량 막대: 거래대금 대비 상대치로 대충 (시각적 보조)
-    var volW = 64;
-
-    // 10일 추이 막대
-    var spark = amt10.map(function(a, i){
-      var h = Math.round((Number(a)||0) / maxAmt * 100);
-      if (h < 6) h = 6;
-      var op = 0.3 + (i/Math.max(amt10.length-1,1)) * 0.7;
-     return '<div style="flex:1;height:'+h+'%;background:#4d9fff;opacity:'+op.toFixed(2)+';border-radius:2px 2px 0 0"></div>';
-    }).join('');
+    // 10일 거래대금 실데이터 → 은은한 파란 면적 라인 (데이터 없으면 안 그림 — 숫자 안 지어냄)
+    var amt10 = (m.amt10 || []).map(Number).filter(function(x){ return !isNaN(x); });
+    function fcSpark(arr){
+      if (!arr || arr.length < 2) return '<div style="font-size:11px;color:#5e6b7d;padding:6px 0">추이 데이터 준비 중</div>';
+      var W=300, H=46, pad=4, n=arr.length;
+      var mx=Math.max.apply(null,arr), mn=Math.min.apply(null,arr), rng=(mx-mn)||1;
+      var pts=arr.map(function(v,i){ return [ pad + i*(W-2*pad)/(n-1), pad + (1-(v-mn)/rng)*(H-2*pad) ]; });
+      var d='M'+pts[0][0].toFixed(1)+','+pts[0][1].toFixed(1);
+      for (var i=0;i<n-1;i++){
+        var p0=pts[i-1]||pts[i], p1=pts[i], p2=pts[i+1], p3=pts[i+2]||p2;
+        var c1x=p1[0]+(p2[0]-p0[0])/6, c1y=p1[1]+(p2[1]-p0[1])/6;
+        var c2x=p2[0]-(p3[0]-p1[0])/6, c2y=p2[1]-(p3[1]-p1[1])/6;
+        d+=' C'+c1x.toFixed(1)+','+c1y.toFixed(1)+' '+c2x.toFixed(1)+','+c2y.toFixed(1)+' '+p2[0].toFixed(1)+','+p2[1].toFixed(1);
+      }
+      var area=d+' L'+pts[n-1][0].toFixed(1)+','+H+' L'+pts[0][0].toFixed(1)+','+H+' Z';
+      return '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" width="100%" height="46" style="display:block;overflow:visible">'
+        + '<path d="'+area+'" fill="rgba(111,155,203,0.12)"/>'
+        + '<path d="'+d+'" fill="none" stroke="#6f9bcb" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>'
+        + '<circle cx="'+pts[n-1][0].toFixed(1)+'" cy="'+pts[n-1][1].toFixed(1)+'" r="2.4" fill="#6f9bcb"/>'
+        + '</svg>';
+    }
+    function fcSplit(s){ var mm=String(s).match(/^([\d.,]+)(.*)$/); return mm?{n:mm[1],u:mm[2]}:{n:s,u:''}; }
+    var pillTxt = rankTxt ? rankTxt.replace(/^\s*·\s*/,'') : '';
+    var cap = fcSplit(won(m.marketCap));
+    var amtv = fcSplit(won(m.tradeAmt));
+    var volv = fcSplit(vol(m.volume) + ' 주');
+    var US = 'font-size:12px;color:#8b97a8;font-weight:400;margin-left:2px';
 
     flow.innerHTML = TITLE
-      + '<div class="mkt-sub">시가총액 ' + won(m.marketCap) + rankTxt + '</div>'
-      + '<div class="mkt-row">'
-      +   '<div class="mkt-row-top"><span class="mkt-lbl">거래대금</span><span class="mkt-val">' + won(m.tradeAmt) + '</span></div>'
-      +   '<div class="mkt-track"><div class="mkt-fill" style="width:' + tradeW + '%"></div></div>'
+      + '<div style="display:flex;align-items:flex-end;justify-content:space-between;margin:2px 0 14px">'
+      +   '<div><div style="font-size:11px;color:#8b97a8;margin-bottom:3px">시가총액</div>'
+      +     '<div style="font-size:21px;color:#eef1f6;font-weight:500;line-height:1.1;letter-spacing:-.3px">' + cap.n + '<span style="' + US + '">' + cap.u + '</span></div></div>'
+      +   (pillTxt ? '<span style="font-size:11px;color:#36e3a4;background:rgba(54,227,164,.14);padding:2px 9px;border-radius:20px;font-weight:500">' + pillTxt + '</span>' : '')
       + '</div>'
-      + '<div class="mkt-row">'
-      +   '<div class="mkt-row-top"><span class="mkt-lbl">거래량</span><span class="mkt-val">' + vol(m.volume) + ' 주</span></div>'
-      +   '<div class="mkt-track"><div class="mkt-fill mkt-fill-light" style="width:' + volW + '%"></div></div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+      +   '<div style="background:#1b2230;border-radius:9px;padding:10px 12px"><div style="font-size:11px;color:#8b97a8;margin-bottom:3px">거래대금</div><div style="font-size:16px;color:#eef1f6;font-weight:500">' + amtv.n + '<span style="' + US + '">' + amtv.u + '</span></div></div>'
+      +   '<div style="background:#1b2230;border-radius:9px;padding:10px 12px"><div style="font-size:11px;color:#8b97a8;margin-bottom:3px">거래량</div><div style="font-size:16px;color:#eef1f6;font-weight:500">' + volv.n + '<span style="' + US + '">' + volv.u + '</span></div></div>'
       + '</div>'
-      + '<div class="mkt-spark-wrap">'
-      +   '<div class="mkt-spark-title">거래대금 최근 10일 추이</div>'
-      +   '<div class="mkt-spark">' + spark + '</div>'
-      + '</div>';
+      + '<div style="font-size:11px;color:#8b97a8;margin:15px 0 8px">거래대금 최근 10일 추이</div>'
+      + fcSpark(amt10);
   }, 0);
 
   // (실적 추이는 위 7:3 우측 컬럼으로 이동됨)
