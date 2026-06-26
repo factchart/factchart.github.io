@@ -723,9 +723,8 @@ async function selectStock(name) {
 
   prices = (allData.prices[name]||[]).map(p=>p.length===5?{date:p[0],open:p[1],high:p[2],low:p[3],close:p[4],price:p[4]}:{date:p[0],price:p[1],close:p[1]});
   disclosures = allData.disclosures.filter(d=>d.name===name);
-  chartPrices = prices;        // 실시간 캔들 갱신이 참조할 배열
+  chartPrices = prices;
   chartDisclosures = disclosures;
-  window._lastShownPrice = null; // 굴림 방향 비교용 직전가 리셋(다른 종목과 비교 방지)
 
   // 공공데이터 전환: 실시간 없음. 항상 마지막 일봉(전일 종가)을 또렷하게 표시.
   if (prices.length > 0) {
@@ -736,7 +735,7 @@ async function selectStock(name) {
     const wonEl = document.getElementById('latestPriceWon');
     const pcEl = document.getElementById('priceChange');
     const priceStr = fmtPriceComma(latest.price);
-    if (numEl) flipNumber(numEl, priceStr, 0);   // 애니메이션 없이 초기 표시
+    if (numEl) numEl.textContent = priceStr;   // 전일 종가 고정 — 일반 표시
     if (wonEl) wonEl.textContent = '원';
     if (latestEl) latestEl.style.opacity = '1';
     if (prev) {
@@ -2862,6 +2861,94 @@ function sendContactForm() {
   }
 }
 
+
+
+// ── 스크롤 / 오늘의 공시 모달 / 맨 위로 버튼 ──
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── 오늘의 공시 모달 (당일 최초 방문 1회) ──
+function closeTodayDisc() {
+  var o = document.getElementById('todayDiscOverlay');
+  if (o) o.style.display = 'none';
+}
+function buildTodayDisc() {
+  if (!allData || !allData.disclosures) return;
+  // 오늘(KST) YYYY-MM-DD
+  var kst = new Date(new Date().toLocaleString('en-US', {timeZone:'Asia/Seoul'}));
+  var today = kst.getFullYear() + '-' + String(kst.getMonth()+1).padStart(2,'0') + '-' + String(kst.getDate()).padStart(2,'0');
+
+  // 하루 1회: 오늘 이미 봤으면 표시 안 함
+  try {
+    if (localStorage.getItem('fc_today_disc_seen') === today) return;
+  } catch(e) {}
+
+  // 코드 역매핑
+  var nameToCode = {};
+  for (var c in CODE_TO_NAME) nameToCode[CODE_TO_NAME[c]] = c;
+
+  // 오늘 공시 추출 → 없으면 최근 공시 폴백
+  var all = allData.disclosures.slice();
+  var todays = all.filter(function(d){ return d.date === today; });
+  var isFallback = false;
+  var list;
+  if (todays.length) {
+    list = todays;
+  } else {
+    isFallback = true;
+    // 최근 날짜순 정렬 후 상위
+    list = all.slice().sort(function(a,b){ return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
+  }
+
+  // 영향도(가중치 절댓값) 순 정렬 후 상위 3 (폴백이면 최근순 유지하며 상위 3)
+  var scored = list.map(function(d){ return { d:d, w: signalWeightOf(d) }; });
+  if (!isFallback) scored.sort(function(a,b){ return Math.abs(b.w) - Math.abs(a.w); });
+  var top = scored.slice(0, 3);
+  if (!top.length) return;
+
+  // 제목/날짜
+  document.getElementById('todayDiscTitle').innerHTML = isFallback ? '🔥 최근 공시' : '🔥 오늘의 공시';
+
+  // 목록 렌더
+  var html = '';
+  top.forEach(function(it, i){
+    var d = it.d;
+    var code = nameToCode[d.name] || '';
+    var href = code ? ('/stock/' + code + '.html') : ('/?stock=' + encodeURIComponent(d.name));
+    var isWarn = it.w < 0;
+    var badgeColor = isWarn ? '#ff5b6e' : '#00d084';
+    var badgeBg = isWarn ? 'rgba(255,91,110,0.12)' : 'rgba(0,208,132,0.12)';
+    var badgeText = isWarn ? '주의 공시' : d.type;
+    html += '<div onclick="goTodayDisc(\'' + encodeURIComponent(d.name) + '\')" style="display:flex;align-items:center;gap:11px;padding:12px 13px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;cursor:pointer;">'
+      + '<div style="font-size:12px;font-weight:700;color:var(--text3);">' + (i+1) + '</div>'
+      + '<div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:600;color:var(--text);">' + d.name + '</div>'
+      + '<div style="font-size:12px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (normalizeTitle(d.title) || d.type) + '</div></div>'
+      + '<div style="font-size:10.5px;color:' + badgeColor + ';background:' + badgeBg + ';padding:2px 7px;border-radius:6px;font-weight:600;white-space:nowrap;">' + badgeText + '</div>'
+      + '</div>';
+  });
+  document.getElementById('todayDiscList').innerHTML = html;
+
+  // 표시 + 오늘 본 것으로 기록
+  document.getElementById('todayDiscOverlay').style.display = 'flex';
+  try { localStorage.setItem('fc_today_disc_seen', today); } catch(e) {}
+}
+function goTodayDisc(encName) {
+  var name = decodeURIComponent(encName);
+  closeTodayDisc();
+  if (typeof selectStock === 'function') selectStock(name);
+}
+// 페이지 1/3 이상 스크롤 시 '맨 위로' 버튼 표시
+function updateToTopBtn() {
+  const btn = document.getElementById('toTopBtn');
+  if (!btn) return;
+  const threshold = (document.documentElement.scrollHeight - window.innerHeight) / 3;
+  if (window.scrollY > threshold && threshold > 40) btn.classList.add('show');
+  else btn.classList.remove('show');
+}
+window.addEventListener('scroll', updateToTopBtn, { passive: true });
+window.addEventListener('resize', updateToTopBtn, { passive: true });
+document.addEventListener('DOMContentLoaded', updateToTopBtn);
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
