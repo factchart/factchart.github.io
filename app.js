@@ -2024,7 +2024,7 @@ async function renderCompany(name) {
   html += '<div class="comp-sec">예상 실적 · 투자의견</div>';
   html += '<div class="comp-soon">증권사 컨센서스(예상 매출·목표주가)는 준비 중이에요.</div>';
 
-  html += '<div class="comp-foot">데이터 출처: 금융감독원 전자공시(DART) · 시가총액은 최근 종가×발행주식수로 계산한 참고치예요. · 적정주가는 DART 최근 확정 실적으로 환산한 참고치로, 미래 실적·성장 기대는 반영되지 않아요.</div>';
+  html += '<div class="comp-foot">데이터 출처: 금융감독원 전자공시(DART) · 한국거래소 · 공공데이터포털(금융위원회 주식시세정보) · 시가총액은 최근 종가×발행주식수로 계산한 참고치예요. · 적정주가는 DART 최근 확정 실적으로 환산한 참고치로, 미래 실적·성장 기대는 반영되지 않아요.</div>';
   html += '</div>';
 
   body.innerHTML = html;
