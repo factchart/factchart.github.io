@@ -890,6 +890,7 @@ body {
 
 .price-change.up { color: var(--up); }
 .price-change.down { color: var(--down); }
+.price-asof { font-size: 11px; color: var(--text3); align-self: flex-end; margin-bottom: 4px; white-space: nowrap; }
 
 /* 숫자 굴림(플립) 애니메이션 */
 .flip-num { display: inline-flex; vertical-align: baseline; }
@@ -1687,8 +1688,6 @@ tbody td {
   border-radius: 20px;
   white-space: nowrap;
   transition: all 0.3s;
-  align-self: flex-end;
-  margin-bottom: 4px;
 }
 
 .market-status.open {
@@ -2214,7 +2213,7 @@ tr.disc-highlight {
 @media (max-width: 480px) {
   .container { padding: 0 10px 40px; }
 
-  .header-right { display: none; }
+  .header-right .hstat { display: none; }
   .site-title { font-size: 15px; } .site-logo { height: 16px; }
 
   .chart-panel-header { padding: 12px 14px; }
@@ -2517,6 +2516,10 @@ tr.disc-highlight {
       <span class="header-sub">공시 × 주가 패턴 분석</span>
     </div>
     <div class="header-right">
+      <div class="market-status" id="marketStatus">
+        <span class="market-dot" id="marketDot"></span>
+        <span id="marketLabel">—</span>
+      </div>
       <div class="hstat">
         <div class="hstat-val">348</div>
         <div class="hstat-label">종목</div>
@@ -2616,10 +2619,7 @@ tr.disc-highlight {
                 <div class="price-value" id="latestPrice"><span class="flip-num" id="latestPriceNum">—</span><span class="price-won" id="latestPriceWon"></span></div>
                 <div class="price-change" id="priceChange">—</div>
               </div>
-              <div class="market-status" id="marketStatus">
-                <span class="market-dot" id="marketDot"></span>
-                <span id="marketLabel">—</span>
-              </div>
+              <div class="price-asof">전일종가 기준</div>
             </div>
           </div>
           <div class="hook-box" id="hookBox" style="display:none">
