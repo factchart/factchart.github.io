@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="index,follow">
+<title>계정 및 데이터 삭제 안내 · FactChart</title>
+<style>
+  :root{
+    --bg:#0B0E13; --surface:#121620; --surface-2:#161B27; --line:#222A39; --line-soft:#1B2230;
+    --text:#E6EAF2; --text-soft:#A4ADBE; --text-dim:#6B7588;
+    --accent:#3DD68C; --accent-down:#FF5A6E; --accent-blue:#4C7DFF; --accent-amber:#F6AD55;
+    --radius:14px; --maxw:760px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Noto Sans KR",system-ui,sans-serif;line-height:1.75;font-size:16px;letter-spacing:-0.01em;padding:0 20px;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word;}
+  header{max-width:var(--maxw);margin:0 auto;padding:56px 0 28px;border-bottom:1px solid var(--line);}
+  .brand{display:inline-flex;align-items:center;gap:9px;font-size:14px;font-weight:700;letter-spacing:0.02em;color:var(--text);margin-bottom:30px;}
+  .brand .tick{width:22px;height:22px;display:block;}
+  h1{font-size:30px;font-weight:800;letter-spacing:-0.025em;line-height:1.25;margin-bottom:14px;}
+  .lead{color:var(--text-soft);font-size:15px;max-width:60ch;}
+  .meta{margin-top:22px;display:flex;flex-wrap:wrap;gap:8px 10px;font-size:12.5px;}
+  .chip{background:var(--surface-2);border:1px solid var(--line-soft);color:var(--text-soft);padding:5px 11px;border-radius:999px;white-space:nowrap;}
+  .chip b{color:var(--text);font-weight:600}
+  main{max-width:var(--maxw);margin:0 auto;padding:8px 0 40px;}
+  section{padding:34px 0 8px;border-bottom:1px solid var(--line-soft);}
+  section:last-of-type{border-bottom:none}
+  .sec-no{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:0.1em;font-variant-numeric:tabular-nums;display:block;margin-bottom:7px;}
+  h2.sec-title{font-size:19px;font-weight:700;letter-spacing:-0.02em;margin-bottom:16px;line-height:1.35;}
+  p{color:var(--text-soft);margin-bottom:13px;font-size:15px}
+  strong{color:var(--text);font-weight:600}
+  a.inline{color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(61,214,140,.35)}
+  a.inline:hover{border-bottom-color:var(--accent)}
+  ul.list{list-style:none;margin:4px 0 16px;display:grid;gap:9px}
+  ul.list li{position:relative;padding-left:20px;color:var(--text-soft);font-size:15px;}
+  ul.list li::before{content:"";position:absolute;left:2px;top:11px;width:6px;height:6px;border-radius:50%;background:var(--accent);opacity:.85;}
+  ul.list li strong{color:var(--text)}
+  ol.steps{list-style:none;counter-reset:s;margin:4px 0 16px;display:grid;gap:11px}
+  ol.steps li{position:relative;padding-left:38px;color:var(--text-soft);font-size:15px;min-height:26px;}
+  ol.steps li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:0;width:26px;height:26px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line);color:var(--accent);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;}
+  ol.steps li strong{color:var(--text)}
+  .callout{background:var(--surface);border:1px solid var(--line-soft);border-left:3px solid var(--accent);border-radius:10px;padding:14px 16px;margin:6px 0 16px;font-size:13.5px;color:var(--text-soft);}
+  .callout strong{color:var(--text)}
+  table.dt{width:100%;border-collapse:collapse;margin:4px 0 16px;font-size:14px;}
+  table.dt th,table.dt td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--line-soft);vertical-align:top;}
+  table.dt th{color:var(--text);font-weight:600;font-size:13px;background:var(--surface-2);}
+  table.dt td{color:var(--text-soft);}
+  table.dt td:first-child{color:var(--text);font-weight:500;white-space:nowrap;}
+  footer{max-width:var(--maxw);margin:0 auto;padding:30px 0 70px;color:var(--text-dim);font-size:12.5px;line-height:1.7;}
+  footer .row{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;align-items:center}
+  footer a{color:var(--text-soft);text-decoration:none}
+  footer a:hover{color:var(--accent)}
+  @media (max-width:600px){header{padding:40px 0 24px}h1{font-size:25px}section{padding:28px 0 6px}h2.sec-title{font-size:17px}body{font-size:15.5px}}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="brand">
+    <svg class="tick" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="2" y="13" width="3.4" height="8" rx="1" fill="#3DD68C"/>
+      <rect x="8" y="7" width="3.4" height="14" rx="1" fill="#3DD68C"/>
+      <rect x="14" y="10" width="3.4" height="11" rx="1" fill="#FF5A6E"/>
+      <rect x="20" y="4" width="2" height="17" rx="1" fill="#4C7DFF"/>
+    </svg>
+    FactChart
+  </span>
+  <h1>계정 및 데이터 삭제 안내</h1>
+  <p class="lead">
+    FactChart(팩트차트) 앱의 계정과 그에 연결된 데이터를 삭제하는 방법을 안내합니다.
+    계정 삭제는 앱 내에서 직접 진행하실 수 있습니다.
+  </p>
+  <div class="meta">
+    <span class="chip">앱 <b>팩트차트 (FactChart)</b></span>
+    <span class="chip">개발자 <b>T&amp;D Labs</b></span>
+    <span class="chip">패키지 <b>kr.co.factchart.app</b></span>
+  </div>
+</header>
+
+<main>
+
+  <section>
+    <span class="sec-no">01</span>
+    <h2 class="sec-title">앱에서 계정 삭제하기</h2>
+    <p>FactChart 앱 안에서 아래 순서대로 진행하시면 계정과 관련 데이터가 삭제됩니다.</p>
+    <ol class="steps">
+      <li>FactChart 앱을 실행하고 로그인합니다.</li>
+      <li>하단 <strong>‘더보기’</strong> 탭으로 이동합니다.</li>
+      <li>화면 <strong>맨 하단의 ‘회원 탈퇴’</strong> 버튼을 누릅니다.</li>
+      <li>탈퇴가 완료되면 계정과 관련 데이터가 <strong>즉시 삭제</strong>됩니다.</li>
+    </ol>
+    <div class="callout">
+      회원 탈퇴를 완료하면 계정 정보와 관심종목 등 서버에 저장된 데이터가 삭제되며, 이 작업은 되돌릴 수 없습니다.
+    </div>
+  </section>
+
+  <section>
+    <span class="sec-no">02</span>
+    <h2 class="sec-title">삭제되는 데이터와 보관 기간</h2>
+    <p>계정 삭제 시 아래 데이터가 처리됩니다.</p>
+    <table class="dt">
+      <thead>
+        <tr><th>데이터 유형</th><th>처리 방식</th><th>보관 기간</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>계정 정보 (이메일 등 로그인 식별자)</td><td>삭제</td><td>즉시 삭제</td></tr>
+        <tr><td>관심종목 목록</td><td>삭제</td><td>즉시 삭제</td></tr>
+        <tr><td>푸시 알림 토큰(FCM)</td><td>삭제</td><td>즉시 삭제</td></tr>
+      </tbody>
+    </table>
+    <ul class="list">
+      <li>위 데이터는 탈퇴 처리와 함께 서버에서 삭제되며, 별도로 보관하지 않습니다.</li>
+      <li>다만 관련 법령에 따라 보관이 요구되는 경우(예: 전자상거래 등에서의 소비자보호에 관한 법률 등)에 한해, 해당 법령이 정한 기간 동안 최소한의 정보가 분리 보관된 후 파기될 수 있습니다.</li>
+      <li>백업 시스템에 남은 사본은 백업 보관 주기에 따라 순차적으로 파기됩니다.</li>
+    </ul>
+    <div class="callout">
+      개인정보 처리에 관한 자세한 사항은 <a href="/privacy.html" class="inline">개인정보처리방침</a>을 참고하시기 바랍니다.
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="row">
+    <span>© FactChart · factchart.co.kr</span>
+    <a href="#top">맨 위로 ↑</a>
+  </div>
+</footer>
+
+</body>
+</html>
