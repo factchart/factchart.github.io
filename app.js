@@ -774,6 +774,8 @@ async function selectStock(name) {
   renderHook(disclosures);
   // 기업분석 탭이 열려있으면 새 종목으로 갱신
   if (activeTab === 'company') renderCompany(currentStock);
+  // 뉴스 탭이 열려있으면 새 종목으로 갱신
+  if (activeTab === 'news') renderNews(currentStock);
 
   // 차트 기본 선택 유형 = Hook 카드 유형(가장 최근 공시 유형)과 일치.
   // renderHook이 위에서 window._hookType을 세팅함. 없으면 사례수 최다로 폴백.
