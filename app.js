@@ -1670,7 +1670,9 @@ function switchTab(tab) {
   });
   document.getElementById('tabChart').style.display   = (tab === 'chart') ? '' : 'none';
   document.getElementById('tabCompany').style.display = (tab === 'company') ? '' : 'none';
+  document.getElementById('tabNews').style.display    = (tab === 'news') ? '' : 'none';
   if (tab === 'company') { renderCompany(currentStock); }
+  if (tab === 'news')    { renderNews(currentStock); }
 }
 
 async function renderCompany(name) {
@@ -2049,6 +2051,68 @@ function _lastClose(stockName){
   var last = p[p.length-1];
   return last.length===5 ? last[4] : last[1];
 }
+const newsCache = {};
+
+async function renderNews(name) {
+  const body = document.getElementById('newsBody');
+  if (!body) return;
+  body.innerHTML = '<div class="loading">뉴스를 불러오는 중…</div>';
+
+  let items = newsCache[name];
+  if (!items) {
+    try {
+      items = await supabaseFetch('news',
+        'stock_name=eq.' + encodeURIComponent(name) +
+        '&select=title,press,url,published_at,summary,sentiment' +
+        '&order=published_at.desc&limit=20');
+      newsCache[name] = items;
+    } catch (e) {
+      body.innerHTML = '<div class="company-empty">뉴스를 불러오지 못했어요.</div>';
+      return;
+    }
+  }
+
+  if (!items || !items.length) {
+    body.innerHTML = '<div class="company-empty">아직 수집된 뉴스가 없어요.</div>';
+    return;
+  }
+
+  function timeAgo(iso) {
+    if (!iso) return '';
+    const d = new Date(iso), now = new Date();
+    const diff = Math.floor((now - d) / 1000);
+    if (diff < 60) return '방금 전';
+    if (diff < 3600) return Math.floor(diff/60) + '분 전';
+    if (diff < 86400) return Math.floor(diff/3600) + '시간 전';
+    if (diff < 86400*7) return Math.floor(diff/86400) + '일 전';
+    return (d.getMonth()+1) + '월 ' + d.getDate() + '일';
+  }
+  function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function sentBadge(s) {
+    if (s === 'pos') return '<span class="news-sent news-pos">호재</span>';
+    if (s === 'neg') return '<span class="news-sent news-neg">악재</span>';
+    return '';
+  }
+
+  let html = '<div class="news-list">';
+  items.forEach(function(it){
+    html += '<a class="news-card" href="' + esc(it.url) + '" target="_blank" rel="noopener noreferrer">'
+          +   '<div class="news-head">'
+          +     '<span class="news-press">' + esc(it.press || '뉴스') + '</span>'
+          +     '<span class="news-time">' + timeAgo(it.published_at) + '</span>'
+          +     sentBadge(it.sentiment)
+          +   '</div>'
+          +   '<div class="news-title">' + esc(it.title) + '</div>'
+          +   (it.summary ? '<div class="news-summary">' + esc(it.summary) + '</div>' : '')
+          + '</a>';
+  });
+  html += '</div>';
+  html += '<div class="news-foot">뉴스 제목·출처만 제공하며, 클릭 시 원문으로 이동합니다. 저작권은 각 언론사에 있습니다.</div>';
+  body.innerHTML = html;
+}
+
+
+// ════════════════════════════════════════
 // ════════════════════════════════════════
 // 밸류에이션 — 업종(통합) 상대비교로 적정주가 환산
 //   이 종목 PER/PBR vs 같은 업종그룹 평균 → 업종평균 배수로 적정가 환산
