@@ -614,6 +614,19 @@ body {
 /* 기업분석 탭 내용 (큰 카드 리디자인) */
 .tab-panel { padding: 0; }
 #tabCompany { padding: 18px; }
+#tabNews { padding: 18px; }
+.news-list { display:flex; flex-direction:column; gap:10px; }
+.news-card { display:block; padding:14px 16px; border-radius:12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); text-decoration:none; transition:background .15s; }
+.news-card:hover { background:rgba(255,255,255,0.07); }
+.news-head { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.news-press { font-size:12px; color:#7a8494; font-weight:600; }
+.news-time { font-size:12px; color:#5a6474; }
+.news-sent { font-size:11px; padding:1px 7px; border-radius:6px; font-weight:600; margin-left:auto; }
+.news-pos { background:rgba(221,60,60,0.15); color:#dd3c3c; }
+.news-neg { background:rgba(49,130,206,0.15); color:#3182ce; }
+.news-title { font-size:14.5px; color:#e3e9f0; line-height:1.45; font-weight:500; }
+.news-summary { font-size:13px; color:#9aa4b2; line-height:1.5; margin-top:6px; }
+.news-foot { font-size:11px; color:#5a6474; margin-top:14px; text-align:center; line-height:1.5; }
 .comp-card-big { background: var(--bg2,#0f1421); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 22px; }
 .comp-head { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,0.07); }
 .comp-name { font-size: 20px; font-weight: 700; color: var(--text); }
@@ -2590,6 +2603,10 @@ tr.disc-highlight {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
             기업 분석
           </button>
+          <button class="ptab" data-tab="news" onclick="switchTab('news')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+            뉴스
+          </button>
         </div>
         <div class="tab-panel" id="tabChart">
         <div class="chart-panel-header">
@@ -2674,6 +2691,9 @@ tr.disc-highlight {
         <div class="tab-panel" id="tabCompany" style="display:none">
           <div id="companyBody"><div class="loading">기업 정보를 불러오는 중…</div></div>
         </div><!-- /tabCompany -->
+        <div class="tab-panel" id="tabNews" style="display:none">
+          <div id="newsBody"><div class="loading">뉴스를 불러오는 중…</div></div>
+        </div><!-- /tabNews -->
       </div><!-- /chart-panel -->
 
 
