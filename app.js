@@ -797,8 +797,7 @@ async function selectStock(name) {
     applyPattern();
   }
 
-  // 뉴스 브리핑 비동기 호출
-  fetchNewsBriefing(name);
+  // (구) AI 뉴스 브리핑 호출 제거 — Supabase 기반 뉴스 탭(renderNews)으로 대체됨
 }
 
 function togglePattern() {
