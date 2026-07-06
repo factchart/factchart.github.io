@@ -513,6 +513,33 @@ async function loadNewsMap(name) {
   return map;
 }
 
+// 상단 뉴스 브리핑 띠 — 최근 뉴스 호재/악재 집계 + 대표 요약 1줄. (2년 시계열 불필요, 최근만)
+function renderNewsBriefing(name) {
+  const el = document.getElementById('newsBrief');
+  if (!el) return;
+  const items = (window._newsAggCache && window._newsAggCache[name]) || [];
+  let pos = 0, neg = 0, neu = 0, rep = '';
+  items.forEach(function(it){
+    if (it.summary === '무관') return;
+    if (it.sentiment === 'pos') { pos++; if (!rep && it.summary) rep = it.summary; }
+    else if (it.sentiment === 'neg') neg++;
+    else neu++;
+  });
+  if (pos + neg + neu === 0) { el.style.display = 'none'; return; }   // 요약된 뉴스 없으면 숨김
+  if (!rep) {
+    const s = items.find(function(it){ return it.summary && it.summary !== '무관'; });
+    rep = s ? s.summary : '';
+  }
+  const tone = pos > neg ? '호재 우세' : (neg > pos ? '악재 우세' : '중립');
+  const toneColor = pos > neg ? '#dd6a6a' : (neg > pos ? '#5a9be0' : '#8a94a6');
+  document.getElementById('nbCounts').innerHTML =
+    '<span style="color:#dd3c3c;">호재 ' + pos + '</span> · ' +
+    '<span style="color:#3182ce;">악재 ' + neg + '</span> · 중립 ' + neu +
+    ' <span style="color:' + toneColor + ';">· ' + tone + '</span>';
+  document.getElementById('nbSummary').textContent = rep ? ('\u2726 ' + rep) : '';
+  el.style.display = 'flex';
+}
+
 const DATA_URL = '/stock_data.json';
 const USE_SUPABASE = true; // Supabase 사용 여부
 
@@ -791,7 +818,8 @@ async function selectStock(name) {
       `<button class="type-btn ${selectedType===t?'active':''}" onclick="selectPatternType('${t}')">${t}</button>`
     ).join('');
 
-  window.chartNewsMap = await loadNewsMap(name);   // 뉴스 날짜별 집계 (차트 마커용)
+  await loadNewsMap(name);          // 뉴스 집계 로드(_newsAggCache 채움)
+  renderNewsBriefing(name);         // 상단 뉴스 브리핑 띠
   renderChart(prices, disclosures, null);
   renderTable(disclosures);
   renderTypeFilter(disclosures);
@@ -1015,46 +1043,6 @@ function renderChart(prices, disclosures, patternData) {
       tension:0.3, order:0
     });
   }
-
-  // 뉴스 마커 — 그날 호재/악재 우세를 삼각형으로. 공시(초록 원)와 형태로 구분.
-  // 뉴스 날짜를 '가장 가까운 직전 거래일'에 스냅(주가봉은 전일종가라 7/3~오늘치가 아직 없을 수 있음).
-  // 종가선 위(호재)/아래(악재)로 살짝 띄워 겹침 방지. 데이터셋 맨 끝에 추가(인덱스 0·1 불변).
-  const _newsMap = window.chartNewsMap || {};
-  const _priceDates = prices.map(p=>p.date);   // 오름차순
-  function _snapIdx(nd){                        // nd 이하인 마지막 거래일 인덱스
-    let lo=0, hi=_priceDates.length-1, ans=-1;
-    while(lo<=hi){ const mid=(lo+hi)>>1; if(_priceDates[mid]<=nd){ ans=mid; lo=mid+1; } else hi=mid-1; }
-    return ans;
-  }
-  const _newsByIdx = {};
-  Object.keys(_newsMap).forEach(function(nd){
-    const idx=_snapIdx(nd); if(idx<0) return;
-    const s=_newsMap[nd], t=_newsByIdx[idx]||(_newsByIdx[idx]={pos:0,neg:0,neu:0});
-    t.pos+=s.pos; t.neg+=s.neg; t.neu+=s.neu;
-  });
-  function _newsDir(i){
-    const n=_newsByIdx[i];
-    if(!n||(n.pos===0&&n.neg===0)) return null;   // 뉴스 없음/중립만 → 마커 없음
-    return n.pos>=n.neg ? 'pos' : 'neg';
-  }
-  datasets.push({
-    label:'뉴스호재',
-    data:prices.map((p,i)=> _newsDir(i)==='pos' ? p.price*1.015 : null),
-    pointRadius:prices.map((p,i)=> _newsDir(i)==='pos' ? 5 : 0),
-    pointStyle:'triangle',
-    pointBackgroundColor:'rgba(221,60,60,0.85)',
-    pointBorderColor:'#dd3c3c', pointBorderWidth:1,
-    pointHoverRadius:7, showLine:false, order:1
-  });
-  datasets.push({
-    label:'뉴스악재',
-    data:prices.map((p,i)=> _newsDir(i)==='neg' ? p.price*0.985 : null),
-    pointRadius:prices.map((p,i)=> _newsDir(i)==='neg' ? 5 : 0),
-    pointStyle:'triangle', pointRotation:180,
-    pointBackgroundColor:'rgba(49,130,206,0.85)',
-    pointBorderColor:'#3182ce', pointBorderWidth:1,
-    pointHoverRadius:7, showLine:false, order:1
-  });
 
   // 공시 마커 pulse 애니메이션
   let pulsePhase = 0;

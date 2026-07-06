@@ -2662,6 +2662,13 @@ tr.disc-highlight {
           </div>
         </div>
 
+        <div id="newsBrief" style="display:none;align-items:center;gap:14px;flex-wrap:wrap;background:rgba(0,208,132,0.07);border:1px solid rgba(0,208,132,0.34);border-radius:12px;padding:9px 14px;margin:10px 0 0;">
+          <span style="font-size:12px;font-weight:500;color:#00d084;white-space:nowrap;">&#10022; 최근 뉴스</span>
+          <span id="nbCounts" style="font-size:13px;color:#c5cdd9;white-space:nowrap;">&mdash;</span>
+          <span id="nbSummary" style="font-size:13px;color:#c5cdd9;flex:1;min-width:150px;"></span>
+          <span onclick="switchTab('news')" style="font-size:12px;color:#47ba7f;cursor:pointer;white-space:nowrap;">전체 보기 &rarr;</span>
+        </div>
+
         <div class="pattern-bar">
           <div class="toggle-wrap">
             <label class="toggle-switch">
@@ -2677,7 +2684,7 @@ tr.disc-highlight {
           <span class="type-label-small">공시 유형</span>
         </div>
 
-        <div class="stats-bar" id="patternStats">
+        <div class="stats-bar" id="patternStats" style="display:none">
           <div class="stat-pill"><span class="stat-pill-label">사례 수</span><span class="stat-pill-val neutral" id="statCount">—</span></div>
           <div class="stat-pill"><span class="stat-pill-label">평균 변동</span><span class="stat-pill-val" id="statAvg">—</span></div>
           <div class="stat-pill"><span class="stat-pill-label">상승 확률</span><span class="stat-pill-val neutral" id="statUp">—</span></div>
@@ -2696,8 +2703,6 @@ tr.disc-highlight {
           <div class="legend-item" id="legendPattern" style="display:none">
             <div class="legend-line" style="background:#f6ad55;height:2.5px;border:none;"></div>유사 패턴 평균
           </div>
-          <div class="legend-item"><span style="color:#dd3c3c;font-size:11px;line-height:1;flex-shrink:0;">&#9650;</span>호재 뉴스</div>
-          <div class="legend-item"><span style="color:#3182ce;font-size:11px;line-height:1;flex-shrink:0;">&#9660;</span>악재 뉴스</div>
         </div>
         </div><!-- /tabChart -->
         <div class="tab-panel" id="tabCompany" style="display:none">
