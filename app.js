@@ -488,6 +488,31 @@ async function loadStockFromSupabase(stockName) {
   };
 }
 
+// 뉴스를 날짜별 호재/악재/중립으로 집계 — 차트 마커·Bloom 인사이트용
+async function loadNewsMap(name) {
+  window._newsAggCache = window._newsAggCache || {};
+  let items = window._newsAggCache[name];
+  if (!items) {
+    try {
+      items = await supabaseFetch('news',
+        'stock_name=eq.' + encodeURIComponent(name) +
+        '&select=published_at,sentiment,summary&order=published_at.desc&limit=300');
+      window._newsAggCache[name] = items;
+    } catch (e) { return {}; }
+  }
+  const map = {};
+  (items || []).forEach(function(it){
+    if (it.summary === '무관') return;           // AI가 무관 판정한 뉴스 제외
+    const dt = it.published_at ? String(it.published_at).slice(0,10) : null;
+    if (!dt) return;
+    if (!map[dt]) map[dt] = { pos:0, neg:0, neu:0 };
+    if (it.sentiment === 'pos') map[dt].pos++;
+    else if (it.sentiment === 'neg') map[dt].neg++;
+    else map[dt].neu++;
+  });
+  return map;
+}
+
 const DATA_URL = '/stock_data.json';
 const USE_SUPABASE = true; // Supabase 사용 여부
 
@@ -766,6 +791,7 @@ async function selectStock(name) {
       `<button class="type-btn ${selectedType===t?'active':''}" onclick="selectPatternType('${t}')">${t}</button>`
     ).join('');
 
+  window.chartNewsMap = await loadNewsMap(name);   // 뉴스 날짜별 집계 (차트 마커용)
   renderChart(prices, disclosures, null);
   renderTable(disclosures);
   renderTypeFilter(disclosures);
@@ -989,6 +1015,33 @@ function renderChart(prices, disclosures, patternData) {
       tension:0.3, order:0
     });
   }
+
+  // 뉴스 마커 — 그날 호재/악재 우세를 삼각형으로. 공시(초록 원)와 형태로 구분.
+  // 종가선 위(호재)/아래(악재)로 살짝 띄워 겹침 방지. 데이터셋 맨 끝에 추가(인덱스 0·1 불변).
+  const _newsMap = window.chartNewsMap || {};
+  function _newsDir(p){
+    const n = _newsMap[p.date];
+    if (!n || (n.pos===0 && n.neg===0)) return null;   // 뉴스 없음/중립만 → 마커 없음
+    return n.pos >= n.neg ? 'pos' : 'neg';
+  }
+  datasets.push({
+    label:'뉴스호재',
+    data:prices.map(p=> _newsDir(p)==='pos' ? p.price*1.015 : null),
+    pointRadius:prices.map(p=> _newsDir(p)==='pos' ? 5 : 0),
+    pointStyle:'triangle',
+    pointBackgroundColor:'rgba(221,60,60,0.85)',
+    pointBorderColor:'#dd3c3c', pointBorderWidth:1,
+    pointHoverRadius:7, showLine:false, order:1
+  });
+  datasets.push({
+    label:'뉴스악재',
+    data:prices.map(p=> _newsDir(p)==='neg' ? p.price*0.985 : null),
+    pointRadius:prices.map(p=> _newsDir(p)==='neg' ? 5 : 0),
+    pointStyle:'triangle', pointRotation:180,
+    pointBackgroundColor:'rgba(49,130,206,0.85)',
+    pointBorderColor:'#3182ce', pointBorderWidth:1,
+    pointHoverRadius:7, showLine:false, order:1
+  });
 
   // 공시 마커 pulse 애니메이션
   let pulsePhase = 0;
