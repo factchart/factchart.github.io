@@ -1017,17 +1017,30 @@ function renderChart(prices, disclosures, patternData) {
   }
 
   // 뉴스 마커 — 그날 호재/악재 우세를 삼각형으로. 공시(초록 원)와 형태로 구분.
+  // 뉴스 날짜를 '가장 가까운 직전 거래일'에 스냅(주가봉은 전일종가라 7/3~오늘치가 아직 없을 수 있음).
   // 종가선 위(호재)/아래(악재)로 살짝 띄워 겹침 방지. 데이터셋 맨 끝에 추가(인덱스 0·1 불변).
   const _newsMap = window.chartNewsMap || {};
-  function _newsDir(p){
-    const n = _newsMap[p.date];
-    if (!n || (n.pos===0 && n.neg===0)) return null;   // 뉴스 없음/중립만 → 마커 없음
-    return n.pos >= n.neg ? 'pos' : 'neg';
+  const _priceDates = prices.map(p=>p.date);   // 오름차순
+  function _snapIdx(nd){                        // nd 이하인 마지막 거래일 인덱스
+    let lo=0, hi=_priceDates.length-1, ans=-1;
+    while(lo<=hi){ const mid=(lo+hi)>>1; if(_priceDates[mid]<=nd){ ans=mid; lo=mid+1; } else hi=mid-1; }
+    return ans;
+  }
+  const _newsByIdx = {};
+  Object.keys(_newsMap).forEach(function(nd){
+    const idx=_snapIdx(nd); if(idx<0) return;
+    const s=_newsMap[nd], t=_newsByIdx[idx]||(_newsByIdx[idx]={pos:0,neg:0,neu:0});
+    t.pos+=s.pos; t.neg+=s.neg; t.neu+=s.neu;
+  });
+  function _newsDir(i){
+    const n=_newsByIdx[i];
+    if(!n||(n.pos===0&&n.neg===0)) return null;   // 뉴스 없음/중립만 → 마커 없음
+    return n.pos>=n.neg ? 'pos' : 'neg';
   }
   datasets.push({
     label:'뉴스호재',
-    data:prices.map(p=> _newsDir(p)==='pos' ? p.price*1.015 : null),
-    pointRadius:prices.map(p=> _newsDir(p)==='pos' ? 5 : 0),
+    data:prices.map((p,i)=> _newsDir(i)==='pos' ? p.price*1.015 : null),
+    pointRadius:prices.map((p,i)=> _newsDir(i)==='pos' ? 5 : 0),
     pointStyle:'triangle',
     pointBackgroundColor:'rgba(221,60,60,0.85)',
     pointBorderColor:'#dd3c3c', pointBorderWidth:1,
@@ -1035,8 +1048,8 @@ function renderChart(prices, disclosures, patternData) {
   });
   datasets.push({
     label:'뉴스악재',
-    data:prices.map(p=> _newsDir(p)==='neg' ? p.price*0.985 : null),
-    pointRadius:prices.map(p=> _newsDir(p)==='neg' ? 5 : 0),
+    data:prices.map((p,i)=> _newsDir(i)==='neg' ? p.price*0.985 : null),
+    pointRadius:prices.map((p,i)=> _newsDir(i)==='neg' ? 5 : 0),
     pointStyle:'triangle', pointRotation:180,
     pointBackgroundColor:'rgba(49,130,206,0.85)',
     pointBorderColor:'#3182ce', pointBorderWidth:1,
