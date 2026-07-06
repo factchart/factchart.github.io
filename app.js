@@ -2065,7 +2065,7 @@ async function renderNews(name) {
       items = await supabaseFetch('news',
         'stock_name=eq.' + encodeURIComponent(name) +
         '&select=title,press,url,published_at,summary,sentiment' +
-        '&order=published_at.desc&limit=20');
+        '&order=published_at.desc&limit=50');
       newsCache[name] = items;
     } catch (e) {
       body.innerHTML = '<div class="company-empty">뉴스를 불러오지 못했어요.</div>';
@@ -2073,7 +2073,10 @@ async function renderNews(name) {
     }
   }
 
-  if (!items || !items.length) {
+  // 'AI가 무관으로 판정한 뉴스'는 화면에서 숨김. (아직 요약 안 된 뉴스 summary=null 은 그대로 노출)
+  const list = (items || []).filter(function(it){ return it.summary !== '무관'; });
+
+  if (!list.length) {
     body.innerHTML = '<div class="company-empty">아직 수집된 뉴스가 없어요.</div>';
     return;
   }
@@ -2096,7 +2099,7 @@ async function renderNews(name) {
   }
 
   let html = '<div class="news-list">';
-  items.forEach(function(it){
+  list.forEach(function(it){
     html += '<a class="news-card" href="' + esc(it.url) + '" target="_blank" rel="noopener noreferrer">'
           +   '<div class="news-head">'
           +     '<span class="news-press">' + esc(it.press || '뉴스') + '</span>'
