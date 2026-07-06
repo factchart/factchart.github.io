@@ -2098,21 +2098,45 @@ async function renderNews(name) {
     return '';
   }
 
-  let html = '<div class="news-list">';
-  list.forEach(function(it){
-    html += '<a class="news-card" href="' + esc(it.url) + '" target="_blank" rel="noopener noreferrer">'
+  function cardHTML(it){
+    return '<a class="news-card" href="' + esc(it.url) + '" target="_blank" rel="noopener noreferrer">'
           +   '<div class="news-head">'
           +     '<span class="news-press">' + esc(it.press || '뉴스') + '</span>'
           +     '<span class="news-time">' + timeAgo(it.published_at) + '</span>'
           +     sentBadge(it.sentiment)
           +   '</div>'
           +   '<div class="news-title">' + esc(it.title) + '</div>'
-          +   (it.summary ? '<div class="news-summary">' + esc(it.summary) + '</div>' : '')
+          +   (it.summary ? '<div class="news-summary"><span class="news-ai-dot">\u2726</span><span>' + esc(it.summary) + '</span></div>' : '')
           + '</a>';
-  });
-  html += '</div>';
-  html += '<div class="news-foot">뉴스 제목·출처만 제공하며, 클릭 시 원문으로 이동합니다. 저작권은 각 언론사에 있습니다.</div>';
+  }
+
+  var INITIAL = 12;
+  var banner = '<div class="news-ai-banner">'
+             +   '<div class="news-ai-head">'
+             +     '<span class="news-ai-ico">\u2726</span>'
+             +     '<span class="news-ai-title">FactChart AI 엔진이 분석했어요</span>'
+             +   '</div>'
+             +   '<div class="news-ai-desc">중요한 뉴스만 선별해, 핵심만 전달합니다.</div>'
+             + '</div>';
+
+  var foot = '<div class="news-foot">뉴스 제목·출처만 제공하며, 클릭 시 원문으로 이동합니다. 저작권은 각 언론사에 있습니다.</div>';
+
+  var firstHTML = list.slice(0, INITIAL).map(cardHTML).join('');
+  var html = banner + '<div class="news-list" id="newsList">' + firstHTML + '</div>';
+  if (list.length > INITIAL) {
+    html += '<div class="news-more" id="newsMore">뉴스 더보기 <span class="cnt">(' + (list.length - INITIAL) + '건)</span> \u25BE</div>';
+  }
+  html += foot;
   body.innerHTML = html;
+
+  var moreBtn = document.getElementById('newsMore');
+  if (moreBtn) {
+    moreBtn.addEventListener('click', function(){
+      var rest = list.slice(INITIAL).map(cardHTML).join('');
+      document.getElementById('newsList').insertAdjacentHTML('beforeend', rest);
+      moreBtn.remove();
+    });
+  }
 }
 
 
