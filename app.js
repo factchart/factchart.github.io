@@ -2345,16 +2345,52 @@ function renderHook(disclosures) {
 
   if (!best) { box.style.display='none'; return; }
 
+  // ── 공시 파트 (패턴 통계) ──
+  const arrBest = byType[best.type] || [];
+  const up = arrBest.filter(function(v){ return v >= 0; }).length;
   const sign = best.avg >= 0 ? '+' : '';
   const colorVal = best.avg >= 0 ? 'var(--up)' : 'var(--down)';
-  document.getElementById('hookQ').innerHTML = '<b>' + best.type + '</b> 공시 후, 주가는?';
-  document.getElementById('hookA').innerHTML =
-    '과거 <b>' + best.count + '번</b> 중 20일 뒤 평균 <b style="color:' + colorVal + '">' + sign + best.avg.toFixed(1) + '%</b>';
-  window._hookType = best.type;
-  const linkEl = document.getElementById('hookLink');
-  if (linkEl) {
-    linkEl.textContent = '↓ 아래 차트의 초록 점을 누르면 해당 공시로 이동해요';
+  const enough = best.count >= 3;
+  let discPart;
+  if (enough) {
+    discPart = '<b style="color:var(--gold);font-weight:600">' + best.type + '</b> 공시 후 과거 '
+      + '<b style="color:var(--text);font-weight:700">' + best.count + '번 중 ' + up + '번</b> 올랐어요 '
+      + '<span style="color:var(--text3)">(20일 평균 <b style="color:' + colorVal + '">' + sign + best.avg.toFixed(1) + '%</b>)</span>.';
+  } else {
+    discPart = '<b style="color:var(--gold);font-weight:600">' + best.type + '</b> 공시가 나왔어요. '
+      + '<span style="color:var(--text3)">아직 사례가 ' + best.count + '번뿐이라 패턴은 참고만 하세요.</span>';
   }
+
+  // ── 뉴스 파트 (뉴스가 한쪽으로 쏠릴 때만) ──
+  let newsPart = '';
+  const agg = (window._newsAggCache && window._newsAggCache[currentStock]) || null;
+  if (agg && agg.length) {
+    let pos = 0, neg = 0, rep = null;
+    agg.forEach(function(it){
+      if (it.summary === '무관') return;
+      if (it.sentiment === 'pos') pos++;
+      else if (it.sentiment === 'neg') neg++;
+      if (!rep && it.summary && (it.sentiment === 'pos' || it.sentiment === 'neg')) rep = it.summary;
+    });
+    if (pos !== neg) {
+      const newsUp = pos > neg;
+      const tone = newsUp ? '호재 우세' : '악재 우세';
+      const toneCol = newsUp ? 'var(--up)' : 'var(--down)';
+      const discUp = best.avg >= 0;
+      // 공시 방향과 뉴스 방향이 엇갈리면 '다만 최근 뉴스는', 같으면 '최근 뉴스도'
+      const conj = (enough && (discUp !== newsUp)) ? ' 다만 최근 뉴스는 ' : ' 최근 뉴스도 ';
+      newsPart = conj + '<b style="color:' + toneCol + ';font-weight:600">' + tone + '</b>';
+      if (rep) {
+        const esc = String(rep).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        newsPart += ' &mdash; <span style="color:var(--text2)">&ldquo;' + esc + '&rdquo;</span>이 컸어요.';
+      } else {
+        newsPart += '예요.';
+      }
+    }
+  }
+
+  document.getElementById('hookA').innerHTML = discPart + newsPart;
+  window._hookType = best.type;
   box.style.display = 'block';
 }
 

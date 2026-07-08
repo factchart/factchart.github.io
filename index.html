@@ -783,29 +783,29 @@ body {
 /* hook 박스 — 우측 대형 카드 (검색 유입자용 첫인상) */
 .hook-box {
   flex: 1;
-  background: rgba(246,173,85,0.04);
-  border: 1px solid rgba(246,173,85,0.14);
+  background: rgba(0,208,132,0.045);
+  border: 1px solid rgba(0,208,132,0.14);
   border-radius: 12px;
-  padding: 24px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
-.hook-q { font-size: 14px; color: var(--text3); font-weight: 500; }
-.hook-q b { font-weight: 600; color: var(--gold); }
-.hook-a { font-size: 26px; font-weight: 700; color: var(--text); margin-top: 8px; line-height: 1.35; letter-spacing: -0.5px; }
-.hook-a b { font-weight: 700; }
-.hook-link {
-  font-size: 13px; color: var(--accent);
-}
-.hook-foot {
+.fc-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
+  margin-bottom: 8px;
+}
+.fc-label { font-size: 11px; font-weight: 600; color: var(--accent); letter-spacing: 0.5px; }
+.hook-a {
+  font-size: 14px; font-weight: 400; color: var(--text2);
+  line-height: 1.7; word-break: keep-all; overflow-wrap: break-word;
+}
+.hook-a b { font-weight: 700; }
+.hook-link {
+  font-size: 13px; color: var(--accent); margin-left: auto;
 }
 .hook-share {
   display: inline-flex;
@@ -2650,15 +2650,14 @@ tr.disc-highlight {
             </div>
           </div>
           <div class="hook-box" id="hookBox" style="display:none">
-            <div class="hook-q" id="hookQ">—</div>
-            <div class="hook-a" id="hookA">—</div>
-            <div class="hook-foot">
-              <span class="hook-link" id="hookLink">↓ 아래 차트의 초록 점을 누르면 해당 공시로 이동해요</span>
+            <div class="fc-head">
+              <span class="fc-label">&#10003; FACT CHECK</span>
               <button class="hook-share" id="hookShare" onclick="shareHook()" aria-label="공유하기">
                 공유
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><polyline points="15 6 20 6 20 11"/><path d="M20 6l-9 9"/></svg>
               </button>
             </div>
+            <div class="hook-a" id="hookA">—</div>
           </div>
         </div>
 
@@ -2677,11 +2676,14 @@ tr.disc-highlight {
             </label>
             <span class="toggle-label active" id="toggleLabel">패턴 복기 ON</span><span class="toggle-desc" id="toggleDesc">동일 공시 발생 시 과거 주가 패턴을 차트에 겹쳐 보여줍니다</span>
           </div>
-          <span class="pattern-info" id="patternInfo"></span>
+          <span class="hook-link" id="hookLink">↓ 아래 차트의 초록 점을 누르면 해당 공시로 이동해요</span>
         </div>
 
-        <div class="type-select-wrap visible" id="patternSelectWrap">
-          <span class="type-label-small">공시 유형</span>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="type-select-wrap visible" id="patternSelectWrap" style="flex:1;">
+            <span class="type-label-small">공시 유형</span>
+          </div>
+          <span class="pattern-info" id="patternInfo" style="white-space:nowrap;"></span>
         </div>
 
         <div class="stats-bar" id="patternStats" style="display:none">
