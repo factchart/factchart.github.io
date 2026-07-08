@@ -786,12 +786,17 @@ body {
   background: rgba(0,208,132,0.045);
   border: 1px solid rgba(0,208,132,0.14);
   border-radius: 12px;
-  padding: 16px 18px;
+  padding: 22px 18px 16px;
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
-.fc-label { font-size: 20px; font-weight: 600; color: var(--accent); letter-spacing: 0.3px; display: block; margin-bottom: 10px; }
+.fc-label { display: flex; align-items: center; gap: 7px; font-size: 20px; font-weight: 800; color: var(--accent); letter-spacing: 0.2px; margin-bottom: 11px; }
+.fc-check {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 23px; height: 23px; border-radius: 50%;
+  background: #0a0e16; color: var(--accent); font-size: 13px; flex-shrink: 0;
+}
 .hook-a {
   font-size: 18px; font-weight: 400; color: var(--text2);
   line-height: 1.65; word-break: keep-all; overflow-wrap: break-word;
@@ -2644,7 +2649,7 @@ tr.disc-highlight {
             </div>
           </div>
           <div class="hook-box" id="hookBox" style="display:none">
-            <div class="fc-label">&#10003; FACT CHECK</div>
+            <div class="fc-label"><span class="fc-check">&#10003;</span>FACT CHECK</div>
             <div class="hook-a" id="hookA">—</div>
             <div class="fc-foot">
               <button class="hook-share" id="hookShare" onclick="shareHook()" aria-label="공유하기">

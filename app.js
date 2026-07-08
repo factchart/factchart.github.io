@@ -2365,17 +2365,17 @@ function renderHook(disclosures) {
   let newsPart = '';
   const agg = (window._newsAggCache && window._newsAggCache[currentStock]) || null;
   if (agg && agg.length) {
-    let pos = 0, neg = 0, rep = null;
+    let pos = 0, neg = 0, repPos = null, repNeg = null;
     agg.forEach(function(it){
       if (it.summary === '무관') return;
-      if (it.sentiment === 'pos') pos++;
-      else if (it.sentiment === 'neg') neg++;
-      if (!rep && it.summary && (it.sentiment === 'pos' || it.sentiment === 'neg')) rep = it.summary;
+      if (it.sentiment === 'pos') { pos++; if (!repPos && it.summary) repPos = it.summary; }
+      else if (it.sentiment === 'neg') { neg++; if (!repNeg && it.summary) repNeg = it.summary; }
     });
     if (pos !== neg) {
       const newsUp = pos > neg;
       const tone = newsUp ? '호재 우세' : '악재 우세';
       const toneCol = newsUp ? 'var(--up)' : 'var(--down)';
+      const rep = newsUp ? repPos : repNeg;   // 우세 방향과 같은 톤의 대표 뉴스만 근거로
       const discUp = best.avg >= 0;
       // 공시 방향과 뉴스 방향이 엇갈리면 '다만 최근 뉴스는', 같으면 '최근 뉴스도'
       const conj = (enough && (discUp !== newsUp)) ? ' 다만 최근 뉴스는 ' : ' 최근 뉴스도 ';
