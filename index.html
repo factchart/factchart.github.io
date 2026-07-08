@@ -786,24 +786,18 @@ body {
   background: rgba(0,208,132,0.045);
   border: 1px solid rgba(0,208,132,0.14);
   border-radius: 12px;
-  padding: 14px 16px;
+  padding: 16px 18px;
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
-.fc-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-.fc-label { font-size: 11px; font-weight: 600; color: var(--accent); letter-spacing: 0.5px; }
+.fc-label { font-size: 20px; font-weight: 600; color: var(--accent); letter-spacing: 0.3px; display: block; margin-bottom: 10px; }
 .hook-a {
-  font-size: 14px; font-weight: 400; color: var(--text2);
-  line-height: 1.7; word-break: keep-all; overflow-wrap: break-word;
+  font-size: 18px; font-weight: 400; color: var(--text2);
+  line-height: 1.65; word-break: keep-all; overflow-wrap: break-word;
 }
 .hook-a b { font-weight: 700; }
+.fc-foot { display: flex; justify-content: flex-end; margin-top: 12px; }
 .hook-link {
   font-size: 13px; color: var(--accent); margin-left: auto;
 }
@@ -2650,14 +2644,14 @@ tr.disc-highlight {
             </div>
           </div>
           <div class="hook-box" id="hookBox" style="display:none">
-            <div class="fc-head">
-              <span class="fc-label">&#10003; FACT CHECK</span>
+            <div class="fc-label">&#10003; FACT CHECK</div>
+            <div class="hook-a" id="hookA">—</div>
+            <div class="fc-foot">
               <button class="hook-share" id="hookShare" onclick="shareHook()" aria-label="공유하기">
                 공유
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><polyline points="15 6 20 6 20 11"/><path d="M20 6l-9 9"/></svg>
               </button>
             </div>
-            <div class="hook-a" id="hookA">—</div>
           </div>
         </div>
 
@@ -2679,8 +2673,8 @@ tr.disc-highlight {
           <span class="hook-link" id="hookLink">↓ 아래 차트의 초록 점을 누르면 해당 공시로 이동해요</span>
         </div>
 
-        <div style="display:flex; align-items:center; gap:10px;">
-          <div class="type-select-wrap visible" id="patternSelectWrap" style="flex:1;">
+        <div style="display:flex; align-items:center; padding-right:24px; border-bottom:1px solid var(--border);">
+          <div class="type-select-wrap visible" id="patternSelectWrap" style="flex:1; border-bottom:none;">
             <span class="type-label-small">공시 유형</span>
           </div>
           <span class="pattern-info" id="patternInfo" style="white-space:nowrap;"></span>
