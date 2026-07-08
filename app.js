@@ -2382,7 +2382,7 @@ function renderHook(disclosures) {
       newsPart = conj + '<b style="color:' + toneCol + ';font-weight:600">' + tone + '</b>';
       if (rep) {
         const esc = String(rep).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-        newsPart += ' &mdash; <span style="color:var(--text2)">&ldquo;' + esc + '&rdquo;</span>이 컸어요.';
+        newsPart += '<br><span style="color:var(--text2)">&ldquo;' + esc + '&rdquo;</span>이 컸어요.';
       } else {
         newsPart += '예요.';
       }
