@@ -1718,6 +1718,17 @@ function changesByHorizon(prices, date) {
 let activeTab = 'chart';
 const companyCache = {};
 
+function switchPage(page) {
+  document.querySelectorAll('.pnav').forEach(function(b){
+    b.classList.toggle('active', b.dataset.page === page);
+  });
+  var home = document.getElementById('pageHome');
+  var ff = document.getElementById('pageFactfinder');
+  if (home) home.style.display = (page === 'factfinder') ? 'none' : '';
+  if (ff) ff.style.display = (page === 'factfinder') ? 'block' : 'none';
+  window.scrollTo(0, 0);
+}
+
 function switchTab(tab) {
   activeTab = tab;
   document.querySelectorAll('.ptab').forEach(function(b){
