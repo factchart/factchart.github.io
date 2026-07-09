@@ -1784,25 +1784,43 @@ async function renderCompany(name) {
 
   // 3개년 미니차트 (조 단위)
   function miniChart(y0,y1,y2,label){
-    const vals = [jo(Number(y2)), jo(Number(y1)), jo(Number(y0))];
-    const valid = vals.filter(function(x){ return x!=null && !isNaN(x); });
-    if (!valid.length) return '<div class="cmini"><div class="cmini-top"><span>'+label+'</span></div><div class="cmini-na">데이터 없음</div></div>';
-    const maxAbs = Math.max.apply(null, valid.map(Math.abs), 0.1);
-    // 추세 화살표: 당기 vs 전기
-    const trend = (vals[2]!=null && vals[1]!=null) ? (vals[2] >= vals[1] ? '▲' : '▼') : '';
-    const trendCls = (vals[2]!=null && vals[1]!=null) ? (vals[2] >= vals[1] ? 'up' : 'down') : '';
-    let bars = '';
-    vals.forEach(function(v){
-      const ht = (v==null||isNaN(v)) ? 2 : Math.max(Math.round(Math.abs(v)/maxAbs*60), 3);
-      const isLast = (v === vals[2]);
-      const cls = (v==null) ? 'flat' : (v>=0 ? (isLast?'up':'dim') : 'down');
-      const lbl = (v==null||isNaN(v)) ? '-' : (v>=0?'':'') + v.toFixed(1);
-      const lblCls = (v==null)?'flat':(v>=0?(isLast?'up':'dim'):'down');
-      bars += '<div class="cbar-col"><span class="cbar-val '+lblCls+'">'+lbl+'</span>'
-        + '<div class="cbar '+cls+'" style="height:'+ht+'px"></div></div>';
-    });
-    return '<div class="cmini"><div class="cmini-top"><span>'+label+'</span><span class="cmini-tr '+trendCls+'">'+trend+'</span></div>'
-      + '<div class="cbars">'+bars+'</div></div>';
+    const vals = [jo(Number(y2)), jo(Number(y1)), jo(Number(y0))]; // 전전기, 전기, 당기
+    const present = vals.filter(function(x){ return x!=null && !isNaN(x); });
+    if (!present.length) return '<div class="cmini"><div class="cmini-head"><span class="cmini-label">'+label+'</span></div><div class="cmini-na">데이터 없음</div></div>';
+    const cur = vals[2], prev = vals[1];
+    const up = (cur!=null && prev!=null) ? (cur >= prev) : true;
+    const col = up ? 'var(--up)' : 'var(--down)';
+    let yoy = '';
+    if (cur!=null && prev!=null && prev!==0) {
+      const pct = (cur-prev)/Math.abs(prev)*100;
+      yoy = ' <span class="cmini-yoy">전년비 '+(pct>=0?'+':'')+pct.toFixed(0)+'%</span>';
+    }
+    const curLbl = (cur==null||isNaN(cur)) ? '-' : cur.toFixed(1)+'조';
+    const W=300, H=48, padX=8, padT=8, padB=8;
+    const xs = [padX, W/2, W-padX];
+    let mn = Math.min.apply(null, present), mx = Math.max.apply(null, present);
+    if (mn===mx) { mn -= 1; mx += 1; }
+    function yOf(v){ return (padT + (1-(v-mn)/(mx-mn))*(H-padT-padB)).toFixed(1); }
+    let pts = [];
+    vals.forEach(function(v,i){ if(v!=null && !isNaN(v)) pts.push(xs[i]+','+yOf(v)); });
+    if (pts.length < 2) {
+      return '<div class="cmini"><div class="cmini-head"><span class="cmini-label">'+label+'</span>'
+        + '<span class="cmini-cur" style="color:'+col+'">'+curLbl+'</span></div></div>';
+    }
+    const line = 'M'+pts.join(' L');
+    const x0v = pts[0].split(',')[0], xNv = pts[pts.length-1].split(',')[0];
+    const area = line + ' L'+xNv+','+(H-padB)+' L'+x0v+','+(H-padB)+' Z';
+    const gid = 'g'+Math.round(Math.random()*99999);
+    const svg = '<svg viewBox="0 0 '+W+' '+H+'" class="cmini-svg" preserveAspectRatio="none">'
+      + '<defs><linearGradient id="'+gid+'" x1="0" y1="0" x2="0" y2="1">'
+      + '<stop offset="0" stop-color="'+col+'" stop-opacity="0.24"/><stop offset="1" stop-color="'+col+'" stop-opacity="0"/></linearGradient></defs>'
+      + '<path d="'+area+'" fill="url(#'+gid+')"/>'
+      + '<path d="'+line+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>'
+      + '</svg>';
+    return '<div class="cmini"><div class="cmini-head"><span class="cmini-label">'+label+'</span>'
+      + '<span class="cmini-cur" style="color:'+col+'">'+curLbl+yoy+'</span></div>'
+      + svg
+      + '<div class="cmini-yrs"><span>전전기</span><span>전기</span><span>당기</span></div></div>';
   }
 
   // ===== 풀이형 재무비율 =====
