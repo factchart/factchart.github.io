@@ -1827,6 +1827,24 @@ function ffDiscovery(){
   return cand;
 }
 
+var FF_TYPE_EDU = [
+  { type:'자사주', badge:'자사주 매입', head:'취득 ≠ 소각, 알고 계셨나요?', desc:'소각은 주식 수가 영구히 줄어 주주가치가 오르지만, 취득은 나중에 되팔 수도 있어요.' },
+  { type:'대규모계약', badge:'대규모 계약', head:'대규모 계약, 이렇게 봐요', desc:'수주·공급 계약은 미래 매출로 이어질 수 있지만, 계약 자체가 곧 이익은 아니에요.' },
+  { type:'배당', badge:'배당 결정', head:'배당 결정, 이렇게 봐요', desc:'이익을 주주에게 나눠주는 것. 배당수익률과 그동안의 지속성을 함께 봐요.' },
+  { type:'투자결정', badge:'투자 결정', head:'투자 결정, 이렇게 봐요', desc:'시설·지분 투자는 성장의 신호지만, 그만큼 자금이 나가는 일이기도 해요.' },
+  { type:'실적발표', badge:'실적 발표', head:'실적 발표, 이렇게 봐요', desc:'분기·사업보고서로 실제 실적을 확인. 시장이 기대한 수치와 비교가 중요해요.' },
+  { type:'주의공시', badge:'주의 공시', head:'주의 공시, 이렇게 봐요', desc:'유상증자·소송 등 주주가치에 영향 줄 수 있는 공시. 내용을 꼭 확인하세요.' },
+  { type:'풍문해명', badge:'풍문·해명', head:'풍문·해명, 이렇게 봐요', desc:'시장에 도는 소문에 대한 회사의 공식 답변. 사실 확인 관점에서 봐요.' }
+];
+var _ffEduIdx = 0;
+function ffCycleEdu(){ _ffEduIdx = (_ffEduIdx+1) % FF_TYPE_EDU.length; renderFactfinder(); }
+function ffSubjParticle(word){ // 받침 판정: "가"/"이"
+  if (!word) return '가';
+  var c = word.charCodeAt(word.length-1);
+  if (c < 0xAC00 || c > 0xD7A3) return '가';
+  return ((c-0xAC00)%28 !== 0) ? '이' : '가';
+}
+
 function renderFactfinder() {
   var el = document.getElementById('pageFactfinder');
   if (!el || !allData || !allData.disclosures) return;
@@ -1861,6 +1879,32 @@ function renderFactfinder() {
       + '<div class="ff-disc-main"><span class="ff-disc-name">'+it.name+'</span><span class="ff-disc-type">'+it.type+' 공시</span></div>'
       + '<div class="ff-disc-val"><span class="ff-disc-d20 '+d20Cls+'">'+d20Str+'</span><span class="ff-disc-d20lbl">공시 후 20일</span></div></div>';
   });
+  html += '</div></div>';
+  // {유형}가 뭐길래?
+  var edu = FF_TYPE_EDU[_ffEduIdx];
+  var particle = ffSubjParticle(edu.type);
+  var seenE = {}, chips = [];
+  for (var e=0;e<discs.length;e++){
+    var de = discs[e];
+    if (de.type !== edu.type) continue;
+    var nme = ffNorm(de.name);
+    if (seenE[nme]) continue;
+    seenE[nme] = true;
+    chips.push({ name:nme, chg:ffDayChange(nme) });
+    if (chips.length >= 3) break;
+  }
+  html += '<div class="ff-section"><div class="ff-section-head"><h2 class="ff-h2">'+edu.type+particle+' 뭐길래?</h2><button class="ff-cycle" onclick="ffCycleEdu()">↻ 다른 유형</button></div>';
+  html += '<div class="ff-edu-card"><span class="ff-edu-badge">'+edu.badge+'</span>'
+    + '<div class="ff-edu-head">'+edu.head+'</div>'
+    + '<div class="ff-edu-desc">'+edu.desc+'</div>';
+  if (chips.length) {
+    html += '<div class="ff-edu-chips"><span class="ff-edu-chips-lbl">'+edu.badge+' 공시 종목</span><div class="ff-edu-chip-row">';
+    chips.forEach(function(c){
+      var cs = c.chg==null ? '' : ' <span class="'+(c.chg>=0?'up':'down')+'">'+(c.chg>=0?'+':'')+c.chg.toFixed(1)+'%</span>';
+      html += '<span class="ff-edu-chip" onclick="goStock(\''+c.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">'+c.name+cs+'</span>';
+    });
+    html += '</div></div>';
+  }
   html += '</div></div>';
   html += '</div>';
   el.innerHTML = html;
