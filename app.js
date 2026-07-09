@@ -1736,46 +1736,117 @@ function goStock(name) {
   selectStock(ffNorm(name));
 }
 
-function renderFactfinder() {
-  var el = document.getElementById('pageFactfinder');
-  if (!el || !allData || !allData.disclosures) return;
+function ffPriceSignals() {
+  var names = Object.keys(allData.prices || {});
+  var surge = [], consec = [], high52 = [];
+  names.forEach(function(name){
+    var p = allData.prices[name];
+    if (!p || p.length < 2) return;
+    var last = p[p.length-1], prev = p[p.length-2];
+    var lc = last[4], pc = prev[4];
+    if (!lc || !pc) return;
+    var chg = (lc-pc)/pc*100;
+    surge.push({ name:name, meta:'', chg:chg, _s:chg });
+    var cnt = 0;
+    for (var i=p.length-1;i>0;i--){ if(p[i][4] > p[i-1][4]) cnt++; else break; }
+    if (cnt >= 2) consec.push({ name:name, meta:cnt+'일 연속', chg:chg, _s:cnt });
+    var win = p.slice(-250);
+    var mx = Math.max.apply(null, win.map(function(r){ return r[4]; }));
+    if (lc >= mx) high52.push({ name:name, meta:'신고가', chg:chg, _s:chg });
+  });
+  surge.sort(function(a,b){ return b._s-a._s; });
+  var drop = surge.slice().sort(function(a,b){ return a._s-b._s; });
+  consec.sort(function(a,b){ return b._s-a._s; });
+  high52.sort(function(a,b){ return b._s-a._s; });
+  return { consec:consec, surge:surge, drop:drop, high52:high52 };
+}
+
+function ffBuildData() {
   var discs = allData.disclosures.slice().sort(function(a,b){ return a.date<b.date?1:(a.date>b.date?-1:0); });
-  var groups = [
-    { type:'자사주', label:'자사주 매입', desc:'유통주식 감소' },
-    { type:'대규모계약', label:'대규모 계약', desc:'수주·공급' },
-    { type:'배당', label:'배당 결정', desc:'주주환원' },
-    { type:'투자결정', label:'투자 결정', desc:'시설·지분 투자' }
-  ];
-  var html = '<div class="ff-wrap">';
-  html += '<div class="ff-section-head"><h2 class="ff-h2">공시 시그널</h2><span class="ff-sub">최근 공시가 나온 종목을 유형별로 모았어요</span></div>';
-  html += '<div class="ff-signal-grid">';
-  groups.forEach(function(g){
+  var types = ['자사주','대규모계약','배당','투자결정'];
+  var disc = {};
+  types.forEach(function(t){
     var seen = {}, items = [];
     for (var i=0;i<discs.length;i++){
       var d = discs[i];
-      if (d.type !== g.type) continue;
+      if (d.type !== t) continue;
       var nm = ffNorm(d.name);
       if (seen[nm]) continue;
       seen[nm] = true;
-      items.push({ name:nm, date:d.date });
-      if (items.length >= 5) break;
+      items.push({ name:nm, meta:d.date.slice(5).replace('-','.'), chg:ffDayChange(nm) });
     }
-    html += '<div class="ff-sig-card"><div class="ff-sig-top"><span class="ff-sig-label">'+g.label+'</span><span class="ff-sig-desc">'+g.desc+'</span></div><div class="ff-sig-list">';
-    if (!items.length) html += '<div class="ff-sig-empty">최근 없음</div>';
-    items.forEach(function(it){
-      var chg = ffDayChange(it.name);
-      var chgStr = chg==null ? '' : (chg>=0?'+':'')+chg.toFixed(1)+'%';
-      var chgCls = chg==null ? '' : (chg>=0?'up':'down');
-      var ndate = it.date.slice(5).replace('-','.');
-      html += '<div class="ff-stock-row" onclick="goStock(\''+it.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">'
-        + '<span class="ff-sr-name">'+it.name+'</span>'
-        + '<span class="ff-sr-date">'+ndate+'</span>'
-        + '<span class="ff-sr-chg '+chgCls+'">'+chgStr+'</span></div>';
-    });
-    html += '</div></div>';
+    disc[t] = items;
   });
+  window._ffData = { disc:disc, price:ffPriceSignals() };
+}
+
+function ffCard(g) {
+  var rows = '';
+  var shown = g.items.slice(0,5);
+  if (!shown.length) rows = '<div class="ff-sig-empty">최근 없음</div>';
+  shown.forEach(function(it){
+    var chgStr = it.chg==null ? '' : (it.chg>=0?'+':'')+it.chg.toFixed(1)+'%';
+    var chgCls = it.chg==null ? '' : (it.chg>=0?'up':'down');
+    rows += '<div class="ff-stock-row" onclick="goStock(\''+it.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">'
+      + '<span class="ff-sr-name">'+it.name+'</span>'
+      + '<span class="ff-sr-date">'+(it.meta||'')+'</span>'
+      + '<span class="ff-sr-chg '+chgCls+'">'+chgStr+'</span></div>';
+  });
+  var more = g.items.length > 5
+    ? '<button class="ff-card-all" onclick="openFFModal(\''+g.kind+'\',\''+g.key+'\')">전체 '+g.items.length+'개 →</button>'
+    : '';
+  return '<div class="ff-sig-card"><div class="ff-sig-top"><span class="ff-sig-label">'+g.label+'</span><span class="ff-sig-desc">'+g.desc+'</span></div>'
+    + '<div class="ff-sig-list">'+rows+'</div>'+more+'</div>';
+}
+
+function renderFactfinder() {
+  var el = document.getElementById('pageFactfinder');
+  if (!el || !allData || !allData.disclosures) return;
+  ffBuildData();
+  var D = window._ffData;
+  var html = '<div class="ff-wrap">';
+  // 공시 시그널
+  html += '<div class="ff-section"><div class="ff-section-head"><h2 class="ff-h2">공시 시그널</h2><span class="ff-sub">최근 공시가 나온 종목을 유형별로</span></div><div class="ff-signal-grid">';
+  html += ffCard({ label:'자사주 매입', desc:'유통주식 감소', kind:'disc', key:'자사주', items:D.disc['자사주'] });
+  html += ffCard({ label:'대규모 계약', desc:'수주·공급', kind:'disc', key:'대규모계약', items:D.disc['대규모계약'] });
+  html += ffCard({ label:'배당 결정', desc:'주주환원', kind:'disc', key:'배당', items:D.disc['배당'] });
+  html += ffCard({ label:'투자 결정', desc:'시설·지분 투자', kind:'disc', key:'투자결정', items:D.disc['투자결정'] });
   html += '</div></div>';
+  // 주가 움직임
+  html += '<div class="ff-section"><div class="ff-section-head"><h2 class="ff-h2">주가 움직임</h2><span class="ff-sub">최근 거래일 기준</span></div><div class="ff-signal-grid">';
+  html += ffCard({ label:'연속 상승', desc:'2일 이상', kind:'price', key:'consec', items:D.price.consec });
+  html += ffCard({ label:'오늘 급등', desc:'상승률 상위', kind:'price', key:'surge', items:D.price.surge });
+  html += ffCard({ label:'오늘 급락', desc:'하락률 상위 · 주의', kind:'price', key:'drop', items:D.price.drop });
+  html += ffCard({ label:'52주 신고가', desc:'연중 최고 경신', kind:'price', key:'high52', items:D.price.high52 });
+  html += '</div></div>';
+  html += '</div>';
   el.innerHTML = html;
+}
+
+var FF_MODAL_TITLES = { '자사주':'자사주 매입','대규모계약':'대규모 계약','배당':'배당 결정','투자결정':'투자 결정','consec':'연속 상승','surge':'오늘 급등','drop':'오늘 급락','high52':'52주 신고가' };
+function openFFModal(kind, key) {
+  var D = window._ffData;
+  if (!D) return;
+  var items = (kind==='disc') ? D.disc[key] : D.price[key];
+  var t = document.getElementById('ffModalTitle');
+  if (t) t.textContent = FF_MODAL_TITLES[key] || key;
+  var rows = '';
+  (items||[]).forEach(function(it){
+    var chgStr = it.chg==null ? '' : (it.chg>=0?'+':'')+it.chg.toFixed(1)+'%';
+    var chgCls = it.chg==null ? '' : (it.chg>=0?'up':'down');
+    rows += '<div class="ff-stock-row" onclick="closeFFModal();goStock(\''+it.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">'
+      + '<span class="ff-sr-name">'+it.name+'</span>'
+      + '<span class="ff-sr-date">'+(it.meta||'')+'</span>'
+      + '<span class="ff-sr-chg '+chgCls+'">'+chgStr+'</span></div>';
+  });
+  var listEl = document.getElementById('ffModalList');
+  if (listEl) listEl.innerHTML = rows || '<div class="ff-sig-empty">없음</div>';
+  var m = document.getElementById('ffModal');
+  if (m) m.style.display = 'flex';
+}
+function closeFFModal() {
+  var m = document.getElementById('ffModal');
+  if (m) m.style.display = 'none';
 }
 
 function switchPage(page) {
