@@ -1883,9 +1883,10 @@ function renderFactfinder() {
   // {유형}가 뭐길래?
   var edu = FF_TYPE_EDU[_ffEduIdx];
   var particle = ffSubjParticle(edu.type);
+  var eduDiscs = allData.disclosures.slice().sort(function(a,b){ return a.date<b.date?1:(a.date>b.date?-1:0); });
   var seenE = {}, chips = [];
-  for (var e=0;e<discs.length;e++){
-    var de = discs[e];
+  for (var e=0;e<eduDiscs.length;e++){
+    var de = eduDiscs[e];
     if (de.type !== edu.type) continue;
     var nme = ffNorm(de.name);
     if (seenE[nme]) continue;
