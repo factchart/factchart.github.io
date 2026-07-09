@@ -1718,6 +1718,66 @@ function changesByHorizon(prices, date) {
 let activeTab = 'chart';
 const companyCache = {};
 
+var FF_NAME_MAP = { '한국조선해양':'HD한국조선해양', '엔씨소프트':'NC' };
+function ffNorm(n){ return FF_NAME_MAP[n] || n; }
+
+function ffDayChange(name) {
+  var p = (allData && allData.prices) ? allData.prices[name] : null;
+  if (!p || p.length < 2) return null;
+  var last = p[p.length-1], prev = p[p.length-2];
+  var lc = last.length===5 ? last[4] : last[1];
+  var pc = prev.length===5 ? prev[4] : prev[1];
+  if (!lc || !pc) return null;
+  return (lc - pc) / pc * 100;
+}
+
+function goStock(name) {
+  switchPage('home');
+  selectStock(ffNorm(name));
+}
+
+function renderFactfinder() {
+  var el = document.getElementById('pageFactfinder');
+  if (!el || !allData || !allData.disclosures) return;
+  var discs = allData.disclosures.slice().sort(function(a,b){ return a.date<b.date?1:(a.date>b.date?-1:0); });
+  var groups = [
+    { type:'자사주', label:'자사주 매입', desc:'유통주식 감소' },
+    { type:'대규모계약', label:'대규모 계약', desc:'수주·공급' },
+    { type:'배당', label:'배당 결정', desc:'주주환원' },
+    { type:'투자결정', label:'투자 결정', desc:'시설·지분 투자' }
+  ];
+  var html = '<div class="ff-wrap">';
+  html += '<div class="ff-section-head"><h2 class="ff-h2">공시 시그널</h2><span class="ff-sub">최근 공시가 나온 종목을 유형별로 모았어요</span></div>';
+  html += '<div class="ff-signal-grid">';
+  groups.forEach(function(g){
+    var seen = {}, items = [];
+    for (var i=0;i<discs.length;i++){
+      var d = discs[i];
+      if (d.type !== g.type) continue;
+      var nm = ffNorm(d.name);
+      if (seen[nm]) continue;
+      seen[nm] = true;
+      items.push({ name:nm, date:d.date });
+      if (items.length >= 5) break;
+    }
+    html += '<div class="ff-sig-card"><div class="ff-sig-top"><span class="ff-sig-label">'+g.label+'</span><span class="ff-sig-desc">'+g.desc+'</span></div><div class="ff-sig-list">';
+    if (!items.length) html += '<div class="ff-sig-empty">최근 없음</div>';
+    items.forEach(function(it){
+      var chg = ffDayChange(it.name);
+      var chgStr = chg==null ? '' : (chg>=0?'+':'')+chg.toFixed(1)+'%';
+      var chgCls = chg==null ? '' : (chg>=0?'up':'down');
+      var ndate = it.date.slice(5).replace('-','.');
+      html += '<div class="ff-stock-row" onclick="goStock(\''+it.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">'
+        + '<span class="ff-sr-name">'+it.name+'</span>'
+        + '<span class="ff-sr-date">'+ndate+'</span>'
+        + '<span class="ff-sr-chg '+chgCls+'">'+chgStr+'</span></div>';
+    });
+    html += '</div></div>';
+  });
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+
 function switchPage(page) {
   document.querySelectorAll('.pnav').forEach(function(b){
     b.classList.toggle('active', b.dataset.page === page);
@@ -1726,6 +1786,7 @@ function switchPage(page) {
   var ff = document.getElementById('pageFactfinder');
   if (home) home.style.display = (page === 'factfinder') ? 'none' : '';
   if (ff) ff.style.display = (page === 'factfinder') ? 'block' : 'none';
+  if (page === 'factfinder') renderFactfinder();
   window.scrollTo(0, 0);
 }
 

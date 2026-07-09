@@ -139,6 +139,24 @@ body {
 .ff-ph-badge { font-size: 12px; font-weight: 800; color: var(--accent); letter-spacing: 0.3px; margin-bottom: 12px; }
 .ff-ph-title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
 .ff-ph-desc { font-size: 14px; color: var(--text3); line-height: 1.7; word-break: keep-all; }
+.ff-wrap { max-width: 920px; margin: 0 auto; padding: 4px 0 40px; }
+.ff-section-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.ff-h2 { font-size: 17px; font-weight: 700; color: var(--text); margin: 0; }
+.ff-sub { font-size: 12px; color: var(--text3); }
+.ff-signal-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; }
+.ff-sig-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+.ff-sig-top { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+.ff-sig-label { font-size: 13px; font-weight: 700; color: var(--gold); }
+.ff-sig-desc { font-size: 10px; color: var(--text3); }
+.ff-sig-list { display: flex; flex-direction: column; gap: 1px; }
+.ff-stock-row { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 7px; cursor: pointer; transition: background 0.12s; }
+.ff-stock-row:hover { background: rgba(255,255,255,0.03); }
+.ff-sr-name { flex: 1; font-size: 12.5px; color: var(--text); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ff-sr-date { font-size: 10px; color: var(--text3); flex-shrink: 0; }
+.ff-sr-chg { font-size: 11.5px; font-weight: 600; width: 50px; text-align: right; flex-shrink: 0; }
+.ff-sr-chg.up { color: var(--up); } .ff-sr-chg.down { color: var(--down); }
+.ff-sig-empty { font-size: 11px; color: var(--text3); padding: 8px; text-align: center; }
+@media (max-width: 760px) { .ff-signal-grid { grid-template-columns: 1fr; } }
 
 .impact-inner {
   display: flex;
