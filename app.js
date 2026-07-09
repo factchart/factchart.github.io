@@ -1507,7 +1507,7 @@ document.addEventListener('mousemove', e => {
     minimapWrap.appendChild(minimapCanvas);
     const minimapRange = document.createElement('div');
     minimapRange.id = 'minimapRange';
-    minimapRange.style.cssText = 'position:absolute;top:0;bottom:0;background:rgba(0,229,160,0.1);border-left:2px solid #00e5a0;border-right:2px solid #00e5a0;cursor:grab;box-sizing:border-box;';
+    minimapRange.style.cssText = 'position:absolute;top:0;bottom:0;background:rgba(255,255,255,0.06);border-left:2px solid rgba(255,255,255,0.35);border-right:2px solid rgba(255,255,255,0.35);cursor:grab;box-sizing:border-box;';
     minimapWrap.appendChild(minimapRange);
     document.querySelector('.chart-body').parentNode.insertBefore(minimapWrap, document.querySelector('.chart-body').nextSibling);
   }
