@@ -1799,6 +1799,34 @@ function ffCard(g) {
     + '<div class="ff-sig-list">'+rows+'</div>'+more+'</div>';
 }
 
+var FF_DISC_THEMES = [
+  { key:'low', label:'공시 후 주가가 많이 빠진 종목', sort:function(a,b){ return a.d20-b.d20; } },
+  { key:'rebound', label:'공시 후 반등이 큰 종목', sort:function(a,b){ return b.d20-a.d20; } },
+  { key:'vol', label:'공시 후 변동이 큰 종목', sort:function(a,b){ return Math.abs(b.d20)-Math.abs(a.d20); } }
+];
+var _ffDiscTheme = 0;
+function ffCycleDiscovery(){ _ffDiscTheme = (_ffDiscTheme+1) % FF_DISC_THEMES.length; renderFactfinder(); }
+
+function ffDiscovery(){
+  if (window._ffDiscCand) return window._ffDiscCand;
+  var discs = allData.disclosures.slice().sort(function(a,b){ return a.date<b.date?1:(a.date>b.date?-1:0); });
+  var seen = {}, cand = [];
+  for (var i=0;i<discs.length;i++){
+    var d = discs[i];
+    var nm = ffNorm(d.name);
+    if (seen[nm]) continue;
+    var raw = allData.prices[nm];
+    if (!raw || raw.length < 2) continue;
+    var pr = raw.map(function(p){ return p.length===5 ? {date:p[0],close:p[4]} : {date:p[0],close:p[1]}; });
+    var ch = changesByHorizon(pr, d.date);
+    if (!ch || ch.d20 == null) continue;
+    seen[nm] = true;
+    cand.push({ name:nm, type:d.type, d20:ch.d20 });
+  }
+  window._ffDiscCand = cand;
+  return cand;
+}
+
 function renderFactfinder() {
   var el = document.getElementById('pageFactfinder');
   if (!el || !allData || !allData.disclosures) return;
@@ -1818,6 +1846,21 @@ function renderFactfinder() {
   html += ffCard({ label:'오늘 급등', desc:'상승률 상위', kind:'price', key:'surge', items:D.price.surge });
   html += ffCard({ label:'오늘 급락', desc:'하락률 상위 · 주의', kind:'price', key:'drop', items:D.price.drop });
   html += ffCard({ label:'52주 신고가', desc:'연중 최고 경신', kind:'price', key:'high52', items:D.price.high52 });
+  html += '</div></div>';
+  // 이런 종목 찾아보셨어요?
+  var cand = ffDiscovery();
+  var theme = FF_DISC_THEMES[_ffDiscTheme];
+  var picked = cand.slice().sort(theme.sort).slice(0,4);
+  html += '<div class="ff-section"><div class="ff-section-head"><h2 class="ff-h2">이런 종목 찾아보셨어요?</h2><span class="ff-sub">'+theme.label+'</span><button class="ff-cycle" onclick="ffCycleDiscovery()">↻ 다른 관점</button></div>';
+  html += '<div class="ff-disc-list">';
+  if (!picked.length) html += '<div class="ff-sig-empty">데이터 없음</div>';
+  picked.forEach(function(it){
+    var d20Str = (it.d20>=0?'+':'')+it.d20.toFixed(1)+'%';
+    var d20Cls = it.d20>=0?'up':'down';
+    html += '<div class="ff-disc-row" onclick="goStock(\''+it.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">'
+      + '<div class="ff-disc-main"><span class="ff-disc-name">'+it.name+'</span><span class="ff-disc-type">'+it.type+' 공시</span></div>'
+      + '<div class="ff-disc-val"><span class="ff-disc-d20 '+d20Cls+'">'+d20Str+'</span><span class="ff-disc-d20lbl">공시 후 20일</span></div></div>';
+  });
   html += '</div></div>';
   html += '</div>';
   el.innerHTML = html;
