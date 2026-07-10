@@ -1851,9 +1851,6 @@ var FF_CATS = {
   ]},
   price: { label:'주가 움직임', desc:'최근 거래일 기준 주가 신호', extraCol:'특성', subs:[
     {key:'consec', label:'연속 상승'},{key:'surge', label:'오늘 급등'},{key:'drop', label:'오늘 급락'},{key:'high52', label:'52주 신고가'}
-  ]},
-  find: { label:'발견', desc:'공시 이후 주가 흐름으로 찾기', extraCol:'공시 후 20일', subs:[
-    {key:'low', label:'많이 빠진'},{key:'rebound', label:'반등 큰'},{key:'vol', label:'변동 큰'}
   ]}
 };
 var ffState = { major:'signal', sub:'자사주', sortKey:'chg', sortDir:-1 };
@@ -1913,11 +1910,31 @@ function ffSelectSub(s){ ffState.sub = s; renderFactfinder(); }
 function ffSort(key){ if (ffState.sortKey===key){ ffState.sortDir *= -1; } else { ffState.sortKey = key; ffState.sortDir = (key==='name')?1:-1; } renderFactfinder(); }
 function ffSortArrow(key){ if (ffState.sortKey!==key) return ''; return ffState.sortDir<0 ? ' ▾' : ' ▴'; }
 
+function ffFindCard(){
+  var cand = ffDiscovery();
+  var theme = FF_DISC_THEMES[_ffDiscTheme];
+  var picked = cand.slice().sort(theme.sort).slice(0,5);
+  var h = '<div class="ff-find"><div class="ff-find-head"><span class="ff-find-title">발견</span><button class="ff-find-cycle" onclick="ffCycleDiscovery()">↻ 다른 관점</button></div>';
+  h += '<div class="ff-find-desc">'+theme.label+'</div><div class="ff-find-list">';
+  if (!picked.length) h += '<div class="ff-tbl-empty">데이터 없음</div>';
+  picked.forEach(function(it){
+    var d20Str = (it.d20>=0?'+':'')+it.d20.toFixed(1)+'%';
+    var cls = it.d20>=0?'up':'down';
+    var meta = (typeof STOCK_META!=='undefined' && STOCK_META[it.name]) || {};
+    h += '<div class="ff-find-row" onclick="goStock(\''+ffEsc(it.name)+'\')">'
+      + '<div class="ff-find-main"><span class="ff-find-name">'+it.name+'</span><span class="ff-find-sec">'+(meta.sector||'')+'</span></div>'
+      + '<div class="ff-find-val"><span class="'+cls+'">'+d20Str+'</span><span class="ff-find-vlbl">공시 후 20일</span></div></div>';
+  });
+  h += '</div></div>';
+  return h;
+}
+
 function renderFactfinder() {
   var el = document.getElementById('pageFactfinder');
   if (!el || !allData || !allData.disclosures) return;
   var data = ffScreenerData();
   var cat = FF_CATS[ffState.major];
+  if (!cat) { ffState.major = 'signal'; cat = FF_CATS.signal; }
   if (!cat.subs.some(function(s){ return s.key===ffState.sub; })) ffState.sub = cat.subs[0].key;
   var rows = (data[ffState.major][ffState.sub] || []).slice();
   var k = ffState.sortKey, dir = ffState.sortDir;
@@ -1932,15 +1949,15 @@ function renderFactfinder() {
     vb = (vb==null||isNaN(vb)) ? -Infinity : vb;
     return (va-vb)*dir;
   });
-  var html = '<div class="ff-scr">';
-  html += '<div class="ff-side"><div class="ff-side-lbl">카테고리</div>';
+  var html = '<div class="ff-layout"><div class="ff-scr">';
+  html += '<div class="ff-side"><div class="ff-side-lbl">팩트 파인더</div>';
   Object.keys(FF_CATS).forEach(function(mk){
     html += '<button class="ff-major'+(mk===ffState.major?' active':'')+'" onclick="ffSelectMajor(\''+mk+'\')">'+FF_CATS[mk].label+'</button>';
   });
   html += '</div><div class="ff-main">';
   html += '<div class="ff-main-head"><div class="ff-main-title">'+cat.label+'</div><div class="ff-main-desc">'+cat.desc+'</div></div>';
   html += '<div class="ff-subs">';
-  cat.subs.forEach(function(s){ html += '<button class="ff-sub-btn'+(s.key===ffState.sub?' active':'')+'" onclick="ffSelectSub(\''+s.key+'\')">'+s.label+'</button>'; });
+  cat.subs.forEach(function(s){ html += '<button class="stock-btn ff-sub-btn'+(s.key===ffState.sub?' active':'')+'" onclick="ffSelectSub(\''+s.key+'\')">'+s.label+'</button>'; });
   html += '</div>';
   html += '<div class="ff-tbl"><div class="ff-tr ff-th">'
     + '<span class="ff-td-name" onclick="ffSort(\'name\')">종목'+ffSortArrow('name')+'</span>'
@@ -1966,7 +1983,9 @@ function renderFactfinder() {
       + '<span class="ff-td-num '+exCls+'">'+r.extra+'</span>'
       + '</div>';
   });
-  html += '</div></div></div>';
+  html += '</div></div>';
+  html += ffFindCard();
+  html += '</div>';
   el.innerHTML = html;
 }
 

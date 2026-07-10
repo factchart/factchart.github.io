@@ -191,7 +191,23 @@ body {
 .ff-edu-chip:hover { background: rgba(255,255,255,0.08); }
 .ff-edu-chip .up { color: var(--up); font-weight: 600; } .ff-edu-chip .down { color: var(--down); font-weight: 600; }
 /* 팩트 파인더 스크리너 */
-.ff-scr { display: flex; background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; min-height: 560px; }
+.ff-layout { display: grid; grid-template-columns: 1fr 360px; gap: 16px; align-items: start; }
+.ff-scr { display: flex; background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; min-height: 520px; }
+.ff-find { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 16px 8px; }
+.ff-find-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px; }
+.ff-find-title { font-size: 15px; font-weight: 700; color: var(--text); }
+.ff-find-cycle { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; font-size: 10.5px; color: var(--text3); padding: 4px 9px; cursor: pointer; transition: background 0.12s, color 0.12s; }
+.ff-find-cycle:hover { background: rgba(255,255,255,0.07); color: var(--text2); }
+.ff-find-desc { font-size: 11.5px; color: var(--text3); margin-bottom: 8px; }
+.ff-find-list { display: flex; flex-direction: column; }
+.ff-find-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 4px; border-top: 1px solid var(--border); cursor: pointer; transition: background 0.12s; }
+.ff-find-row:hover { background: rgba(255,255,255,0.025); }
+.ff-find-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ff-find-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.ff-find-sec { font-size: 10.5px; color: var(--text3); }
+.ff-find-val { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; flex-shrink: 0; }
+.ff-find-val .up { color: var(--up); font-weight: 700; font-size: 13.5px; } .ff-find-val .down { color: var(--down); font-weight: 700; font-size: 13.5px; }
+.ff-find-vlbl { font-size: 9px; color: var(--text3); }
 .ff-side { width: 152px; flex-shrink: 0; border-right: 1px solid var(--border); padding: 16px 10px; }
 .ff-side-lbl { font-size: 10px; color: var(--text3); padding: 0 10px; margin-bottom: 10px; letter-spacing: 0.5px; }
 .ff-major { display: block; width: 100%; text-align: left; background: none; border: none; font-size: 13.5px; color: var(--text2); padding: 11px 12px; border-radius: 9px; cursor: pointer; margin-bottom: 3px; transition: background 0.12s, color 0.12s; }
@@ -202,9 +218,7 @@ body {
 .ff-main-title { font-size: 18px; font-weight: 700; color: var(--text); }
 .ff-main-desc { font-size: 12px; color: var(--text3); margin-top: 3px; }
 .ff-subs { display: flex; gap: 7px; padding: 0 20px 14px; flex-wrap: wrap; }
-.ff-sub-btn { font-size: 12px; color: var(--text2); background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 16px; padding: 6px 14px; cursor: pointer; transition: background 0.12s, color 0.12s, border-color 0.12s; }
-.ff-sub-btn:hover { background: rgba(255,255,255,0.07); }
-.ff-sub-btn.active { background: var(--accent); color: #0C111B; border-color: var(--accent); font-weight: 700; }
+.ff-subs .stock-btn { font-size: 12.5px; padding: 7px 13px; }
 .ff-tbl { border-top: 1px solid var(--border); }
 .ff-tr { display: flex; align-items: center; padding: 13px 20px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.12s; }
 .ff-tr:not(.ff-th):hover { background: rgba(255,255,255,0.025); }
@@ -219,6 +233,7 @@ body {
 .ff-td-num.up { color: var(--up); font-weight: 600; } .ff-td-num.down { color: var(--down); font-weight: 600; }
 .ff-td-num.ff-dim { color: var(--text2); }
 .ff-tbl-empty { padding: 48px; text-align: center; color: var(--text3); font-size: 13px; }
+@media (max-width: 1024px) { .ff-layout { grid-template-columns: 1fr; } }
 @media (max-width: 760px) {
   .ff-scr { flex-direction: column; min-height: 0; }
   .ff-side { width: auto; border-right: none; border-bottom: 1px solid var(--border); display: flex; gap: 6px; overflow-x: auto; padding: 12px; }
