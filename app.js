@@ -1949,7 +1949,7 @@ function renderFactfinder() {
     vb = (vb==null||isNaN(vb)) ? -Infinity : vb;
     return (va-vb)*dir;
   });
-  var html = '<div class="ff-layout"><div class="ff-scr">';
+  var html = '<div class="main-layout ff-mlayout"><div class="left-col"><div class="ff-scr">';
   html += '<div class="ff-side"><div class="ff-side-lbl">팩트 파인더</div>';
   Object.keys(FF_CATS).forEach(function(mk){
     html += '<button class="ff-major'+(mk===ffState.major?' active':'')+'" onclick="ffSelectMajor(\''+mk+'\')">'+FF_CATS[mk].label+'</button>';
@@ -1984,7 +1984,7 @@ function renderFactfinder() {
       + '</div>';
   });
   html += '</div></div>';
-  html += ffFindCard();
+  html += '<div class="right-col">' + ffFindCard() + '</div>';
   html += '</div>';
   el.innerHTML = html;
 }
