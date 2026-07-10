@@ -1845,69 +1845,128 @@ function ffSubjParticle(word){ // 받침 판정: "가"/"이"
   return ((c-0xAC00)%28 !== 0) ? '이' : '가';
 }
 
+var FF_CATS = {
+  signal: { label:'공시 시그널', desc:'최근 주요 공시가 나온 종목', extraCol:'공시일', subs:[
+    {key:'자사주', label:'자사주 매입'},{key:'대규모계약', label:'대규모 계약'},{key:'배당', label:'배당 결정'},{key:'투자결정', label:'투자 결정'}
+  ]},
+  price: { label:'주가 움직임', desc:'최근 거래일 기준 주가 신호', extraCol:'특성', subs:[
+    {key:'consec', label:'연속 상승'},{key:'surge', label:'오늘 급등'},{key:'drop', label:'오늘 급락'},{key:'high52', label:'52주 신고가'}
+  ]},
+  find: { label:'발견', desc:'공시 이후 주가 흐름으로 찾기', extraCol:'공시 후 20일', subs:[
+    {key:'low', label:'많이 빠진'},{key:'rebound', label:'반등 큰'},{key:'vol', label:'변동 큰'}
+  ]}
+};
+var ffState = { major:'signal', sub:'자사주', sortKey:'chg', sortDir:-1 };
+
+function ffFmtCap(v){ if(!v)return '-'; if(v>=1e12)return (v/1e12).toFixed(1)+'조'; if(v>=1e8)return Math.round(v/1e8).toLocaleString()+'억'; return v.toLocaleString(); }
+function ffFmtVol(v){ if(!v)return '-'; if(v>=1e8)return (v/1e8).toFixed(1)+'억'; if(v>=1e4)return Math.round(v/1e4).toLocaleString()+'만'; return v.toLocaleString(); }
+function ffFmtPrice(v){ if(v==null)return '-'; return Math.round(v).toLocaleString(); }
+function ffEsc(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+
+function ffStockInfo(name){
+  var p = allData.prices[name];
+  if (!p || p.length < 2) return null;
+  var last = p[p.length-1], prev = p[p.length-2];
+  var price = last[4], pc = prev[4];
+  if (!price || !pc) return null;
+  var m = (allData.market && allData.market[name]) || {};
+  var meta = (typeof STOCK_META !== 'undefined' && STOCK_META[name]) || {};
+  return { name:name, sector:meta.sector||'', price:price, chg:(price-pc)/pc*100, cap:m.marketCap||null, vol:m.volume||null, extra:'', extraRaw:null, _d20:null };
+}
+
+function ffScreenerData(){
+  if (window._ffScr) return window._ffScr;
+  var data = { signal:{}, price:{}, find:{} };
+  var discs = allData.disclosures.slice().sort(function(a,b){ return a.date<b.date?1:(a.date>b.date?-1:0); });
+  ['자사주','대규모계약','배당','투자결정'].forEach(function(t){
+    var seen = {}, arr = [];
+    for (var i=0;i<discs.length;i++){
+      var d = discs[i]; if (d.type !== t) continue;
+      var nm = ffNorm(d.name); if (seen[nm]) continue; seen[nm] = true;
+      var info = ffStockInfo(nm); if (!info) continue;
+      info.extra = d.date.slice(5).replace('-','.'); info.extraRaw = d.date;
+      arr.push(info);
+    }
+    data.signal[t] = arr;
+  });
+  var ps = ffPriceSignals();
+  ['consec','surge','drop','high52'].forEach(function(k){
+    data.price[k] = (ps[k]||[]).map(function(it){
+      var info = ffStockInfo(it.name); if (!info) return null;
+      if (k==='consec') { info.extra = it.meta; info.extraRaw = it._s; }
+      else if (k==='high52') { info.extra = '신고가'; info.extraRaw = info.chg; }
+      else { info.extra = (it.chg>=0?'+':'')+it.chg.toFixed(1)+'%'; info.extraRaw = it.chg; info._d20 = it.chg; }
+      return info;
+    }).filter(Boolean);
+  });
+  var cand = ffDiscovery();
+  function toInfo(it){ var info = ffStockInfo(it.name); if (!info) return null; info.extra = (it.d20>=0?'+':'')+it.d20.toFixed(1)+'%'; info.extraRaw = it.d20; info._d20 = it.d20; return info; }
+  data.find.low = cand.slice().sort(function(a,b){ return a.d20-b.d20; }).map(toInfo).filter(Boolean);
+  data.find.rebound = cand.slice().sort(function(a,b){ return b.d20-a.d20; }).map(toInfo).filter(Boolean);
+  data.find.vol = cand.slice().sort(function(a,b){ return Math.abs(b.d20)-Math.abs(a.d20); }).map(toInfo).filter(Boolean);
+  window._ffScr = data;
+  return data;
+}
+
+function ffSelectMajor(m){ ffState.major = m; ffState.sub = FF_CATS[m].subs[0].key; ffState.sortKey = 'chg'; ffState.sortDir = -1; renderFactfinder(); }
+function ffSelectSub(s){ ffState.sub = s; renderFactfinder(); }
+function ffSort(key){ if (ffState.sortKey===key){ ffState.sortDir *= -1; } else { ffState.sortKey = key; ffState.sortDir = (key==='name')?1:-1; } renderFactfinder(); }
+function ffSortArrow(key){ if (ffState.sortKey!==key) return ''; return ffState.sortDir<0 ? ' ▾' : ' ▴'; }
+
 function renderFactfinder() {
   var el = document.getElementById('pageFactfinder');
   if (!el || !allData || !allData.disclosures) return;
-  ffBuildData();
-  var D = window._ffData;
-  var html = '<div class="ff-wrap">';
-  // 공시 시그널
-  html += '<div class="ff-section"><div class="ff-section-head"><h2 class="ff-h2">공시 시그널</h2><span class="ff-sub">최근 공시가 나온 종목을 유형별로</span></div><div class="ff-signal-grid">';
-  html += ffCard({ label:'자사주 매입', desc:'유통주식 감소', kind:'disc', key:'자사주', items:D.disc['자사주'] });
-  html += ffCard({ label:'대규모 계약', desc:'수주·공급', kind:'disc', key:'대규모계약', items:D.disc['대규모계약'] });
-  html += ffCard({ label:'배당 결정', desc:'주주환원', kind:'disc', key:'배당', items:D.disc['배당'] });
-  html += ffCard({ label:'투자 결정', desc:'시설·지분 투자', kind:'disc', key:'투자결정', items:D.disc['투자결정'] });
-  html += '</div></div>';
-  // 주가 움직임
-  html += '<div class="ff-section"><div class="ff-section-head"><h2 class="ff-h2">주가 움직임</h2><span class="ff-sub">최근 거래일 기준</span></div><div class="ff-signal-grid">';
-  html += ffCard({ label:'연속 상승', desc:'2일 이상', kind:'price', key:'consec', items:D.price.consec });
-  html += ffCard({ label:'오늘 급등', desc:'상승률 상위', kind:'price', key:'surge', items:D.price.surge });
-  html += ffCard({ label:'오늘 급락', desc:'하락률 상위 · 주의', kind:'price', key:'drop', items:D.price.drop });
-  html += ffCard({ label:'52주 신고가', desc:'연중 최고 경신', kind:'price', key:'high52', items:D.price.high52 });
-  html += '</div></div>';
-  // 이런 종목 찾아보셨어요?
-  var cand = ffDiscovery();
-  var theme = FF_DISC_THEMES[_ffDiscTheme];
-  var picked = cand.slice().sort(theme.sort).slice(0,4);
-  html += '<div class="ff-section"><div class="ff-section-head"><h2 class="ff-h2">이런 종목 찾아보셨어요?</h2><span class="ff-sub">'+theme.label+'</span><button class="ff-cycle" onclick="ffCycleDiscovery()">↻ 다른 관점</button></div>';
-  html += '<div class="ff-disc-list">';
-  if (!picked.length) html += '<div class="ff-sig-empty">데이터 없음</div>';
-  picked.forEach(function(it){
-    var d20Str = (it.d20>=0?'+':'')+it.d20.toFixed(1)+'%';
-    var d20Cls = it.d20>=0?'up':'down';
-    html += '<div class="ff-disc-row" onclick="goStock(\''+it.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">'
-      + '<div class="ff-disc-main"><span class="ff-disc-name">'+it.name+'</span><span class="ff-disc-type">'+it.type+' 공시</span></div>'
-      + '<div class="ff-disc-val"><span class="ff-disc-d20 '+d20Cls+'">'+d20Str+'</span><span class="ff-disc-d20lbl">공시 후 20일</span></div></div>';
+  var data = ffScreenerData();
+  var cat = FF_CATS[ffState.major];
+  if (!cat.subs.some(function(s){ return s.key===ffState.sub; })) ffState.sub = cat.subs[0].key;
+  var rows = (data[ffState.major][ffState.sub] || []).slice();
+  var k = ffState.sortKey, dir = ffState.sortDir;
+  rows.sort(function(a,b){
+    if (k==='name') return a.name<b.name?-dir:(a.name>b.name?dir:0);
+    var va, vb;
+    if (k==='extra'){
+      va = a.extraRaw; vb = b.extraRaw;
+      if (typeof va==='string' || typeof vb==='string'){ va=String(va); vb=String(vb); return va<vb?-dir:(va>vb?dir:0); }
+    } else { va = a[k]; vb = b[k]; }
+    va = (va==null||isNaN(va)) ? -Infinity : va;
+    vb = (vb==null||isNaN(vb)) ? -Infinity : vb;
+    return (va-vb)*dir;
   });
-  html += '</div></div>';
-  // {유형}가 뭐길래?
-  var edu = FF_TYPE_EDU[_ffEduIdx];
-  var particle = ffSubjParticle(edu.type);
-  var eduDiscs = allData.disclosures.slice().sort(function(a,b){ return a.date<b.date?1:(a.date>b.date?-1:0); });
-  var seenE = {}, chips = [];
-  for (var e=0;e<eduDiscs.length;e++){
-    var de = eduDiscs[e];
-    if (de.type !== edu.type) continue;
-    var nme = ffNorm(de.name);
-    if (seenE[nme]) continue;
-    seenE[nme] = true;
-    chips.push({ name:nme, chg:ffDayChange(nme) });
-    if (chips.length >= 3) break;
-  }
-  html += '<div class="ff-section"><div class="ff-section-head"><h2 class="ff-h2">'+edu.type+particle+' 뭐길래?</h2><button class="ff-cycle" onclick="ffCycleEdu()">↻ 다른 유형</button></div>';
-  html += '<div class="ff-edu-card"><span class="ff-edu-badge">'+edu.badge+'</span>'
-    + '<div class="ff-edu-head">'+edu.head+'</div>'
-    + '<div class="ff-edu-desc">'+edu.desc+'</div>';
-  if (chips.length) {
-    html += '<div class="ff-edu-chips"><span class="ff-edu-chips-lbl">'+edu.badge+' 공시 종목</span><div class="ff-edu-chip-row">';
-    chips.forEach(function(c){
-      var cs = c.chg==null ? '' : ' <span class="'+(c.chg>=0?'up':'down')+'">'+(c.chg>=0?'+':'')+c.chg.toFixed(1)+'%</span>';
-      html += '<span class="ff-edu-chip" onclick="goStock(\''+c.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">'+c.name+cs+'</span>';
-    });
-    html += '</div></div>';
-  }
-  html += '</div></div>';
+  var html = '<div class="ff-scr">';
+  html += '<div class="ff-side"><div class="ff-side-lbl">카테고리</div>';
+  Object.keys(FF_CATS).forEach(function(mk){
+    html += '<button class="ff-major'+(mk===ffState.major?' active':'')+'" onclick="ffSelectMajor(\''+mk+'\')">'+FF_CATS[mk].label+'</button>';
+  });
+  html += '</div><div class="ff-main">';
+  html += '<div class="ff-main-head"><div class="ff-main-title">'+cat.label+'</div><div class="ff-main-desc">'+cat.desc+'</div></div>';
+  html += '<div class="ff-subs">';
+  cat.subs.forEach(function(s){ html += '<button class="ff-sub-btn'+(s.key===ffState.sub?' active':'')+'" onclick="ffSelectSub(\''+s.key+'\')">'+s.label+'</button>'; });
   html += '</div>';
+  html += '<div class="ff-tbl"><div class="ff-tr ff-th">'
+    + '<span class="ff-td-name" onclick="ffSort(\'name\')">종목'+ffSortArrow('name')+'</span>'
+    + '<span class="ff-td-num" onclick="ffSort(\'price\')">현재가'+ffSortArrow('price')+'</span>'
+    + '<span class="ff-td-num" onclick="ffSort(\'chg\')">등락률'+ffSortArrow('chg')+'</span>'
+    + '<span class="ff-td-num" onclick="ffSort(\'cap\')">시총'+ffSortArrow('cap')+'</span>'
+    + '<span class="ff-td-num ff-hide-m" onclick="ffSort(\'vol\')">거래량'+ffSortArrow('vol')+'</span>'
+    + '<span class="ff-td-num" onclick="ffSort(\'extra\')">'+cat.extraCol+ffSortArrow('extra')+'</span>'
+    + '</div>';
+  if (!rows.length) html += '<div class="ff-tbl-empty">종목이 없어요</div>';
+  rows.forEach(function(r){
+    var chgStr = (r.chg>=0?'+':'')+r.chg.toFixed(1)+'%';
+    var chgCls = r.chg>=0?'up':'down';
+    var exCls = 'ff-dim';
+    if (r.extra.indexOf('+')===0) exCls = 'up';
+    else if (r.extra.indexOf('-')===0) exCls = 'down';
+    html += '<div class="ff-tr" onclick="goStock(\''+ffEsc(r.name)+'\')">'
+      + '<span class="ff-td-name"><span class="ff-tn">'+r.name+'</span><span class="ff-ts">'+r.sector+'</span></span>'
+      + '<span class="ff-td-num">'+ffFmtPrice(r.price)+'</span>'
+      + '<span class="ff-td-num '+chgCls+'">'+chgStr+'</span>'
+      + '<span class="ff-td-num ff-dim">'+ffFmtCap(r.cap)+'</span>'
+      + '<span class="ff-td-num ff-dim ff-hide-m">'+ffFmtVol(r.vol)+'</span>'
+      + '<span class="ff-td-num '+exCls+'">'+r.extra+'</span>'
+      + '</div>';
+  });
+  html += '</div></div></div>';
   el.innerHTML = html;
 }
 
