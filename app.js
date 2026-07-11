@@ -1944,6 +1944,10 @@ function ffSelectMajor(m){ ffState.major = m; ffState.sub = FF_CATS[m].subs[0].k
 function ffSelectSub(s){ ffState.sub = s; renderFactfinder(); }
 function ffSort(key){ if (ffState.sortKey===key){ ffState.sortDir *= -1; } else { ffState.sortKey = key; ffState.sortDir = (key==='name')?1:-1; } renderFactfinder(); }
 function ffSortArrow(key){ if (ffState.sortKey!==key) return ''; return ffState.sortDir<0 ? ' ▾' : ' ▴'; }
+function ffSortMark(key){
+  if (ffState.sortKey === key) return '<i class="ff-sm on">'+(ffState.sortDir<0?'▾':'▴')+'</i>';
+  return '<i class="ff-sm">⇅</i>';
+}
 
 function ffEduCard(){
   var edu = FF_TYPE_EDU[_ffEduIdx];
@@ -2007,22 +2011,24 @@ function renderFactfinder() {
   cat.subs.forEach(function(s){ html += '<button class="stock-btn ff-sub-btn'+(s.key===ffState.sub?' active':'')+'" onclick="ffSelectSub(\''+s.key+'\')">'+s.label+'</button>'; });
   html += '</div>';
   html += '<div class="ff-tbl"><div class="ff-tr ff-th">'
-    + '<span class="ff-td-name" onclick="ffSort(\'name\')">종목'+ffSortArrow('name')+'</span>'
-    + '<span class="ff-td-num" onclick="ffSort(\'price\')">현재가'+ffSortArrow('price')+'</span>'
-    + '<span class="ff-td-num" onclick="ffSort(\'chg\')">등락률'+ffSortArrow('chg')+'</span>'
-    + '<span class="ff-td-sec" onclick="ffSort(\'sector\')">업종'+ffSortArrow('sector')+'</span>'
-    + '<span class="ff-td-num" onclick="ffSort(\'cap\')">시총'+ffSortArrow('cap')+'</span>'
-    + '<span class="ff-td-num ff-hide-m" onclick="ffSort(\'vol\')">거래량'+ffSortArrow('vol')+'</span>'
-    + '<span class="ff-td-num" onclick="ffSort(\'extra\')">'+cat.extraCol+ffSortArrow('extra')+'</span>'
+    + '<span class="ff-td-rank">#</span>'
+    + '<span class="ff-td-name" onclick="ffSort(\'name\')">종목'+ffSortMark('name')+'</span>'
+    + '<span class="ff-td-num" onclick="ffSort(\'price\')">현재가'+ffSortMark('price')+'</span>'
+    + '<span class="ff-td-num" onclick="ffSort(\'chg\')">등락률'+ffSortMark('chg')+'</span>'
+    + '<span class="ff-td-sec" onclick="ffSort(\'sector\')">업종'+ffSortMark('sector')+'</span>'
+    + '<span class="ff-td-num" onclick="ffSort(\'cap\')">시총'+ffSortMark('cap')+'</span>'
+    + '<span class="ff-td-num ff-hide-m" onclick="ffSort(\'vol\')">거래량'+ffSortMark('vol')+'</span>'
+    + '<span class="ff-td-num" onclick="ffSort(\'extra\')">'+cat.extraCol+ffSortMark('extra')+'</span>'
     + '</div>';
   if (!rows.length) html += '<div class="ff-tbl-empty">종목이 없어요</div>';
-  rows.forEach(function(r){
+  rows.forEach(function(r, i){
     var chgStr = (r.chg>=0?'+':'')+r.chg.toFixed(1)+'%';
     var chgCls = r.chg>=0?'up':'down';
     var exCls = 'ff-dim';
     if (r.extra.indexOf('+')===0) exCls = 'up';
     else if (r.extra.indexOf('-')===0) exCls = 'down';
     html += '<div class="ff-tr" onclick="goStock(\''+ffEsc(r.name)+'\')">'
+      + '<span class="ff-td-rank">'+(i+1)+'</span>'
       + '<span class="ff-td-name"><span class="ff-tn">'+r.name+'</span></span>'
       + '<span class="ff-td-num">'+ffFmtPrice(r.price)+'</span>'
       + '<span class="ff-td-num '+chgCls+'">'+chgStr+'</span>'

@@ -211,17 +211,17 @@ body {
 .ff-find-val { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; flex-shrink: 0; }
 .ff-find-val .up { color: var(--up); font-weight: 700; font-size: 13.5px; } .ff-find-val .down { color: var(--down); font-weight: 700; font-size: 13.5px; }
 .ff-find-vlbl { font-size: 9px; color: var(--text3); }
-.ff-side { width: 152px; flex-shrink: 0; border-right: 1px solid var(--border); padding: 16px 10px; }
-.ff-side-lbl { font-size: 14px; font-weight: 700; color: var(--text3); opacity: 0.75; padding: 0 10px; margin-bottom: 14px; }
+.ff-side { width: 152px; flex-shrink: 0; border-right: 1px solid var(--border); padding: 22px 10px 16px; }
+.ff-side-lbl { font-size: 14px; font-weight: 700; color: var(--text3); opacity: 0.7; padding: 0 10px; margin-bottom: 16px; line-height: 29px; }
 .ff-major { display: block; width: 100%; text-align: left; background: none; border: none; font-size: 15px; color: var(--text2); padding: 11px 12px; border-radius: 9px; cursor: pointer; margin-bottom: 3px; transition: background 0.12s, color 0.12s; }
 .ff-major:hover { background: rgba(255,255,255,0.03); }
 .ff-major.active { background: rgba(0,208,132,0.1); color: var(--accent); font-weight: 700; }
 .ff-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .ff-main-head { padding: 22px 22px 0; }
-.ff-main-title { font-size: 24px; font-weight: 700; color: var(--text); }
+.ff-main-title { font-size: 24px; font-weight: 700; color: var(--text); line-height: 29px; }
 .ff-main-desc { font-size: 15px; color: var(--text3); margin-top: 8px; }
-.ff-subs { display: flex; gap: 8px; padding: 18px 22px 18px; flex-wrap: wrap; }
-.ff-subs .stock-btn { font-size: 14px; padding: 9px 16px; }
+.ff-subs { display: flex; gap: 10px; padding: 20px 22px 22px; flex-wrap: wrap; }
+.ff-subs .stock-btn { font-size: 14px; padding: 12px 20px; }
 .ff-tbl { border-top: 1px solid var(--border); }
 .ff-tr { display: flex; align-items: center; padding: 13px 20px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.12s; }
 .ff-tr:not(.ff-th):hover { background: rgba(255,255,255,0.025); }
@@ -232,6 +232,11 @@ body {
 .ff-th .ff-td-name { flex-direction: row; }
 .ff-tn { font-size: 14.5px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ff-ts { font-size: 11px; color: var(--text3); }
+.ff-sm { font-style: normal; font-size: 11px; margin-left: 4px; color: var(--text3); opacity: 0.4; transition: opacity 0.12s, color 0.12s; }
+.ff-th span:hover .ff-sm { opacity: 0.9; }
+.ff-sm.on { opacity: 1; color: var(--accent); }
+.ff-td-rank { width: 34px; flex-shrink: 0; text-align: left; font-size: 13px; color: var(--text3); padding-right: 14px; }
+.ff-th .ff-td-rank { color: var(--text3); cursor: default; }
 .ff-td-sec { width: 112px; text-align: right; font-size: 14.5px; flex-shrink: 0; color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ff-td-num { width: 88px; text-align: right; font-size: 14.5px; flex-shrink: 0; color: var(--text); }
 .ff-td-num.up { color: var(--up); font-weight: 600; } .ff-td-num.down { color: var(--down); font-weight: 600; }
