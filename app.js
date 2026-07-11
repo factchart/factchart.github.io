@@ -1738,7 +1738,7 @@ function goStock(name) {
 
 function ffPriceSignals() {
   var names = Object.keys(allData.prices || {});
-  var surge = [], consec = [], high52 = [];
+  var all = [], consec = [], high52 = [];
   names.forEach(function(name){
     var p = allData.prices[name];
     if (!p || p.length < 2) return;
@@ -1746,7 +1746,7 @@ function ffPriceSignals() {
     var lc = last[4], pc = prev[4];
     if (!lc || !pc) return;
     var chg = (lc-pc)/pc*100;
-    surge.push({ name:name, meta:'', chg:chg, _s:chg });
+    all.push({ name:name, meta:'', chg:chg, _s:chg });
     var cnt = 0;
     for (var i=p.length-1;i>0;i--){ if(p[i][4] > p[i-1][4]) cnt++; else break; }
     if (cnt >= 2) consec.push({ name:name, meta:cnt+'일 연속', chg:chg, _s:cnt });
@@ -1754,8 +1754,9 @@ function ffPriceSignals() {
     var mx = Math.max.apply(null, win.map(function(r){ return r[4]; }));
     if (lc >= mx) high52.push({ name:name, meta:'신고가', chg:chg, _s:chg });
   });
-  surge.sort(function(a,b){ return b._s-a._s; });
-  var drop = surge.slice().sort(function(a,b){ return a._s-b._s; });
+  // 급등 = 상승 종목만(상위 40), 급락 = 하락 종목만(하위 40) — 정렬이 아니라 필터
+  var surge = all.filter(function(x){ return x.chg > 0; }).sort(function(a,b){ return b.chg-a.chg; }).slice(0,40);
+  var drop  = all.filter(function(x){ return x.chg < 0; }).sort(function(a,b){ return a.chg-b.chg; }).slice(0,40);
   consec.sort(function(a,b){ return b._s-a._s; });
   high52.sort(function(a,b){ return b._s-a._s; });
   return { consec:consec, surge:surge, drop:drop, high52:high52 };
@@ -1933,15 +1934,36 @@ function ffScreenerData(){
   });
   var cand = ffDiscovery();
   function toInfo(it){ var info = ffStockInfo(it.name); if (!info) return null; info.extra = (it.d20>=0?'+':'')+it.d20.toFixed(1)+'%'; info.extraRaw = it.d20; info._d20 = it.d20; return info; }
-  data.find.low = cand.slice().sort(function(a,b){ return a.d20-b.d20; }).map(toInfo).filter(Boolean);
-  data.find.rebound = cand.slice().sort(function(a,b){ return b.d20-a.d20; }).map(toInfo).filter(Boolean);
-  data.find.vol = cand.slice().sort(function(a,b){ return Math.abs(b.d20)-Math.abs(a.d20); }).map(toInfo).filter(Boolean);
+  // 각 관점을 '필터'로 (정렬만 다르면 기본정렬에 덮여 똑같아 보임)
+  data.find.low = cand.filter(function(x){ return x.d20 < 0; }).sort(function(a,b){ return a.d20-b.d20; }).slice(0,40).map(toInfo).filter(Boolean);
+  data.find.rebound = cand.filter(function(x){ return x.d20 > 0; }).sort(function(a,b){ return b.d20-a.d20; }).slice(0,40).map(toInfo).filter(Boolean);
+  // '변동 큰' = 상승·하락 양쪽에서 번갈아 (절대값만 쓰면 반등큰과 동일해짐)
+  var upBig = cand.filter(function(x){ return x.d20 > 0; }).sort(function(a,b){ return b.d20-a.d20; });
+  var dnBig = cand.filter(function(x){ return x.d20 < 0; }).sort(function(a,b){ return a.d20-b.d20; });
+  var mixed = [];
+  for (var vi=0; vi<20; vi++){
+    if (upBig[vi]) mixed.push(upBig[vi]);
+    if (dnBig[vi]) mixed.push(dnBig[vi]);
+  }
+  data.find.vol = mixed.map(toInfo).filter(Boolean);
   window._ffScr = data;
   return data;
 }
 
-function ffSelectMajor(m){ ffState.major = m; ffState.sub = FF_CATS[m].subs[0].key; ffState.sortKey = 'chg'; ffState.sortDir = -1; renderFactfinder(); }
-function ffSelectSub(s){ ffState.sub = s; renderFactfinder(); }
+function ffDefaultSort(major, sub){
+  if (major === 'find') {
+    if (sub === 'vol') return { key:'none', dir:1 };
+    return { key:'extra', dir:(sub==='low' ? 1 : -1) };
+  }
+  if (major === 'price') {
+    if (sub === 'drop') return { key:'chg', dir:1 };
+    if (sub === 'consec') return { key:'extra', dir:-1 };
+    return { key:'chg', dir:-1 };
+  }
+  return { key:'chg', dir:-1 };
+}
+function ffSelectMajor(m){ ffState.major = m; ffState.sub = FF_CATS[m].subs[0].key; var d = ffDefaultSort(m, ffState.sub); ffState.sortKey = d.key; ffState.sortDir = d.dir; renderFactfinder(); }
+function ffSelectSub(s){ ffState.sub = s; var d = ffDefaultSort(ffState.major, s); ffState.sortKey = d.key; ffState.sortDir = d.dir; renderFactfinder(); }
 function ffSort(key){ if (ffState.sortKey===key){ ffState.sortDir *= -1; } else { ffState.sortKey = key; ffState.sortDir = (key==='name')?1:-1; } renderFactfinder(); }
 function ffSortArrow(key){ if (ffState.sortKey!==key) return ''; return ffState.sortDir<0 ? ' ▾' : ' ▴'; }
 function ffSortMark(key){
@@ -1988,7 +2010,7 @@ function renderFactfinder() {
   if (!cat.subs.some(function(s){ return s.key===ffState.sub; })) ffState.sub = cat.subs[0].key;
   var rows = (data[ffState.major][ffState.sub] || []).slice();
   var k = ffState.sortKey, dir = ffState.sortDir;
-  rows.sort(function(a,b){
+  if (k !== 'none') rows.sort(function(a,b){
     if (k==='name') return a.name<b.name?-dir:(a.name>b.name?dir:0);
     if (k==='sector'){ var sa=a.sector||'', sb=b.sector||''; return sa<sb?-dir:(sa>sb?dir:0); }
     var va, vb;
