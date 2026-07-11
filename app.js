@@ -2032,7 +2032,7 @@ function renderFactfinder() {
       + '<span class="ff-td-num '+exCls+'">'+r.extra+'</span>'
       + '</div>';
   });
-  html += '</div></div>';
+  html += '</div></div></div></div>';
   html += '<div class="right-col">' + ffEduCard() + '</div>';
   html += '</div>';
   el.innerHTML = html;
