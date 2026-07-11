@@ -1845,12 +1845,47 @@ function ffSubjParticle(word){ // 받침 판정: "가"/"이"
   return ((c-0xAC00)%28 !== 0) ? '이' : '가';
 }
 
+var FF_IND_MAP = {
+  '반도체·장비·소재':'반도체','반도체장비':'반도체','반도체':'반도체','반도체·전자':'반도체','반도체부품':'반도체','반도체소재':'반도체',
+  '바이오·제약·의료기기':'바이오','바이오·제약':'바이오','바이오':'바이오','바이오·미용':'바이오',
+  '미용의료기기':'의료','의료AI':'의료',
+  '화학·소재':'화학','에너지·화학':'화학','화학·태양광':'화학','소재·화학':'화학','포장재·소재':'화학','소재·필터':'화학',
+  '2차전지·소재':'배터리','2차전지소재':'배터리','2차전지':'배터리',
+  'IT·소프트웨어':'IT','IT·플랫폼':'IT','IT·보안서비스':'IT','핀테크':'IT','광고·마케팅':'IT',
+  '게임·엔터·IT':'게임','게임':'게임','엔터테인먼트':'엔터테인먼트',
+  '금융':'금융','보험':'금융','증권':'금융','금융·핀테크':'금융','금융·카드':'금융','부동산·리츠':'리츠',
+  '자동차·부품':'자동차','자동차부품':'자동차','자동차':'자동차',
+  '조선':'조선','조선·해양':'조선','조선·에너지':'조선',
+  '기계·중공업':'기계','기계·부품':'기계','로봇':'기계',
+  '전기·전력기기·조선기계':'전력에너지','전력·유틸리티':'전력에너지','원전·에너지':'전력에너지','에너지':'전력에너지','에너지·플랜트':'전력에너지','에너지·유틸리티·레저':'전력에너지',
+  '방산·항공':'방위산업물자','방산·철도':'방위산업물자','방산·IT':'방위산업물자','방산·광학':'방위산업물자','소재·방산':'방위산업물자',
+  '철강·금속':'금속','철강·소재':'금속','철강':'금속','비철금속':'금속','전기·소재':'금속',
+  '건설·인프라':'건설','건설':'건설','건설·플랜트':'건설','상사·건설':'건설',
+  '물류·운송':'운송','물류':'운송','해운':'운송',
+  '식품·음료':'음식료','식품':'음식료','식품·수산':'음식료',
+  '유통·리테일':'유통','유통':'유통','상사·에너지':'유통',
+  '소비재·서비스':'생활용품','필수소비재':'생활용품','생활소비재':'생활용품',
+  '생활가전':'가전제품','전자·가전':'가전제품',
+  '뷰티·화장품':'화장품','화장품':'화장품',
+  '전자부품':'전자부품','디스플레이':'디스플레이','통신':'통신','통신장비':'통신',
+  '지주':'지주사','투자지주':'지주사','지주·방산':'지주사','지주·에너지':'지주사','지주·건설':'지주사',
+  '교육':'교육'
+};
+function ffIndustry(name){
+  var meta = (typeof STOCK_META!=='undefined' && STOCK_META[name]) || {};
+  var s = meta.sector || '';
+  return FF_IND_MAP[s] || s || '-';
+}
+
 var FF_CATS = {
   signal: { label:'공시 시그널', desc:'최근 주요 공시가 나온 종목', extraCol:'공시일', subs:[
     {key:'자사주', label:'자사주 매입'},{key:'대규모계약', label:'대규모 계약'},{key:'배당', label:'배당 결정'},{key:'투자결정', label:'투자 결정'}
   ]},
   price: { label:'주가 움직임', desc:'최근 거래일 기준 주가 신호', extraCol:'특성', subs:[
     {key:'consec', label:'연속 상승'},{key:'surge', label:'오늘 급등'},{key:'drop', label:'오늘 급락'},{key:'high52', label:'52주 신고가'}
+  ]},
+  find: { label:'발견', desc:'공시 이후 주가 흐름으로 찾기', extraCol:'공시 후 20일', subs:[
+    {key:'low', label:'많이 빠진'},{key:'rebound', label:'반등 큰'},{key:'vol', label:'변동 큰'}
   ]}
 };
 var ffState = { major:'signal', sub:'자사주', sortKey:'chg', sortDir:-1 };
@@ -1868,7 +1903,7 @@ function ffStockInfo(name){
   if (!price || !pc) return null;
   var m = (allData.market && allData.market[name]) || {};
   var meta = (typeof STOCK_META !== 'undefined' && STOCK_META[name]) || {};
-  return { name:name, sector:meta.sector||'', price:price, chg:(price-pc)/pc*100, cap:m.marketCap||null, vol:m.volume||null, extra:'', extraRaw:null, _d20:null };
+  return { name:name, sector:ffIndustry(name), price:price, chg:(price-pc)/pc*100, cap:m.marketCap||null, vol:m.volume||null, extra:'', extraRaw:null, _d20:null };
 }
 
 function ffScreenerData(){
@@ -1910,21 +1945,32 @@ function ffSelectSub(s){ ffState.sub = s; renderFactfinder(); }
 function ffSort(key){ if (ffState.sortKey===key){ ffState.sortDir *= -1; } else { ffState.sortKey = key; ffState.sortDir = (key==='name')?1:-1; } renderFactfinder(); }
 function ffSortArrow(key){ if (ffState.sortKey!==key) return ''; return ffState.sortDir<0 ? ' ▾' : ' ▴'; }
 
-function ffFindCard(){
-  var cand = ffDiscovery();
-  var theme = FF_DISC_THEMES[_ffDiscTheme];
-  var picked = cand.slice().sort(theme.sort).slice(0,5);
-  var h = '<div class="ff-find"><div class="ff-find-head"><span class="ff-find-title">발견</span><button class="ff-find-cycle" onclick="ffCycleDiscovery()">↻ 다른 관점</button></div>';
-  h += '<div class="ff-find-desc">'+theme.label+'</div><div class="ff-find-list">';
-  if (!picked.length) h += '<div class="ff-tbl-empty">데이터 없음</div>';
-  picked.forEach(function(it){
-    var d20Str = (it.d20>=0?'+':'')+it.d20.toFixed(1)+'%';
-    var cls = it.d20>=0?'up':'down';
-    var meta = (typeof STOCK_META!=='undefined' && STOCK_META[it.name]) || {};
-    h += '<div class="ff-find-row" onclick="goStock(\''+ffEsc(it.name)+'\')">'
-      + '<div class="ff-find-main"><span class="ff-find-name">'+it.name+'</span><span class="ff-find-sec">'+(meta.sector||'')+'</span></div>'
-      + '<div class="ff-find-val"><span class="'+cls+'">'+d20Str+'</span><span class="ff-find-vlbl">공시 후 20일</span></div></div>';
-  });
+function ffEduCard(){
+  var edu = FF_TYPE_EDU[_ffEduIdx];
+  var particle = ffSubjParticle(edu.type);
+  var eduDiscs = allData.disclosures.slice().sort(function(a,b){ return a.date<b.date?1:(a.date>b.date?-1:0); });
+  var seenE = {}, chips = [];
+  for (var e=0;e<eduDiscs.length;e++){
+    var de = eduDiscs[e];
+    if (de.type !== edu.type) continue;
+    var nme = ffNorm(de.name);
+    if (seenE[nme]) continue;
+    seenE[nme] = true;
+    chips.push({ name:nme, chg:ffDayChange(nme) });
+    if (chips.length >= 3) break;
+  }
+  var h = '<div class="ff-find"><div class="ff-find-head"><span class="ff-find-title">'+edu.type+particle+' 뭐길래?</span><button class="ff-find-cycle" onclick="ffCycleEdu()">↻ 다른 유형</button></div>';
+  h += '<div class="ff-edu-body">'
+    + '<div class="ff-edu-head">'+edu.head+'</div>'
+    + '<div class="ff-edu-desc">'+edu.desc+'</div>';
+  if (chips.length) {
+    h += '<div class="ff-edu-chips"><span class="ff-edu-chips-lbl">'+edu.badge+' 공시 종목</span><div class="ff-edu-chip-row">';
+    chips.forEach(function(c){
+      var cs = c.chg==null ? '' : ' <span class="'+(c.chg>=0?'up':'down')+'">'+(c.chg>=0?'+':'')+c.chg.toFixed(1)+'%</span>';
+      h += '<span class="ff-edu-chip" onclick="goStock(\''+ffEsc(c.name)+'\')">'+c.name+cs+'</span>';
+    });
+    h += '</div></div>';
+  }
   h += '</div></div>';
   return h;
 }
@@ -1987,7 +2033,7 @@ function renderFactfinder() {
       + '</div>';
   });
   html += '</div></div>';
-  html += '<div class="right-col">' + ffFindCard() + '</div>';
+  html += '<div class="right-col">' + ffEduCard() + '</div>';
   html += '</div>';
   el.innerHTML = html;
 }
