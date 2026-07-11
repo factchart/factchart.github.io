@@ -223,22 +223,22 @@ body {
 .ff-subs { display: flex; gap: 10px; padding: 20px 22px 22px; flex-wrap: wrap; }
 .ff-subs .stock-btn { font-size: 14px; padding: 12px 20px; }
 .ff-tbl { border-top: 1px solid var(--border); }
-.ff-tr { display: flex; align-items: center; padding: 13px 20px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.12s; }
+.ff-tr { display: flex; align-items: center; gap: 8px; padding: 14px 22px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.12s; }
 .ff-tr:not(.ff-th):hover { background: rgba(255,255,255,0.025); }
-.ff-th { cursor: default; padding: 10px 20px; }
+.ff-th { cursor: default; padding: 11px 22px; }
 .ff-th span { font-size: 14px; color: var(--text3); cursor: pointer; user-select: none; white-space: nowrap; }
 .ff-th span:hover { color: var(--text2); }
-.ff-td-name { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ff-td-name { flex: 0 1 150px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .ff-th .ff-td-name { flex-direction: row; }
 .ff-tn { font-size: 14.5px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ff-ts { font-size: 11px; color: var(--text3); }
 .ff-sm { font-style: normal; font-size: 11px; margin-left: 4px; color: var(--text3); opacity: 0.4; transition: opacity 0.12s, color 0.12s; }
 .ff-th span:hover .ff-sm { opacity: 0.9; }
 .ff-sm.on { opacity: 1; color: var(--accent); }
-.ff-td-rank { width: 34px; flex-shrink: 0; text-align: left; font-size: 13px; color: var(--text3); padding-right: 14px; }
+.ff-td-rank { width: 22px; flex-shrink: 0; text-align: left; font-size: 13px; color: var(--text3); }
 .ff-th .ff-td-rank { color: var(--text3); cursor: default; }
-.ff-td-sec { width: 112px; text-align: right; font-size: 14.5px; flex-shrink: 0; color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ff-td-num { width: 88px; text-align: right; font-size: 14.5px; flex-shrink: 0; color: var(--text); }
+.ff-td-sec { flex: 1 1 0; min-width: 92px; text-align: right; font-size: 14.5px; color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ff-td-num { flex: 1 1 0; min-width: 74px; text-align: right; font-size: 14.5px; color: var(--text); }
 .ff-td-num.up { color: var(--up); font-weight: 600; } .ff-td-num.down { color: var(--down); font-weight: 600; }
 .ff-td-num.ff-dim { color: var(--text2); }
 .ff-tbl-empty { padding: 48px; text-align: center; color: var(--text3); font-size: 13px; }

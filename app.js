@@ -2011,7 +2011,7 @@ function renderFactfinder() {
   cat.subs.forEach(function(s){ html += '<button class="stock-btn ff-sub-btn'+(s.key===ffState.sub?' active':'')+'" onclick="ffSelectSub(\''+s.key+'\')">'+s.label+'</button>'; });
   html += '</div>';
   html += '<div class="ff-tbl"><div class="ff-tr ff-th">'
-    + '<span class="ff-td-rank">#</span>'
+    + '<span class="ff-td-rank"></span>'
     + '<span class="ff-td-name" onclick="ffSort(\'name\')">종목'+ffSortMark('name')+'</span>'
     + '<span class="ff-td-num" onclick="ffSort(\'price\')">현재가'+ffSortMark('price')+'</span>'
     + '<span class="ff-td-num" onclick="ffSort(\'chg\')">등락률'+ffSortMark('chg')+'</span>'
