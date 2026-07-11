@@ -1872,6 +1872,9 @@ var FF_IND_MAP = {
   '지주':'지주사','투자지주':'지주사','지주·방산':'지주사','지주·에너지':'지주사','지주·건설':'지주사',
   '교육':'교육'
 };
+var FF_SUBIND = {"반도체":["메모리·종합","전공정 장비","후공정·테스트","소재·부품","팹리스·설계"],"바이오":["CDMO·위탁","바이오시밀러·항체","신약개발","전통제약","진단·백신","미용·에스테틱"],"화학":["석유화학·정유","전자·반도체 소재","태양광·친환경","건자재·도료","섬유·포장","기타 화학"],"금융":["은행·금융지주","증권","보험","카드·결제"],"전력에너지":["원전","전력기기·케이블","발전·유틸리티","정유·조선기자재","레저·카지노"],"배터리":["셀 제조","양극재·음극재","전해질·분리막","장비·부품","재활용"],"게임":["MMORPG·PC","모바일·캐주얼","K-POP·엔터","미디어·콘텐츠"],"IT":["플랫폼·포털","IT서비스·SI","보안","핀테크·결제","AI·기타"],"기계":["로봇","건설·산업기계","부품·장비"],"자동차":["완성차","부품·모듈","타이어"],"화장품":["브랜드","ODM·OEM","유통·부자재"]};
+var FF_STOCK_SUB = {"삼성전자":"반도체/메모리·종합","SK하이닉스":"반도체/메모리·종합","제주반도체":"반도체/메모리·종합","서울반도체":"반도체/메모리·종합","원익IPS":"반도체/전공정 장비","주성엔지니어링":"반도체/전공정 장비","유진테크":"반도체/전공정 장비","테스":"반도체/전공정 장비","피에스케이":"반도체/전공정 장비","HPSP":"반도체/전공정 장비","와이씨":"반도체/전공정 장비","제우스":"반도체/전공정 장비","선익시스템":"반도체/전공정 장비","필옵틱스":"반도체/전공정 장비","넥스틴":"반도체/전공정 장비","이오테크닉스":"반도체/전공정 장비","한미반도체":"반도체/후공정·테스트","리노공업":"반도체/후공정·테스트","ISC":"반도체/후공정·테스트","테크윙":"반도체/후공정·테스트","티에스이":"반도체/후공정·테스트","두산테스나":"반도체/후공정·테스트","하나마이크론":"반도체/후공정·테스트","SFA반도체":"반도체/후공정·테스트","네오셈":"반도체/후공정·테스트","고영":"반도체/후공정·테스트","파크시스템스":"반도체/후공정·테스트","솔브레인":"반도체/소재·부품","동진쎄미켐":"반도체/소재·부품","티씨케이":"반도체/소재·부품","하나머티리얼즈":"반도체/소재·부품","에스앤에스텍":"반도체/소재·부품","코미코":"반도체/소재·부품","에프에스티":"반도체/소재·부품","미코":"반도체/소재·부품","심텍":"반도체/소재·부품","포스코엠텍":"반도체/소재·부품","서진시스템":"반도체/소재·부품","피에스케이홀딩스":"반도체/소재·부품","가온칩스":"반도체/팹리스·설계","RFHIC":"반도체/팹리스·설계","삼성바이오로직스":"바이오/CDMO·위탁","에스티팜":"바이오/CDMO·위탁","셀트리온":"바이오/바이오시밀러·항체","셀트리온제약":"바이오/바이오시밀러·항체","알테오젠":"바이오/바이오시밀러·항체","에이비엘바이오":"바이오/바이오시밀러·항체","한올바이오파마":"바이오/바이오시밀러·항체","SK바이오팜":"바이오/신약개발","HLB":"바이오/신약개발","리가켐바이오":"바이오/신약개발","디앤디파마텍":"바이오/신약개발","보로노이":"바이오/신약개발","오스코텍":"바이오/신약개발","올릭스":"바이오/신약개발","펩트론":"바이오/신약개발","네이처셀":"바이오/신약개발","차바이오텍":"바이오/신약개발","지아이이노베이션":"바이오/신약개발","젬백스":"바이오/신약개발","현대바이오":"바이오/신약개발","유한양행":"바이오/전통제약","한미약품":"바이오/전통제약","한미사이언스":"바이오/전통제약","녹십자":"바이오/전통제약","녹십자홀딩스":"바이오/전통제약","대웅":"바이오/전통제약","대웅제약":"바이오/전통제약","종근당":"바이오/전통제약","삼천당제약":"바이오/전통제약","HK이노엔":"바이오/전통제약","동국제약":"바이오/전통제약","바이넥스":"바이오/전통제약","SK바이오사이언스":"바이오/진단·백신","에스디바이오센서":"바이오/진단·백신","씨젠":"바이오/진단·백신","큐리옥스바이오시스템즈":"바이오/진단·백신","휴젤":"바이오/미용·에스테틱","파마리서치":"바이오/미용·에스테틱","엘앤씨바이오":"바이오/미용·에스테틱","케어젠":"바이오/미용·에스테틱","메디톡스":"바이오/미용·에스테틱","LG화학":"화학/석유화학·정유","SK이노베이션":"화학/석유화학·정유","롯데케미칼":"화학/석유화학·정유","금호석유화학":"화학/석유화학·정유","대한유화":"화학/석유화학·정유","태광산업":"화학/석유화학·정유","SK케미칼":"화학/석유화학·정유","롯데정밀화학":"화학/석유화학·정유","미원상사":"화학/석유화학·정유","미원에스씨":"화학/석유화학·정유","아세아":"화학/석유화학·정유","SKC":"화학/전자·반도체 소재","한솔케미칼":"화학/전자·반도체 소재","이수스페셜티케미컬":"화학/전자·반도체 소재","후성":"화학/전자·반도체 소재","코스모화학":"화학/전자·반도체 소재","율촌화학":"화학/전자·반도체 소재","한화솔루션":"화학/태양광·친환경","OCI홀딩스":"화학/태양광·친환경","KCC":"화학/건자재·도료","동화기업":"화학/건자재·도료","코오롱인더":"화학/섬유·포장","효성티앤씨":"화학/섬유·포장","동원시스템즈":"화학/섬유·포장","동성화인텍":"화학/섬유·포장","시노펙스":"화학/섬유·포장","세아베스틸지주":"화학/기타 화학","세아제강지주":"화학/기타 화학","TKG휴켐스":"화학/기타 화학","KB금융":"금융/은행·금융지주","신한지주":"금융/은행·금융지주","하나금융지주":"금융/은행·금융지주","우리금융지주":"금융/은행·금융지주","기업은행":"금융/은행·금융지주","BNK금융지주":"금융/은행·금융지주","JB금융지주":"금융/은행·금융지주","iM금융지주":"금융/은행·금융지주","카카오뱅크":"금융/은행·금융지주","미래에셋증권":"금융/증권","NH투자증권":"금융/증권","삼성증권":"금융/증권","키움증권":"금융/증권","한국금융지주":"금융/증권","우리기술투자":"금융/증권","삼성생명":"금융/보험","삼성화재":"금융/보험","DB손해보험":"금융/보험","한화생명":"금융/보험","현대해상":"금융/보험","메리츠금융지주":"금융/보험","인카금융서비스":"금융/보험","삼성카드":"금융/카드·결제","두산에너빌리티":"전력에너지/원전","한전기술":"전력에너지/원전","한전KPS":"전력에너지/원전","우리기술":"전력에너지/원전","HD현대일렉트릭":"전력에너지/전력기기·케이블","LS ELECTRIC":"전력에너지/전력기기·케이블","효성중공업":"전력에너지/전력기기·케이블","대한전선":"전력에너지/전력기기·케이블","산일전기":"전력에너지/전력기기·케이블","제룡전기":"전력에너지/전력기기·케이블","비에이치아이":"전력에너지/전력기기·케이블","신성델타테크":"전력에너지/전력기기·케이블","한국전력":"전력에너지/발전·유틸리티","한국가스공사":"전력에너지/발전·유틸리티","지역난방공사":"전력에너지/발전·유틸리티","S-Oil":"전력에너지/정유·조선기자재","HD현대마린솔루션":"전력에너지/정유·조선기자재","한화엔진":"전력에너지/정유·조선기자재","HD현대마린엔진":"전력에너지/정유·조선기자재","강원랜드":"전력에너지/레저·카지노","파라다이스":"전력에너지/레저·카지노","GKL":"전력에너지/레저·카지노","아난티":"전력에너지/레저·카지노","LG에너지솔루션":"배터리/셀 제조","삼성SDI":"배터리/셀 제조","세방전지":"배터리/셀 제조","포스코퓨처엠":"배터리/양극재·음극재","엘앤에프":"배터리/양극재·음극재","에코프로비엠":"배터리/양극재·음극재","에코프로":"배터리/양극재·음극재","에코프로머티":"배터리/양극재·음극재","에코앤드림":"배터리/양극재·음극재","나노신소재":"배터리/양극재·음극재","SK아이이테크놀로지":"배터리/전해질·분리막","엔켐":"배터리/전해질·분리막","천보":"배터리/전해질·분리막","솔브레인홀딩스":"배터리/전해질·분리막","씨아이에스":"배터리/장비·부품","대주전자재료":"배터리/장비·부품","태성":"배터리/장비·부품","레이크머티리얼즈":"배터리/장비·부품","이녹스첨단소재":"배터리/장비·부품","덕산네오룩스":"배터리/장비·부품","성일하이텍":"배터리/재활용","에코프로에이치엔":"배터리/재활용","NC":"게임/MMORPG·PC","펄어비스":"게임/MMORPG·PC","웹젠":"게임/MMORPG·PC","네오위즈":"게임/MMORPG·PC","크래프톤":"게임/MMORPG·PC","넷마블":"게임/모바일·캐주얼","컴투스":"게임/모바일·캐주얼","카카오게임즈":"게임/모바일·캐주얼","넥슨게임즈":"게임/모바일·캐주얼","데브시스터즈":"게임/모바일·캐주얼","더블유게임즈":"게임/모바일·캐주얼","위메이드":"게임/모바일·캐주얼","위메이드맥스":"게임/모바일·캐주얼","JYP Ent.":"게임/K-POP·엔터","에스엠":"게임/K-POP·엔터","와이지엔터테인먼트":"게임/K-POP·엔터","디어유":"게임/K-POP·엔터","CJ ENM":"게임/미디어·콘텐츠","스튜디오드래곤":"게임/미디어·콘텐츠","SOOP":"게임/미디어·콘텐츠","카페24":"게임/미디어·콘텐츠","골프존":"게임/미디어·콘텐츠","NAVER":"IT/플랫폼·포털","카카오":"IT/플랫폼·포털","삼성에스디에스":"IT/IT서비스·SI","LG씨엔에스":"IT/IT서비스·SI","현대오토에버":"IT/IT서비스·SI","포스코DX":"IT/IT서비스·SI","다우데이타":"IT/IT서비스·SI","엠로":"IT/IT서비스·SI","안랩":"IT/보안","에스원":"IT/보안","한글과컴퓨터":"IT/보안","인텔리안테크":"IT/보안","카카오페이":"IT/핀테크·결제","NHN KCP":"IT/핀테크·결제","코나아이":"IT/핀테크·결제","셀바스AI":"IT/AI·기타","솔트룩스":"IT/AI·기타","제일기획":"IT/AI·기타","두산로보틱스":"기계/로봇","레인보우로보틱스":"기계/로봇","로보티즈":"기계/로봇","유일로보틱스":"기계/로봇","클로봇":"기계/로봇","유진로봇":"기계/로봇","큐렉소":"기계/로봇","두산":"기계/건설·산업기계","두산밥캣":"기계/건설·산업기계","미스토홀딩스":"기계/건설·산업기계","에스피지":"기계/부품·장비","피엔티":"기계/부품·장비","원익QnC":"기계/부품·장비","에스에프에이":"기계/부품·장비","성광벤드":"기계/부품·장비","현대차":"자동차/완성차","기아":"자동차/완성차","현대모비스":"자동차/부품·모듈","한온시스템":"자동차/부품·모듈","에스엘":"자동차/부품·모듈","HL만도":"자동차/부품·모듈","현대위아":"자동차/부품·모듈","DN오토모티브":"자동차/부품·모듈","성우하이텍":"자동차/부품·모듈","한국타이어앤테크놀로지":"자동차/타이어","한국앤컴퍼니":"자동차/타이어","금호타이어":"자동차/타이어","아모레퍼시픽":"화장품/브랜드","아모레퍼시픽홀딩스":"화장품/브랜드","에이피알":"화장품/브랜드","브이티":"화장품/브랜드","감성코퍼레이션":"화장품/브랜드","코스맥스":"화장품/ODM·OEM","한국콜마":"화장품/ODM·OEM","코스메카코리아":"화장품/ODM·OEM","씨앤씨인터내셔널":"화장품/ODM·OEM","실리콘투":"화장품/유통·부자재","펌텍코리아":"화장품/유통·부자재"};
+
 function ffIndustry(name){
   var meta = (typeof STOCK_META!=='undefined' && STOCK_META[name]) || {};
   var s = meta.sector || '';
@@ -1885,11 +1888,12 @@ var FF_CATS = {
   price: { label:'주가 움직임', desc:'최근 거래일 기준 주가 신호', extraCol:'특성', subs:[
     {key:'consec', label:'연속 상승'},{key:'surge', label:'오늘 급등'},{key:'drop', label:'오늘 급락'},{key:'high52', label:'52주 신고가'}
   ]},
+  industry: { label:'업종', desc:'업종·세부 분야별로 종목 보기', extraCol:'공시일', subs:[] },
   find: { label:'발견', desc:'공시 이후 주가 흐름으로 찾기', extraCol:'공시 후 20일', subs:[
     {key:'low', label:'많이 빠진'},{key:'rebound', label:'반등 큰'},{key:'vol', label:'변동 큰'}
   ]}
 };
-var ffState = { major:'signal', sub:'자사주', sortKey:'chg', sortDir:-1 };
+var ffState = { major:'signal', sub:'자사주', sub2:'_all', sortKey:'chg', sortDir:-1 };
 
 function ffFmtCap(v){ if(!v)return '-'; if(v>=1e12)return (v/1e12).toFixed(1)+'조'; if(v>=1e8)return Math.round(v/1e8).toLocaleString()+'억'; return v.toLocaleString(); }
 function ffFmtVol(v){ if(!v)return '-'; if(v>=1e8)return (v/1e8).toFixed(1)+'억'; if(v>=1e4)return Math.round(v/1e4).toLocaleString()+'만'; return v.toLocaleString(); }
@@ -1905,6 +1909,42 @@ function ffStockInfo(name){
   var m = (allData.market && allData.market[name]) || {};
   var meta = (typeof STOCK_META !== 'undefined' && STOCK_META[name]) || {};
   return { name:name, sector:ffIndustry(name), price:price, chg:(price-pc)/pc*100, cap:m.marketCap||null, vol:m.volume||null, extra:'', extraRaw:null, _d20:null };
+}
+
+function ffIndustryList(){
+  // 업종별 종목수 (많은 순)
+  if (window._ffIndList) return window._ffIndList;
+  var cnt = {};
+  Object.keys(allData.prices || {}).forEach(function(n){
+    var i = ffIndustry(n);
+    if (!i || i==='-') return;
+    cnt[i] = (cnt[i]||0)+1;
+  });
+  var list = Object.keys(cnt).sort(function(a,b){ return cnt[b]-cnt[a]; });
+  window._ffIndList = list;
+  return list;
+}
+function ffIndustryRows(ind, sub){
+  var rows = [];
+  var discMap = {};
+  allData.disclosures.forEach(function(d){
+    var nm = ffNorm(d.name);
+    if (!discMap[nm] || d.date > discMap[nm]) discMap[nm] = d.date;
+  });
+  Object.keys(allData.prices || {}).forEach(function(n){
+    if (ffIndustry(n) !== ind) return;
+    if (sub && sub !== '_all') {
+      var key = FF_STOCK_SUB[n];
+      if (!key || key !== ind+'/'+sub) return;
+    }
+    var info = ffStockInfo(n);
+    if (!info) return;
+    var dt = discMap[n];
+    info.extra = dt ? dt.slice(5).replace('-','.') : '-';
+    info.extraRaw = dt || '';
+    rows.push(info);
+  });
+  return rows;
 }
 
 function ffScreenerData(){
@@ -1962,7 +2002,14 @@ function ffDefaultSort(major, sub){
   }
   return { key:'chg', dir:-1 };
 }
-function ffSelectMajor(m){ ffState.major = m; ffState.sub = FF_CATS[m].subs[0].key; var d = ffDefaultSort(m, ffState.sub); ffState.sortKey = d.key; ffState.sortDir = d.dir; renderFactfinder(); }
+function ffSelectMajor(m){
+  ffState.major = m;
+  if (m === 'industry') { ffState.sub = ffIndustryList()[0]; ffState.sub2 = '_all'; ffState.sortKey='cap'; ffState.sortDir=-1; }
+  else { ffState.sub = FF_CATS[m].subs[0].key; var d = ffDefaultSort(m, ffState.sub); ffState.sortKey = d.key; ffState.sortDir = d.dir; }
+  renderFactfinder();
+}
+function ffSelectInd(i){ ffState.sub = i; ffState.sub2 = '_all'; renderFactfinder(); }
+function ffSelectSub2(s2){ ffState.sub2 = s2; renderFactfinder(); }
 function ffSelectSub(s){ ffState.sub = s; var d = ffDefaultSort(ffState.major, s); ffState.sortKey = d.key; ffState.sortDir = d.dir; renderFactfinder(); }
 function ffSort(key){ if (ffState.sortKey===key){ ffState.sortDir *= -1; } else { ffState.sortKey = key; ffState.sortDir = (key==='name')?1:-1; } renderFactfinder(); }
 function ffSortArrow(key){ if (ffState.sortKey!==key) return ''; return ffState.sortDir<0 ? ' ▾' : ' ▴'; }
@@ -2007,8 +2054,15 @@ function renderFactfinder() {
   var data = ffScreenerData();
   var cat = FF_CATS[ffState.major];
   if (!cat) { ffState.major = 'signal'; cat = FF_CATS.signal; }
-  if (!cat.subs.some(function(s){ return s.key===ffState.sub; })) ffState.sub = cat.subs[0].key;
-  var rows = (data[ffState.major][ffState.sub] || []).slice();
+  var rows;
+  if (ffState.major === 'industry') {
+    var inds = ffIndustryList();
+    if (inds.indexOf(ffState.sub) < 0) ffState.sub = inds[0];
+    rows = ffIndustryRows(ffState.sub, ffState.sub2 || '_all');
+  } else {
+    if (!cat.subs.some(function(s){ return s.key===ffState.sub; })) ffState.sub = cat.subs[0].key;
+    rows = (data[ffState.major][ffState.sub] || []).slice();
+  }
   var k = ffState.sortKey, dir = ffState.sortDir;
   if (k !== 'none') rows.sort(function(a,b){
     if (k==='name') return a.name<b.name?-dir:(a.name>b.name?dir:0);
@@ -2028,10 +2082,28 @@ function renderFactfinder() {
     html += '<button class="ff-major'+(mk===ffState.major?' active':'')+'" onclick="ffSelectMajor(\''+mk+'\')">'+FF_CATS[mk].label+'</button>';
   });
   html += '</div><div class="ff-main">';
-  html += '<div class="ff-main-head"><div class="ff-main-title">'+cat.label+'</div><div class="ff-main-desc">'+cat.desc+'</div></div>';
+  var headTitle = (ffState.major==='industry') ? ffState.sub : cat.label;
+  var headDesc = (ffState.major==='industry') ? (rows.length+'개 종목') : cat.desc;
+  html += '<div class="ff-main-head"><div class="ff-main-title">'+headTitle+'</div><div class="ff-main-desc">'+headDesc+'</div></div>';
   html += '<div class="ff-subs">';
-  cat.subs.forEach(function(s){ html += '<button class="stock-btn ff-sub-btn'+(s.key===ffState.sub?' active':'')+'" onclick="ffSelectSub(\''+s.key+'\')">'+s.label+'</button>'; });
-  html += '</div>';
+  if (ffState.major === 'industry') {
+    ffIndustryList().forEach(function(i){
+      html += '<button class="stock-btn ff-sub-btn'+(i===ffState.sub?' active':'')+'" onclick="ffSelectInd(\''+ffEsc(i)+'\')">'+i+'</button>';
+    });
+    html += '</div>';
+    var subs = FF_SUBIND[ffState.sub];
+    if (subs && subs.length) {
+      html += '<div class="ff-subs ff-subs2">';
+      html += '<button class="stock-btn ff-sub2'+((!ffState.sub2||ffState.sub2==='_all')?' active':'')+'" onclick="ffSelectSub2(\'_all\')">전체</button>';
+      subs.forEach(function(s2){
+        html += '<button class="stock-btn ff-sub2'+(ffState.sub2===s2?' active':'')+'" onclick="ffSelectSub2(\''+ffEsc(s2)+'\')">'+s2+'</button>';
+      });
+      html += '</div>';
+    }
+  } else {
+    cat.subs.forEach(function(s){ html += '<button class="stock-btn ff-sub-btn'+(s.key===ffState.sub?' active':'')+'" onclick="ffSelectSub(\''+s.key+'\')">'+s.label+'</button>'; });
+    html += '</div>';
+  }
   html += '<div class="ff-tbl"><div class="ff-tr ff-th">'
     + '<span class="ff-td-rank"></span>'
     + '<span class="ff-td-name" onclick="ffSort(\'name\')">종목'+ffSortMark('name')+'</span>'
