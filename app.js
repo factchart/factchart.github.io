@@ -1940,6 +1940,7 @@ function renderFactfinder() {
   var k = ffState.sortKey, dir = ffState.sortDir;
   rows.sort(function(a,b){
     if (k==='name') return a.name<b.name?-dir:(a.name>b.name?dir:0);
+    if (k==='sector'){ var sa=a.sector||'', sb=b.sector||''; return sa<sb?-dir:(sa>sb?dir:0); }
     var va, vb;
     if (k==='extra'){
       va = a.extraRaw; vb = b.extraRaw;
@@ -1963,6 +1964,7 @@ function renderFactfinder() {
     + '<span class="ff-td-name" onclick="ffSort(\'name\')">종목'+ffSortArrow('name')+'</span>'
     + '<span class="ff-td-num" onclick="ffSort(\'price\')">현재가'+ffSortArrow('price')+'</span>'
     + '<span class="ff-td-num" onclick="ffSort(\'chg\')">등락률'+ffSortArrow('chg')+'</span>'
+    + '<span class="ff-td-sec" onclick="ffSort(\'sector\')">업종'+ffSortArrow('sector')+'</span>'
     + '<span class="ff-td-num" onclick="ffSort(\'cap\')">시총'+ffSortArrow('cap')+'</span>'
     + '<span class="ff-td-num ff-hide-m" onclick="ffSort(\'vol\')">거래량'+ffSortArrow('vol')+'</span>'
     + '<span class="ff-td-num" onclick="ffSort(\'extra\')">'+cat.extraCol+ffSortArrow('extra')+'</span>'
@@ -1975,9 +1977,10 @@ function renderFactfinder() {
     if (r.extra.indexOf('+')===0) exCls = 'up';
     else if (r.extra.indexOf('-')===0) exCls = 'down';
     html += '<div class="ff-tr" onclick="goStock(\''+ffEsc(r.name)+'\')">'
-      + '<span class="ff-td-name"><span class="ff-tn">'+r.name+'</span><span class="ff-ts">'+r.sector+'</span></span>'
+      + '<span class="ff-td-name"><span class="ff-tn">'+r.name+'</span></span>'
       + '<span class="ff-td-num">'+ffFmtPrice(r.price)+'</span>'
       + '<span class="ff-td-num '+chgCls+'">'+chgStr+'</span>'
+      + '<span class="ff-td-sec ff-dim">'+(r.sector||'-')+'</span>'
       + '<span class="ff-td-num ff-dim">'+ffFmtCap(r.cap)+'</span>'
       + '<span class="ff-td-num ff-dim ff-hide-m">'+ffFmtVol(r.vol)+'</span>'
       + '<span class="ff-td-num '+exCls+'">'+r.extra+'</span>'
