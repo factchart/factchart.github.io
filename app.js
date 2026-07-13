@@ -1882,6 +1882,9 @@ function ffIndustry(name){
 }
 
 function ffHasNews(){ return !!(allData && allData.news && Object.keys(allData.news).length); }
+function ffHasFin(){ return !!(allData && allData.fin && Object.keys(allData.fin).length); }
+function ffFinOf(name){ return (allData.fin && allData.fin[name]) || null; }
+function ffFmtNum(v, suffix){ return (v===null||v===undefined) ? '-' : (v + (suffix||'')); }
 function ffNewsOf(name){ return (allData.news && allData.news[name]) || null; }
 
 var FF_CATS = {
@@ -1914,7 +1917,8 @@ function ffStockInfo(name){
   if (!price || !pc) return null;
   var m = (allData.market && allData.market[name]) || {};
   var meta = (typeof STOCK_META !== 'undefined' && STOCK_META[name]) || {};
-  return { name:name, sector:ffIndustry(name), price:price, chg:(price-pc)/pc*100, cap:m.marketCap||null, vol:m.volume||null, extra:'', extraRaw:null, _d20:null };
+  var f = ffFinOf(name) || {};
+  return { name:name, sector:ffIndustry(name), price:price, chg:(price-pc)/pc*100, cap:m.marketCap||null, vol:m.volume||null, per:(f.per!=null?f.per:null), pbr:(f.pbr!=null?f.pbr:null), roe:(f.roe!=null?f.roe:null), extra:'', extraRaw:null, _d20:null };
 }
 
 function ffIndustryList(){
@@ -2144,6 +2148,8 @@ function renderFactfinder() {
     + '<span class="ff-td-sec" onclick="ffSort(\'sector\')">업종'+ffSortMark('sector')+'</span>'
     + '<span class="ff-td-num" onclick="ffSort(\'cap\')">시총'+ffSortMark('cap')+'</span>'
     + '<span class="ff-td-num ff-hide-m" onclick="ffSort(\'vol\')">거래량'+ffSortMark('vol')+'</span>'
+    + (ffHasFin() ? '<span class="ff-td-num ff-hide-m" onclick="ffSort(\'per\')">PER'+ffSortMark('per')+'</span>' : '')
+    + (ffHasFin() ? '<span class="ff-td-num ff-hide-m" onclick="ffSort(\'pbr\')">PBR'+ffSortMark('pbr')+'</span>' : '')
     + '<span class="ff-td-num" onclick="ffSort(\'extra\')">'+cat.extraCol+ffSortMark('extra')+'</span>'
     + '</div>';
   if (!rows.length) html += '<div class="ff-tbl-empty">종목이 없어요</div>';
@@ -2163,6 +2169,8 @@ function renderFactfinder() {
       + '<span class="ff-td-sec ff-dim">'+(r.sector||'-')+'</span>'
       + '<span class="ff-td-num ff-dim">'+ffFmtCap(r.cap)+'</span>'
       + '<span class="ff-td-num ff-dim ff-hide-m">'+ffFmtVol(r.vol)+'</span>'
+      + (ffHasFin() ? '<span class="ff-td-num ff-dim ff-hide-m">'+ffFmtNum(r.per)+'</span>' : '')
+      + (ffHasFin() ? '<span class="ff-td-num ff-dim ff-hide-m">'+ffFmtNum(r.pbr)+'</span>' : '')
       + '<span class="ff-td-num '+exCls+'">'+r.extra+'</span>'
       + '</div>';
   });
