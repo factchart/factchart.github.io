@@ -1881,6 +1881,9 @@ function ffIndustry(name){
   return FF_IND_MAP[s] || s || '-';
 }
 
+function ffHasNews(){ return !!(allData && allData.news && Object.keys(allData.news).length); }
+function ffNewsOf(name){ return (allData.news && allData.news[name]) || null; }
+
 var FF_CATS = {
   signal: { label:'공시 시그널', desc:'최근 주요 공시가 나온 종목', extraCol:'공시일', subs:[
     {key:'자사주', label:'자사주 매입'},{key:'대규모계약', label:'대규모 계약'},{key:'배당', label:'배당 결정'},{key:'투자결정', label:'투자 결정'}
@@ -1889,6 +1892,9 @@ var FF_CATS = {
     {key:'consec', label:'연속 상승'},{key:'surge', label:'오늘 급등'},{key:'drop', label:'오늘 급락'},{key:'high52', label:'52주 신고가'}
   ]},
   industry: { label:'업종', desc:'업종·세부 분야별로 종목 보기', extraCol:'공시일', subs:[] },
+  news: { label:'뉴스 분위기', desc:'최근 30일 뉴스의 호재·악재 흐름', extraCol:'호재·악재', subs:[
+    {key:'pos', label:'호재 우세'},{key:'neg', label:'악재 우세'},{key:'many', label:'뉴스 많은'}
+  ]},
   find: { label:'발견', desc:'공시 이후 주가 흐름으로 찾기', extraCol:'공시 후 20일', subs:[
     {key:'low', label:'많이 빠진'},{key:'rebound', label:'반등 큰'},{key:'vol', label:'변동 큰'}
   ]}
@@ -1949,7 +1955,27 @@ function ffIndustryRows(ind, sub){
 
 function ffScreenerData(){
   if (window._ffScr) return window._ffScr;
-  var data = { signal:{}, price:{}, find:{} };
+  var data = { signal:{}, price:{}, find:{}, news:{} };
+  // 뉴스 분위기 (데이터 있을 때만)
+  if (ffHasNews()) {
+    var nAll = [];
+    Object.keys(allData.news).forEach(function(nm){
+      var n = allData.news[nm];
+      if (!n) return;
+      var info = ffStockInfo(ffNorm(nm));
+      if (!info) return;
+      var tot = (n.pos||0)+(n.neg||0)+(n.neu||0);
+      info.extra = '호재'+(n.pos||0)+'·악재'+(n.neg||0);
+      info.extraRaw = (n.pos||0)-(n.neg||0);
+      info._tone = n.tone; info._tot = tot; info._pos = n.pos||0; info._neg = n.neg||0;
+      nAll.push(info);
+    });
+    data.news.pos = nAll.filter(function(x){ return x._tone==='pos'; }).sort(function(a,b){ return b.extraRaw-a.extraRaw; }).slice(0,40);
+    data.news.neg = nAll.filter(function(x){ return x._tone==='neg'; }).sort(function(a,b){ return a.extraRaw-b.extraRaw; }).slice(0,40);
+    data.news.many = nAll.slice().sort(function(a,b){ return b._tot-a._tot; }).slice(0,40);
+  } else {
+    data.news.pos = []; data.news.neg = []; data.news.many = [];
+  }
   var discs = allData.disclosures.slice().sort(function(a,b){ return a.date<b.date?1:(a.date>b.date?-1:0); });
   ['자사주','대규모계약','배당','투자결정'].forEach(function(t){
     var seen = {}, arr = [];
@@ -1991,6 +2017,11 @@ function ffScreenerData(){
 }
 
 function ffDefaultSort(major, sub){
+  if (major === 'news') {
+    if (sub === 'neg') return { key:'extra', dir:1 };
+    if (sub === 'many') return { key:'none', dir:1 };
+    return { key:'extra', dir:-1 };
+  }
   if (major === 'find') {
     if (sub === 'vol') return { key:'none', dir:1 };
     return { key:'extra', dir:(sub==='low' ? 1 : -1) };
@@ -2079,6 +2110,7 @@ function renderFactfinder() {
   var html = '<div class="main-layout ff-mlayout"><div class="left-col"><div class="ff-scr">';
   html += '<div class="ff-side"><div class="ff-side-lbl">팩트 파인더</div>';
   Object.keys(FF_CATS).forEach(function(mk){
+    if (mk === 'news' && !ffHasNews()) return;   // 뉴스 데이터 없으면 숨김
     html += '<button class="ff-major'+(mk===ffState.major?' active':'')+'" onclick="ffSelectMajor(\''+mk+'\')">'+FF_CATS[mk].label+'</button>';
   });
   html += '</div><div class="ff-main">';
@@ -2119,7 +2151,9 @@ function renderFactfinder() {
     var chgStr = (r.chg>=0?'+':'')+r.chg.toFixed(1)+'%';
     var chgCls = r.chg>=0?'up':'down';
     var exCls = 'ff-dim';
-    if (r.extra.indexOf('+')===0) exCls = 'up';
+    if (r._tone === 'pos') exCls = 'up';
+    else if (r._tone === 'neg') exCls = 'down';
+    else if (r.extra.indexOf('+')===0) exCls = 'up';
     else if (r.extra.indexOf('-')===0) exCls = 'down';
     html += '<div class="ff-tr" onclick="goStock(\''+ffEsc(r.name)+'\')">'
       + '<span class="ff-td-rank">'+(i+1)+'</span>'
