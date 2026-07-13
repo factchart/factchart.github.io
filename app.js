@@ -1975,7 +1975,14 @@ function ffScreenerData(){
       nAll.push(info);
     });
     data.news.pos = nAll.filter(function(x){ return x._tone==='pos'; }).sort(function(a,b){ return b.extraRaw-a.extraRaw; }).slice(0,40);
-    data.news.neg = nAll.filter(function(x){ return x._tone==='neg'; }).sort(function(a,b){ return a.extraRaw-b.extraRaw; }).slice(0,40);
+    data.news.neg = nAll.filter(function(x){ return x._tone==='neg'; }).sort(function(a,b){ return a.extraRaw-b.extraRaw; }).slice(0,40)
+      .map(function(x){
+        // 악재 우세 화면에서는 악재를 앞에 표시 (얕은 복사 — ES5 호환)
+        var o = {};
+        for (var k in x) { if (x.hasOwnProperty(k)) o[k] = x[k]; }
+        o.extra = '<span class="down">악재'+x._neg+'</span>·<span class="up">호재'+x._pos+'</span>';
+        return o;
+      });
     data.news.many = nAll.slice().sort(function(a,b){ return b._tot-a._tot; }).slice(0,40);
   } else {
     data.news.pos = []; data.news.neg = []; data.news.many = [];
@@ -2157,7 +2164,7 @@ function renderFactfinder() {
     + '<span class="ff-td-num ff-hide-m" onclick="ffSort(\'vol\')">거래량'+ffSortMark('vol')+'</span>'
     + (ffHasFin() ? '<span class="ff-td-num ff-hide-m" onclick="ffSort(\'per\')">PER'+ffSortMark('per')+'</span>' : '')
     + (ffHasFin() ? '<span class="ff-td-num ff-hide-m" onclick="ffSort(\'pbr\')">PBR'+ffSortMark('pbr')+'</span>' : '')
-    + '<span class="ff-td-num" onclick="ffSort(\'extra\')">'+cat.extraCol+ffSortMark('extra')+'</span>'
+    + '<span class="ff-td-num" onclick="ffSort(\'extra\')">'+((ffState.major==='news'&&ffState.sub==='neg')?'악재·호재':cat.extraCol)+ffSortMark('extra')+'</span>'
     + '</div>';
   if (!rows.length) html += '<div class="ff-tbl-empty">종목이 없어요</div>';
   rows.forEach(function(r, i){
