@@ -189,7 +189,7 @@ body {
 .ff-edu-chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .ff-edu-chip { font-size: 14px; color: var(--text); background: rgba(255,255,255,0.04); border: 1px solid var(--border2); border-radius: 8px; padding: 9px 14px; cursor: pointer; transition: background 0.12s; }
 .ff-edu-chip:hover { background: rgba(255,255,255,0.08); }
-.ff-edu-chip .up { color: var(--up); font-weight: 600; } .ff-edu-chip .down { color: var(--down); font-weight: 600; }
+.ff-edu-chip .up { color: var(--up); font-weight: 600; font-variant-numeric: tabular-nums; } .ff-edu-chip .down { color: var(--down); font-weight: 600; font-variant-numeric: tabular-nums; }
 /* 팩트 파인더 스크리너 */
 .ff-scr { display: flex; background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; min-height: 520px; }
 @media (min-width: 1025px) { .ff-mlayout .ff-scr { margin-top: 46px; } }
@@ -209,7 +209,7 @@ body {
 .ff-find-name { font-size: 13px; font-weight: 600; color: var(--text); }
 .ff-find-sec { font-size: 10.5px; color: var(--text3); }
 .ff-find-val { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; flex-shrink: 0; }
-.ff-find-val .up { color: var(--up); font-weight: 700; font-size: 13.5px; } .ff-find-val .down { color: var(--down); font-weight: 700; font-size: 13.5px; }
+.ff-find-val .up { color: var(--up); font-weight: 700; font-size: 13.5px; font-variant-numeric: tabular-nums; } .ff-find-val .down { color: var(--down); font-weight: 700; font-size: 13.5px; font-variant-numeric: tabular-nums; }
 .ff-find-vlbl { font-size: 9px; color: var(--text3); }
 .ff-side { width: 152px; flex-shrink: 0; border-right: 1px solid var(--border); padding: 22px 10px 16px; }
 .ff-side-lbl { font-size: 14px; font-weight: 700; color: var(--text3); opacity: 0.7; padding: 0 10px; margin-bottom: 16px; line-height: 29px; }
@@ -244,13 +244,15 @@ body {
 .ff-sm { font-style: normal; font-size: 11px; margin-left: 4px; color: var(--text3); opacity: 0.4; transition: opacity 0.12s, color 0.12s; }
 .ff-th span:hover .ff-sm { opacity: 0.9; }
 .ff-sm.on { opacity: 1; color: var(--accent); }
-.ff-td-rank { width: 22px; flex-shrink: 0; text-align: left; font-size: 13px; color: var(--text3); }
+.ff-td-rank { width: 26px; flex-shrink: 0; text-align: right; padding-right: 10px; font-size: 13px; color: var(--text3); font-variant-numeric: tabular-nums; }
 .ff-th .ff-td-rank { color: var(--text3); cursor: default; }
 .ff-td-sec { flex: 1 1 0; min-width: 92px; text-align: right; font-size: 14.5px; color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ff-td-num { flex: 1 1 0; min-width: 74px; text-align: right; font-size: 14.5px; color: var(--text); }
+.ff-td-num { flex: 1 1 0; min-width: 74px; text-align: right; font-size: 14.5px; color: var(--text); font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; }
 .ff-td-num.up { color: var(--up); font-weight: 600; } .ff-td-num.down { color: var(--down); font-weight: 600; }
 .ff-td-num.ff-dim { color: var(--text2); }
-.ff-td-num.ff-news-cell { color: var(--text3); font-size: 13px; }
+.ff-td-num.ff-news-cell { color: var(--text3); font-size: 13px; font-variant-numeric: tabular-nums; }
+.ff-td-extra { flex: 0 0 132px; min-width: 132px; }
+
 .ff-td-num.ff-news-cell .up { color: var(--up); font-weight: 600; }
 .ff-td-num.ff-news-cell .down { color: var(--down); font-weight: 600; }
 

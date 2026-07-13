@@ -2164,7 +2164,7 @@ function renderFactfinder() {
     + '<span class="ff-td-num ff-hide-m" onclick="ffSort(\'vol\')">거래량'+ffSortMark('vol')+'</span>'
     + (ffHasFin() ? '<span class="ff-td-num ff-hide-m" onclick="ffSort(\'per\')">PER'+ffSortMark('per')+'</span>' : '')
     + (ffHasFin() ? '<span class="ff-td-num ff-hide-m" onclick="ffSort(\'pbr\')">PBR'+ffSortMark('pbr')+'</span>' : '')
-    + '<span class="ff-td-num" onclick="ffSort(\'extra\')">'+((ffState.major==='news'&&ffState.sub==='neg')?'악재·호재':cat.extraCol)+ffSortMark('extra')+'</span>'
+    + '<span class="ff-td-num ff-td-extra" onclick="ffSort(\'extra\')">'+((ffState.major==='news'&&ffState.sub==='neg')?'악재·호재':cat.extraCol)+ffSortMark('extra')+'</span>'
     + '</div>';
   if (!rows.length) html += '<div class="ff-tbl-empty">종목이 없어요</div>';
   rows.forEach(function(r, i){
@@ -2184,7 +2184,7 @@ function renderFactfinder() {
       + '<span class="ff-td-num ff-dim ff-hide-m">'+ffFmtVol(r.vol)+'</span>'
       + (ffHasFin() ? '<span class="ff-td-num ff-dim ff-hide-m">'+ffFmtNum(r.per)+'</span>' : '')
       + (ffHasFin() ? '<span class="ff-td-num ff-dim ff-hide-m">'+ffFmtNum(r.pbr)+'</span>' : '')
-      + '<span class="ff-td-num '+exCls+'">'+r.extra+'</span>'
+      + '<span class="ff-td-num ff-td-extra '+exCls+'">'+r.extra+'</span>'
       + '</div>';
   });
   html += '</div></div></div></div>';
