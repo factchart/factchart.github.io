@@ -1969,7 +1969,7 @@ function ffScreenerData(){
       var info = ffStockInfo(ffNorm(nm));
       if (!info) return;
       var tot = (n.pos||0)+(n.neg||0)+(n.neu||0);
-      info.extra = '호재'+(n.pos||0)+'·악재'+(n.neg||0);
+      info.extra = '<span class="up">호재'+(n.pos||0)+'</span>·<span class="down">악재'+(n.neg||0)+'</span>';
       info.extraRaw = (n.pos||0)-(n.neg||0);
       info._tone = n.tone; info._tot = tot; info._pos = n.pos||0; info._neg = n.neg||0;
       nAll.push(info);
@@ -2137,7 +2137,14 @@ function renderFactfinder() {
       html += '</div>';
     }
   } else {
-    cat.subs.forEach(function(s){ html += '<button class="stock-btn ff-sub-btn'+(s.key===ffState.sub?' active':'')+'" onclick="ffSelectSub(\''+s.key+'\')">'+s.label+'</button>'; });
+    cat.subs.forEach(function(s){
+      var tone = '';
+      if (ffState.major === 'news') {
+        if (s.key === 'pos') tone = ' ff-tone-pos';
+        else if (s.key === 'neg') tone = ' ff-tone-neg';
+      }
+      html += '<button class="stock-btn ff-sub-btn'+tone+(s.key===ffState.sub?' active':'')+'" onclick="ffSelectSub(\''+s.key+'\')">'+s.label+'</button>';
+    });
     html += '</div>';
   }
   html += '<div class="ff-tbl"><div class="ff-tr ff-th">'
@@ -2157,8 +2164,7 @@ function renderFactfinder() {
     var chgStr = (r.chg>=0?'+':'')+r.chg.toFixed(1)+'%';
     var chgCls = r.chg>=0?'up':'down';
     var exCls = 'ff-dim';
-    if (r._tone === 'pos') exCls = 'up';
-    else if (r._tone === 'neg') exCls = 'down';
+    if (r._tone) exCls = 'ff-news-cell';           // 뉴스: 내부 span이 색을 가짐
     else if (r.extra.indexOf('+')===0) exCls = 'up';
     else if (r.extra.indexOf('-')===0) exCls = 'down';
     html += '<div class="ff-tr" onclick="goStock(\''+ffEsc(r.name)+'\')">'

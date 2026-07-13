@@ -223,6 +223,11 @@ body {
 .ff-subs { display: flex; gap: 10px; padding: 20px 22px 22px; flex-wrap: wrap; }
 .ff-subs .stock-btn { font-size: 14px; padding: 12px 20px; }
 .ff-subs2 { padding-top: 0; padding-bottom: 20px; gap: 8px; }
+/* 뉴스 분위기 하위버튼 톤 구분 (상승=빨강, 하락=파랑 규칙과 통일) */
+.ff-subs .stock-btn.ff-tone-pos:hover { border-color: var(--up); color: var(--up); background: rgba(229,62,62,0.06); }
+.ff-subs .stock-btn.ff-tone-pos.active { background: rgba(229,62,62,0.12); border-color: var(--up); color: var(--up); }
+.ff-subs .stock-btn.ff-tone-neg:hover { border-color: var(--down); color: var(--down); background: rgba(49,130,206,0.06); }
+.ff-subs .stock-btn.ff-tone-neg.active { background: rgba(49,130,206,0.12); border-color: var(--down); color: var(--down); }
 .ff-subs2 .stock-btn.ff-sub2 { font-size: 12.5px; padding: 8px 14px; background: transparent; color: var(--text3); }
 .ff-subs2 .stock-btn.ff-sub2:hover { color: var(--accent); border-color: var(--accent); }
 .ff-subs2 .stock-btn.ff-sub2.active { background: rgba(0,208,132,0.1); color: var(--accent); border-color: var(--accent); font-weight: 600; }
@@ -245,6 +250,10 @@ body {
 .ff-td-num { flex: 1 1 0; min-width: 74px; text-align: right; font-size: 14.5px; color: var(--text); }
 .ff-td-num.up { color: var(--up); font-weight: 600; } .ff-td-num.down { color: var(--down); font-weight: 600; }
 .ff-td-num.ff-dim { color: var(--text2); }
+.ff-td-num.ff-news-cell { color: var(--text3); font-size: 13px; }
+.ff-td-num.ff-news-cell .up { color: var(--up); font-weight: 600; }
+.ff-td-num.ff-news-cell .down { color: var(--down); font-weight: 600; }
+
 .ff-tbl-empty { padding: 48px; text-align: center; color: var(--text3); font-size: 13px; }
 @media (max-width: 760px) {
   .ff-scr { flex-direction: column; min-height: 0; }
