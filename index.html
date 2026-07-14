@@ -632,6 +632,17 @@ body {
   gap: 6px;
 }
 
+/* ★<a href> 전환 (SEO: 검색봇이 종목 페이지를 발견하려면 진짜 링크가 필요).
+   겉모습·동작은 기존과 동일하게 유지 — UA 기본 밑줄/색만 제거 */
+.stock-btn, .ff-tr, .ff-stock-row, .ff-edu-chip {
+  text-decoration: none;
+}
+a.stock-btn, a.ff-tr, a.ff-stock-row, a.ff-edu-chip,
+a.stock-btn:visited, a.ff-tr:visited, a.ff-stock-row:visited, a.ff-edu-chip:visited {
+  text-decoration: none;
+}
+a.stock-btn { display: inline-block; }
+
 .stock-btn {
   font-family: var(--sans);
   font-size: 14px;

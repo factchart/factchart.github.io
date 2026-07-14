@@ -620,10 +620,10 @@ function _applyZoom() {
 function renderButtons() {
   document.getElementById('stockBtns').innerHTML =
     STOCKS.map(s =>
-      `<button class="stock-btn ${s===currentStock?'active':''}" onclick="selectStock('${s}')">${s}</button>`
+      `<a class="stock-btn ${s===currentStock?'active':''}" href="${stockHref(s)}" onclick="return navStock('${s}', event)">${s}</a>`
     ).join('') +
     STOCKS_COMING.map(s =>
-      `<button class="stock-btn stock-btn-coming" title="데이터 준비 중">${s} <span style="font-size:9px;opacity:0.5">준비중</span></button>`
+      `<span class="stock-btn stock-btn-coming" title="데이터 준비 중">${s} <span style="font-size:9px;opacity:0.5">준비중</span></span>`
     ).join('');
   setTimeout(updateArrows, 100);
 }
@@ -1768,9 +1768,27 @@ function ffDayChange(name) {
   return (lc - pc) / pc * 100;
 }
 
-function goStock(name) {
-  switchPage('home', 'none');   // URL은 selectStock이 한 번만 push
+/* 종목명 → 크롤 가능한 정적 페이지 경로.
+   ★검색봇은 onclick을 실행하지 않는다. <a href>가 있어야 348개 종목 페이지를 발견한다. */
+function stockHref(name) {
+  var m = (typeof STOCK_META === 'object') ? STOCK_META[name] : null;
+  if (m && m.ticker) return '/stock/' + m.ticker + '.html';
+  return '/?stock=' + encodeURIComponent(name);
+}
+
+/* 팩트파인더 → 종목 (사람: SPA 이동 / 봇: href를 크롤) */
+function goStock(name, e) {
+  if (e) e.preventDefault();          // <a>의 기본 이동(새로고침)을 막고 SPA로 처리
+  switchPage('home', 'none');         // URL은 selectStock이 한 번만 push
   selectStock(ffNorm(name));
+  return false;
+}
+
+/* 홈 종목 버튼 → 종목 (스크롤 위치 유지 위해 switchPage 안 씀) */
+function navStock(name, e) {
+  if (e) e.preventDefault();
+  selectStock(name);
+  return false;
 }
 
 function ffPriceSignals() {
@@ -1825,10 +1843,10 @@ function ffCard(g) {
   shown.forEach(function(it){
     var chgStr = it.chg==null ? '' : (it.chg>=0?'+':'')+it.chg.toFixed(1)+'%';
     var chgCls = it.chg==null ? '' : (it.chg>=0?'up':'down');
-    rows += '<div class="ff-stock-row" onclick="goStock(\''+it.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">'
+    rows += '<a class="ff-stock-row" href="'+stockHref(it.name)+'" onclick="return goStock(\''+it.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\', event)">'
       + '<span class="ff-sr-name">'+it.name+'</span>'
       + '<span class="ff-sr-date">'+(it.meta||'')+'</span>'
-      + '<span class="ff-sr-chg '+chgCls+'">'+chgStr+'</span></div>';
+      + '<span class="ff-sr-chg '+chgCls+'">'+chgStr+'</span></a>';
   });
   var more = g.items.length > 5
     ? '<button class="ff-card-all" onclick="openFFModal(\''+g.kind+'\',\''+g.key+'\')">전체 '+g.items.length+'개 →</button>'
@@ -2119,7 +2137,7 @@ function ffEduCard(){
     h += '<div class="ff-edu-chips"><span class="ff-edu-chips-lbl">'+edu.badge+' 공시 종목</span><div class="ff-edu-chip-row">';
     chips.forEach(function(c){
       var cs = c.chg==null ? '' : ' <span class="'+(c.chg>=0?'up':'down')+'">'+(c.chg>=0?'+':'')+c.chg.toFixed(1)+'%</span>';
-      h += '<span class="ff-edu-chip" onclick="goStock(\''+ffEsc(c.name)+'\')">'+c.name+cs+'</span>';
+      h += '<a class="ff-edu-chip" href="'+stockHref(c.name)+'" onclick="return goStock(\''+ffEsc(c.name)+'\', event)">'+c.name+cs+'</a>';
     });
     h += '</div></div>';
   }
@@ -2211,7 +2229,7 @@ function renderFactfinder() {
     if (r._tone) exCls = 'ff-news-cell';           // 뉴스: 내부 span이 색을 가짐
     else if (r.extra.indexOf('+')===0) exCls = 'up';
     else if (r.extra.indexOf('-')===0) exCls = 'down';
-    html += '<div class="ff-tr" onclick="goStock(\''+ffEsc(r.name)+'\')">'
+    html += '<a class="ff-tr" href="'+stockHref(r.name)+'" onclick="return goStock(\''+ffEsc(r.name)+'\', event)">'
       + '<span class="ff-td-rank">'+(i+1)+'</span>'
       + '<span class="ff-td-name"><span class="ff-tn">'+r.name+'</span></span>'
       + '<span class="ff-td-num">'+ffFmtPrice(r.price)+'</span>'
@@ -2222,7 +2240,7 @@ function renderFactfinder() {
       + (ffHasFin() ? '<span class="ff-td-num ff-dim ff-hide-m">'+ffFmtNum(r.per)+'</span>' : '')
       + (ffHasFin() ? '<span class="ff-td-num ff-dim ff-hide-m">'+ffFmtNum(r.pbr)+'</span>' : '')
       + '<span class="ff-td-num ff-td-extra '+exCls+'">'+r.extra+'</span>'
-      + '</div>';
+      + '</a>';
   });
   html += '</div></div></div></div>';
   html += '<div class="right-col">' + ffEduCard() + '</div>';
@@ -2241,10 +2259,10 @@ function openFFModal(kind, key) {
   (items||[]).forEach(function(it){
     var chgStr = it.chg==null ? '' : (it.chg>=0?'+':'')+it.chg.toFixed(1)+'%';
     var chgCls = it.chg==null ? '' : (it.chg>=0?'up':'down');
-    rows += '<div class="ff-stock-row" onclick="closeFFModal();goStock(\''+it.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">'
+    rows += '<a class="ff-stock-row" href="'+stockHref(it.name)+'" onclick="closeFFModal(); return goStock(\''+it.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\', event)">'
       + '<span class="ff-sr-name">'+it.name+'</span>'
       + '<span class="ff-sr-date">'+(it.meta||'')+'</span>'
-      + '<span class="ff-sr-chg '+chgCls+'">'+chgStr+'</span></div>';
+      + '<span class="ff-sr-chg '+chgCls+'">'+chgStr+'</span></a>';
   });
   var listEl = document.getElementById('ffModalList');
   if (listEl) listEl.innerHTML = rows || '<div class="ff-sig-empty">없음</div>';
