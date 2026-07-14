@@ -554,6 +554,46 @@ const TYPE_COLORS = {
 };
 
 let currentStock = null;
+
+/* ═══════════ SPA 라우팅 (history API) ═══════════
+   URL 규칙:  홈+종목 → /?stock=<종목명>   |   팩트파인더 → /?page=factfinder
+   routeMode: 'push'(기본, 히스토리 추가) | 'replace'(덮어씀) | 'none'(URL 안 건드림)
+   ★replaceState만 쓰면 히스토리가 안 쌓여서 뒤로가기가 사이트 밖으로 나감 → pushState 사용 */
+let currentPage = 'home';
+
+function buildRoute(page, stock) {
+  var qs = '';
+  if (page === 'factfinder') qs = '?page=factfinder';
+  else if (stock) qs = '?stock=' + encodeURIComponent(stock);
+  return window.location.pathname + qs;
+}
+
+function pushRoute(mode) {
+  if (mode === 'none') return;
+  try {
+    var url = buildRoute(currentPage, currentStock);
+    var st  = { page: currentPage, stock: currentStock };
+    if (mode === 'replace') history.replaceState(st, '', url);
+    else                    history.pushState(st, '', url);
+  } catch (e) {}
+}
+
+/* 뒤로가기·앞으로가기 → 화면 복원 (URL이 정본) */
+window.addEventListener('popstate', function () {
+  var params = new URLSearchParams(window.location.search);
+  var page   = (params.get('page') === 'factfinder') ? 'factfinder' : 'home';
+  var stock  = params.get('stock');
+  if (stock && typeof CODE_TO_NAME === 'object' && CODE_TO_NAME[stock]) stock = CODE_TO_NAME[stock];
+
+  if (page === 'factfinder') {
+    switchPage('factfinder', 'none');
+  } else {
+    switchPage('home', 'none');
+    if (stock && allData && allData.prices && allData.prices[stock] && stock !== currentStock) {
+      selectStock(stock, 'none');
+    }
+  }
+});
 let chartInstance = null;
 let allData = null;
 let chartPrices = null;       // 현재 차트에 그려진 가격 배열(실시간 캔들 갱신용)
@@ -731,18 +771,15 @@ document.addEventListener('click', e => {
   }
 });
 
-async function selectStock(name) {
+async function selectStock(name, routeMode) {
   currentStock = name;
   patternOn = true;
   selectedType = null;
   activeTypeFilter = '전체';
 
-  // URL을 현재 종목으로 갱신 (새로고침 없이, 공유·북마크용)
-  try {
-    var u = new URL(window.location);
-    u.searchParams.set('stock', name);
-    history.replaceState(null, '', u);
-  } catch (e) {}
+  // URL 갱신 (새로고침 없이, 공유·북마크·뒤로가기용)
+  currentPage = 'home';
+  pushRoute(routeMode === undefined ? 'push' : routeMode);
 
   document.getElementById('patternToggle').checked = true;
   const lbl = document.getElementById('toggleLabel');
@@ -1732,7 +1769,7 @@ function ffDayChange(name) {
 }
 
 function goStock(name) {
-  switchPage('home');
+  switchPage('home', 'none');   // URL은 selectStock이 한 번만 push
   selectStock(ffNorm(name));
 }
 
@@ -2219,7 +2256,8 @@ function closeFFModal() {
   if (m) m.style.display = 'none';
 }
 
-function switchPage(page) {
+function switchPage(page, routeMode) {
+  currentPage = page;
   document.querySelectorAll('.pnav').forEach(function(b){
     b.classList.toggle('active', b.dataset.page === page);
   });
@@ -2229,6 +2267,7 @@ function switchPage(page) {
   if (ff) ff.style.display = (page === 'factfinder') ? 'block' : 'none';
   if (page === 'factfinder') renderFactfinder();
   window.scrollTo(0, 0);
+  pushRoute(routeMode === undefined ? 'push' : routeMode);
 }
 
 function switchTab(tab) {
@@ -3402,7 +3441,10 @@ fetch(DATA_URL)
     // reqStock이 6자리 종목코드면 종목명으로 변환 (코드/종목명 모두 허용)
     if (reqStock && CODE_TO_NAME[reqStock]) reqStock = CODE_TO_NAME[reqStock];
     var validStock = reqStock && allData.prices && allData.prices[reqStock] ? reqStock : '삼성전자';
-    selectStock(validStock);
+    selectStock(validStock, 'replace');           // 초기 진입은 히스토리를 쌓지 않음
+    if (params.get('page') === 'factfinder') {    // /?page=factfinder 로 직접 진입
+      switchPage('factfinder', 'replace');
+    }
   })
   .then(() => {
     initMarketStatus();
