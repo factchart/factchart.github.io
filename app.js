@@ -620,7 +620,7 @@ function _applyZoom() {
 function renderButtons() {
   document.getElementById('stockBtns').innerHTML =
     STOCKS.map(s =>
-      `<a class="stock-btn ${s===currentStock?'active':''}" href="${stockHref(s)}" onclick="return navStock('${s}', event)">${s}</a>`
+      `<a class="stock-btn ${s===currentStock?'active':''}" href="${stockHref(s)}" draggable="false" onclick="return navStock('${s}', event)">${s}</a>`
     ).join('') +
     STOCKS_COMING.map(s =>
       `<span class="stock-btn stock-btn-coming" title="데이터 준비 중">${s} <span style="font-size:9px;opacity:0.5">준비중</span></span>`
@@ -665,18 +665,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 클릭 후 좌/우 드래그로 스크롤
     let isDown = false, startX = 0, startScroll = 0, moved = 0;
-    grid.addEventListener('mousedown', (e) => {
-      if (e.button !== 0) return;   // ★왼쪽 버튼만. 우클릭이 드래그로 잡혀 컨텍스트 메뉴(새 탭 열기)가 막히던 문제
-      isDown = true; moved = 0;
-      startX = e.pageX;
-      startScroll = grid.scrollLeft;
-      grid.style.cursor = 'grabbing';
-      grid.style.scrollBehavior = 'auto';
-    });
-    window.addEventListener('mouseup', () => {
+    // ★종목 버튼이 <a>가 되면서 브라우저 네이티브 '링크 드래그'가 켜짐.
+    //   그게 마우스를 가로채 mouseup이 안 와서 isDown이 true로 남고 드래그가 stick 되던 문제 → 원천 차단.
+    grid.addEventListener('dragstart', (e) => e.preventDefault());
+
+    const endDrag = () => {
       if (!isDown) return;
       isDown = false;
-      grid.style.cursor = '';
+      grid.style.cursor = 'grab';
       grid.style.scrollBehavior = 'smooth';
       // 드래그였으면 직후 클릭(종목 선택) 1회 무시
       if (moved > 6) {
@@ -685,7 +681,22 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => grid.removeEventListener('click', block, true), 50);
       }
       setTimeout(updateArrows, 150);
+    };
+
+    grid.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;   // ★왼쪽 버튼만 (우클릭이 드래그로 잡히던 문제)
+      e.preventDefault();           // ★네이티브 링크 드래그 시작 자체를 막음
+      isDown = true; moved = 0;
+      startX = e.pageX;
+      startScroll = grid.scrollLeft;
+      grid.style.cursor = 'grabbing';
+      grid.style.scrollBehavior = 'auto';
     });
+    window.addEventListener('mouseup', endDrag);
+    // 안전장치: 창 밖으로 나가거나 포커스를 잃어도 반드시 드래그 해제 (stick 방지)
+    window.addEventListener('blur', endDrag);
+    window.addEventListener('dragend', endDrag);
+    document.addEventListener('mouseleave', endDrag);
     window.addEventListener('mousemove', (e) => {
       if (!isDown) return;
       const dx = e.pageX - startX;
@@ -1844,7 +1855,7 @@ function ffCard(g) {
   shown.forEach(function(it){
     var chgStr = it.chg==null ? '' : (it.chg>=0?'+':'')+it.chg.toFixed(1)+'%';
     var chgCls = it.chg==null ? '' : (it.chg>=0?'up':'down');
-    rows += '<a class="ff-stock-row" href="'+stockHref(it.name)+'" onclick="return goStock(\''+it.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\', event)">'
+    rows += '<a class="ff-stock-row" draggable="false" href="'+stockHref(it.name)+'" onclick="return goStock(\''+it.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\', event)">'
       + '<span class="ff-sr-name">'+it.name+'</span>'
       + '<span class="ff-sr-date">'+(it.meta||'')+'</span>'
       + '<span class="ff-sr-chg '+chgCls+'">'+chgStr+'</span></a>';
@@ -2138,7 +2149,7 @@ function ffEduCard(){
     h += '<div class="ff-edu-chips"><span class="ff-edu-chips-lbl">'+edu.badge+' 공시 종목</span><div class="ff-edu-chip-row">';
     chips.forEach(function(c){
       var cs = c.chg==null ? '' : ' <span class="'+(c.chg>=0?'up':'down')+'">'+(c.chg>=0?'+':'')+c.chg.toFixed(1)+'%</span>';
-      h += '<a class="ff-edu-chip" href="'+stockHref(c.name)+'" onclick="return goStock(\''+ffEsc(c.name)+'\', event)">'+c.name+cs+'</a>';
+      h += '<a class="ff-edu-chip" draggable="false" href="'+stockHref(c.name)+'" onclick="return goStock(\''+ffEsc(c.name)+'\', event)">'+c.name+cs+'</a>';
     });
     h += '</div></div>';
   }
@@ -2230,7 +2241,7 @@ function renderFactfinder() {
     if (r._tone) exCls = 'ff-news-cell';           // 뉴스: 내부 span이 색을 가짐
     else if (r.extra.indexOf('+')===0) exCls = 'up';
     else if (r.extra.indexOf('-')===0) exCls = 'down';
-    html += '<a class="ff-tr" href="'+stockHref(r.name)+'" onclick="return goStock(\''+ffEsc(r.name)+'\', event)">'
+    html += '<a class="ff-tr" draggable="false" href="'+stockHref(r.name)+'" onclick="return goStock(\''+ffEsc(r.name)+'\', event)">'
       + '<span class="ff-td-rank">'+(i+1)+'</span>'
       + '<span class="ff-td-name"><span class="ff-tn">'+r.name+'</span></span>'
       + '<span class="ff-td-num">'+ffFmtPrice(r.price)+'</span>'
@@ -2260,7 +2271,7 @@ function openFFModal(kind, key) {
   (items||[]).forEach(function(it){
     var chgStr = it.chg==null ? '' : (it.chg>=0?'+':'')+it.chg.toFixed(1)+'%';
     var chgCls = it.chg==null ? '' : (it.chg>=0?'up':'down');
-    rows += '<a class="ff-stock-row" href="'+stockHref(it.name)+'" onclick="closeFFModal(); return goStock(\''+it.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\', event)">'
+    rows += '<a class="ff-stock-row" draggable="false" href="'+stockHref(it.name)+'" onclick="closeFFModal(); return goStock(\''+it.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\', event)">'
       + '<span class="ff-sr-name">'+it.name+'</span>'
       + '<span class="ff-sr-date">'+(it.meta||'')+'</span>'
       + '<span class="ff-sr-chg '+chgCls+'">'+chgStr+'</span></a>';

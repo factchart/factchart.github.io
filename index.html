@@ -642,6 +642,12 @@ a.stock-btn:visited, a.ff-tr:visited, a.ff-stock-row:visited, a.ff-edu-chip:visi
   text-decoration: none;
 }
 a.stock-btn { display: inline-block; }
+/* ★<a>의 브라우저 네이티브 '링크 드래그'(유령 썸네일) 차단.
+   안 막으면 드래그가 mouseup을 가로채 좌우 스크롤이 stick 됨 */
+a.stock-btn, a.ff-tr, a.ff-stock-row, a.ff-edu-chip {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
 
 .stock-btn {
   font-family: var(--sans);
