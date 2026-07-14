@@ -666,6 +666,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 클릭 후 좌/우 드래그로 스크롤
     let isDown = false, startX = 0, startScroll = 0, moved = 0;
     grid.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;   // ★왼쪽 버튼만. 우클릭이 드래그로 잡혀 컨텍스트 메뉴(새 탭 열기)가 막히던 문제
       isDown = true; moved = 0;
       startX = e.pageX;
       startScroll = grid.scrollLeft;
