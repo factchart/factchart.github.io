@@ -802,6 +802,14 @@ a.stock-btn, a.ff-tr, a.ff-stock-row, a.ff-edu-chip {
 .news-ai-desc { font-size:12px; color:#9aa7b8; line-height:1.6; }
 .news-summary { display:flex; align-items:flex-start; gap:6px; padding:8px 10px; margin-top:8px; background:rgba(255,255,255,0.03); border-radius:8px; font-size:13px; color:#aeb9c8; line-height:1.5; }
 .news-ai-dot { color:#2fe0a0; font-size:11px; margin-top:2px; flex-shrink:0; }
+#newsBrief { border-radius:12px; padding:1px; margin:10px 16px 0; background:linear-gradient(135deg,#00E0A0 0%,#16C98D 45%,#3FB98A 78%,#5AA9C9 100%); }
+.nb-inner { display:flex; align-items:center; gap:12px; flex-wrap:wrap; background:#111823; border-radius:11px; padding:10px 14px; }
+.nb-label { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+.nb-dia { flex-shrink:0; }
+.nb-label-txt { font-size:12.5px; font-weight:700; letter-spacing:0.2px; background:linear-gradient(90deg,#00E0A0,#2BC78E); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+.nb-counts { font-size:13px; color:#c5cdd9; white-space:nowrap; }
+.nb-summary { font-size:13px; color:#c5cdd9; flex:1; min-width:150px; line-height:1.5; }
+.nb-more { font-size:12px; color:#16C98D; cursor:pointer; white-space:nowrap; }
 .news-more { display:block; width:100%; text-align:center; padding:11px; margin-top:12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09); border-radius:10px; font-size:13px; color:#c3d0e0; cursor:pointer; transition:background .15s; }
 .news-more:hover { background:rgba(255,255,255,0.07); }
 .news-more .cnt { color:#7a8699; }
@@ -2822,11 +2830,16 @@ tr.disc-highlight {
           </div>
         </div>
 
-        <div id="newsBrief" style="display:none;align-items:center;gap:14px;flex-wrap:wrap;background:rgba(255,255,255,0.015);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:9px 14px;margin:10px 16px 0;">
-          <span style="font-size:12px;font-weight:500;color:#00d084;white-space:nowrap;">&#10022; 최근 뉴스</span>
-          <span id="nbCounts" style="font-size:13px;color:#c5cdd9;white-space:nowrap;">&mdash;</span>
-          <span id="nbSummary" style="font-size:13px;color:#c5cdd9;flex:1;min-width:150px;"></span>
-          <span onclick="switchTab('news')" style="font-size:12px;color:#47ba7f;cursor:pointer;white-space:nowrap;">전체 보기 &rarr;</span>
+        <div id="newsBrief" style="display:none;">
+          <div class="nb-inner">
+            <span class="nb-label">
+              <svg class="nb-dia" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="nbDiaGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#00E0A0"/><stop offset="0.45" stop-color="#16C98D"/><stop offset="0.78" stop-color="#3FB98A"/><stop offset="1" stop-color="#5AA9C9"/></linearGradient></defs><path d="M12 2 L15 9 L22 12 L15 15 L12 22 L9 15 L2 12 L9 9 Z" fill="url(#nbDiaGrad)"/></svg>
+              <span class="nb-label-txt">AI 요약 · 최근 30일</span>
+            </span>
+            <span id="nbCounts" class="nb-counts">&mdash;</span>
+            <span id="nbSummary" class="nb-summary"></span>
+            <span onclick="switchTab('news')" class="nb-more">전체 보기 &rarr;</span>
+          </div>
         </div>
 
         <div class="pattern-bar">
