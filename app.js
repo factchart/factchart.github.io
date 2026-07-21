@@ -536,8 +536,8 @@ function renderNewsBriefing(name) {
     '<span style="color:#dd3c3c;">호재 ' + pos + '</span> · ' +
     '<span style="color:#3182ce;">악재 ' + neg + '</span> · 중립 ' + neu +
     ' <span style="color:' + toneColor + ';">· ' + tone + '</span>';
-  document.getElementById('nbSummary').textContent = rep ? ('\u2726 ' + rep) : '';
-  el.style.display = 'flex';
+  document.getElementById('nbSummary').textContent = rep || '';
+  el.style.display = 'block';
 }
 
 const DATA_URL = '/stock_data.json';
