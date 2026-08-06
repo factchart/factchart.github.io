@@ -2981,8 +2981,10 @@ function renderHook(disclosures) {
       const conj = (enough && (discUp !== newsUp)) ? ' 다만 최근 뉴스는 ' : ' 최근 뉴스도 ';
       newsPart = conj + '<b style="color:' + toneCol + ';font-weight:600">' + tone + '</b>';
       if (rep) {
-        const esc = String(rep).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-        newsPart += '<br><span style="color:var(--text2)">&ldquo;' + esc + '&rdquo;</span>이 컸어요.';
+        let repShort = String(rep);
+        if (repShort.length > 35) repShort = repShort.slice(0, 35) + '…';
+        const esc = repShort.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        newsPart += '<br><span style="color:var(--text2)">&ldquo;' + esc + '&rdquo;\u00A0영향이\u00A0컸어요.</span>';
       } else {
         newsPart += '예요.';
       }
