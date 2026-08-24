@@ -2708,9 +2708,41 @@ tr.disc-highlight {
   .modal-box { padding: 20px; }
   .toggle-desc { display: none; }
 }
+
+/* ── 앱 다운로드 프로모 배너 ── */
+.app-promo-bar {
+  background: var(--accent);
+  color: #04342c;
+  padding: 9px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.app-promo-bar a {
+  color: #04342c;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.app-promo-bar a:hover { opacity: 0.85; }
+@media (max-width: 480px) {
+  .app-promo-bar { font-size: 12px; padding: 8px 12px; }
+}
 </style>
 </head>
 <body>
+
+<!-- 앱 다운로드 프로모 배너 -->
+<div class="app-promo-bar">
+  <a href="https://play.google.com/store/apps/details?id=kr.co.factchart.app" target="_blank" rel="noopener">
+    FACT.Chart 안드로이드 앱 출시 지금 다운로드 <span aria-hidden="true">→</span>
+  </a>
+</div>
+
 <div class="container">
 
   <!-- 헤더 — 한 줄 -->
