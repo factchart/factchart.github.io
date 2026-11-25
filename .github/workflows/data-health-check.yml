@@ -1,0 +1,114 @@
+name: Data Health Check
+
+# 주가(prices)·공시(disclosures)·뉴스(news) 테이블이 멈춰있지 않은지 매일 확인.
+# 기대 범위보다 오래됐으면 GitHub 이슈를 열어서 알림 (메일로 감).
+# 정상으로 돌아오면 열려있던 이슈를 자동으로 닫음.
+#
+# 필요한 저장소 secret (Settings → Secrets and variables → Actions):
+#   SUPABASE_URL          예: https://xxxxx.supabase.co
+#   SUPABASE_SERVICE_KEY  service_role 키 (Code.gs의 SUPABASE_KEY와 동일)
+
+on:
+  schedule:
+    - cron: '0 9 * * *'   # 매일 09:00 UTC = 18:00 KST (주가·공시 당일 파이프라인 끝난 뒤)
+  workflow_dispatch: {}    # 수동 실행 테스트용
+
+permissions:
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check table freshness
+        id: check
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          set -e
+          now_epoch=$(date -u +%s)
+          report=""
+          stale=0
+
+          check_table () {
+            local table=$1
+            local date_col=$2
+            local max_age_days=$3
+            local label=$4
+
+            local resp
+            resp=$(curl -s -G "${SUPABASE_URL}/rest/v1/${table}" \
+              --data-urlencode "select=${date_col}" \
+              --data-urlencode "order=${date_col}.desc" \
+              --data-urlencode "limit=1" \
+              -H "apikey: ${SUPABASE_SERVICE_KEY}" \
+              -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}")
+
+            local raw_date
+            raw_date=$(echo "$resp" | jq -r ".[0].${date_col} // empty")
+
+            if [ -z "$raw_date" ]; then
+              report="${report}- **${label}**: 값을 가져오지 못함 (응답: $(echo "$resp" | head -c 200))\n"
+              stale=1
+              return
+            fi
+
+            # published_at 같은 timestamptz는 그대로, date는 00:00 UTC로 파싱
+            local item_epoch
+            item_epoch=$(date -u -d "${raw_date}" +%s 2>/dev/null || echo 0)
+            local age_days=$(( (now_epoch - item_epoch) / 86400 ))
+
+            if [ "$age_days" -gt "$max_age_days" ]; then
+              report="${report}- **${label}**: 최신 데이터 ${raw_date} (${age_days}일 지남, 허용 ${max_age_days}일) ⚠️\n"
+              stale=1
+            else
+              report="${report}- **${label}**: 정상 (최신 ${raw_date}, ${age_days}일 전)\n"
+            fi
+          }
+
+          check_table "prices" "date" 4 "주가(prices)"
+          check_table "disclosures" "date" 4 "공시(disclosures)"
+          check_table "news" "published_at" 2 "뉴스(news)"
+
+          echo -e "$report"
+          {
+            echo "report<<EOF"
+            echo -e "$report"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          echo "stale=$stale" >> "$GITHUB_OUTPUT"
+
+      - name: Open or update issue if stale
+        if: steps.check.outputs.stale == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          existing=$(gh issue list --repo "${{ github.repository }}" --label data-health --state open --json number --jq '.[0].number // empty')
+          body="자동 헬스체크에서 데이터 지연이 감지됐어요.
+
+          ${{ steps.check.outputs.report }}
+
+          확인 순서는 \`ops/incidents.md\`의 2026-11-13 인시던트 참고. 대부분 Apps Script 트리거/커서가 멈춘 경우였음."
+
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "${{ github.repository }}" --body "$body"
+          else
+            gh issue create --repo "${{ github.repository }}" \
+              --title "[data-health] 데이터 업데이트 지연 감지 - $(date -u +%Y-%m-%d)" \
+              --label data-health \
+              --body "$body"
+          fi
+
+      - name: Close issue if healthy again
+        if: steps.check.outputs.stale == '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          nums=$(gh issue list --repo "${{ github.repository }}" --label data-health --state open --json number --jq '.[].number')
+          for n in $nums; do
+            gh issue comment "$n" --repo "${{ github.repository }}" --body "✅ 다시 정상으로 돌아왔어요. 자동으로 닫습니다.
+
+${{ steps.check.outputs.report }}"
+            gh issue close "$n" --repo "${{ github.repository }}"
+          done
