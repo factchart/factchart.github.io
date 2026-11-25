@@ -109,6 +109,6 @@ jobs:
           for n in $nums; do
             gh issue comment "$n" --repo "${{ github.repository }}" --body "✅ 다시 정상으로 돌아왔어요. 자동으로 닫습니다.
 
-${{ steps.check.outputs.report }}"
+            ${{ steps.check.outputs.report }}"
             gh issue close "$n" --repo "${{ github.repository }}"
           done
